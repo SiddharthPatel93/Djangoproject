@@ -20,3 +20,18 @@ class Account(models.Model):
 
     def __str__(self):
         return self.name
+
+class Course(models.Model):
+    name = models.CharField(max_length=MAX_LENGTH)
+    members = models.ManyToManyField(to=Account, related_name="courses")
+
+class Section(models.Model):
+    course = models.ForeignKey(to=Course, on_delete=models.CASCADE)
+    number = models.IntegerField()
+    # String through parameter is necessary due to mutual dependency of classes
+    members = models.ManyToManyField(to=Account, through="SectionMembership")
+
+class SectionMembership(models.Model):
+    account = models.ForeignKey(to=Account, on_delete=models.CASCADE)
+    section = models.ForeignKey(to=Section, on_delete=models.CASCADE)
+    grader = models.BooleanField(default=False)
