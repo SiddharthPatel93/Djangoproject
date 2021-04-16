@@ -27,7 +27,7 @@ class Course(models.Model):
 
 class Section(models.Model):
     course = models.ForeignKey(to=Course, on_delete=models.CASCADE)
-    number = models.IntegerField()
+    num = models.IntegerField()
     # String through parameter is necessary due to mutual dependency of classes
     members = models.ManyToManyField(to=Account, through="SectionMembership")
 
