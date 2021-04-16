@@ -23,21 +23,21 @@ class Account(models.Model):
 
 class Course(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
-    members = models.ManyToManyField(to=Account, related_name="courses")
+    members = models.ManyToManyField(to=Account, through="CourseMembership")
 
     def __str__(self):
         return self.name
+
+class CourseMembership(models.Model):
+    account = models.ForeignKey(to=Account, on_delete=models.CASCADE)
+    course = models.ForeignKey(to=Course, on_delete=models.CASCADE)
+    grader = models.BooleanField(default=False)
 
 class Section(models.Model):
     course = models.ForeignKey(to=Course, on_delete=models.CASCADE)
     num = models.IntegerField()
     # String through parameter is necessary due to mutual dependency of classes
-    members = models.ManyToManyField(to=Account, through="SectionMembership")
+    members = models.ManyToManyField(to=Account, related_name="sections")
 
     def __str__(self):
         return str(self.num)
-
-class SectionMembership(models.Model):
-    account = models.ForeignKey(to=Account, on_delete=models.CASCADE)
-    section = models.ForeignKey(to=Section, on_delete=models.CASCADE)
-    grader = models.BooleanField(default=False)
