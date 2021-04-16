@@ -25,11 +25,17 @@ class Course(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
     members = models.ManyToManyField(to=Account, related_name="courses")
 
+    def __str__(self):
+        return self.name
+
 class Section(models.Model):
     course = models.ForeignKey(to=Course, on_delete=models.CASCADE)
     num = models.IntegerField()
     # String through parameter is necessary due to mutual dependency of classes
     members = models.ManyToManyField(to=Account, through="SectionMembership")
+
+    def __str__(self):
+        return str(self.num)
 
 class SectionMembership(models.Model):
     account = models.ForeignKey(to=Account, on_delete=models.CASCADE)
