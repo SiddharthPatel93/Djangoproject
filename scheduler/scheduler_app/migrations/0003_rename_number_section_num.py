@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scheduler_site', '0002_auto_20210415_2151'),
+        ('scheduler_app', '0002_auto_20210415_2151'),
     ]
 
     operations = [

@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class SchedulerSiteConfig(AppConfig):
+class SchedulerAppConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'scheduler_site'
+    name = 'scheduler_app'

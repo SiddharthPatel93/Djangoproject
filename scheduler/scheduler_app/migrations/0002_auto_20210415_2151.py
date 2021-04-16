@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scheduler_site', '0001_initial'),
+        ('scheduler_app', '0001_initial'),
     ]
 
     operations = [
@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=1023)),
-                ('members', models.ManyToManyField(related_name='courses', to='scheduler_site.Account')),
+                ('members', models.ManyToManyField(related_name='courses', to='scheduler_app.Account')),
             ],
         ),
         migrations.CreateModel(
@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('number', models.IntegerField()),
-                ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='scheduler_site.course')),
+                ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='scheduler_app.course')),
             ],
         ),
         migrations.CreateModel(
@@ -32,13 +32,13 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('grader', models.BooleanField(default=False)),
-                ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='scheduler_site.account')),
-                ('section', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='scheduler_site.section')),
+                ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='scheduler_app.account')),
+                ('section', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='scheduler_app.section')),
             ],
         ),
         migrations.AddField(
             model_name='section',
             name='members',
-            field=models.ManyToManyField(through='scheduler_site.SectionMembership', to='scheduler_site.Account'),
+            field=models.ManyToManyField(through='scheduler_app.SectionMembership', to='scheduler_app.Account'),
         ),
     ]
