@@ -17,3 +17,6 @@ class Account(models.Model):
     phone = models.CharField(max_length=MAX_LENGTH)
     address = models.CharField(max_length=MAX_LENGTH)
     office_hours = models.CharField(max_length=MAX_LENGTH)
+
+    def __str__(self):
+        return self.name
