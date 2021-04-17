@@ -16,6 +16,5 @@ class CourseTest(TestCase):
 
 class SectionTest(TestCase):
     def test_matchName(self):
-        num = 902
-        s = Section(num=num)
-        self.assertEqual(str(num), s.__str__(), "Section name does not equal entered number")
+        s = Section(num=902)
+        self.assertEqual("902", s.__str__(), "Section name does not equal entered number")
