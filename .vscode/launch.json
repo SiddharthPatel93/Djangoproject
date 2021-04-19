@@ -13,6 +13,17 @@
                 "runserver"
             ],
             "django": true
+        },
+        {
+            "name": "Python: Django Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}\\scheduler\\manage.py",
+            "args": [
+                "test",
+                "scheduler_app"
+            ],
+            "django": true
         }
     ]
 }
