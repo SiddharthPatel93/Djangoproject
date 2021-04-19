@@ -44,9 +44,26 @@ class SectionTest(TestCase):
 class LoginTest(TestCase):
     def setUp(self):
         self.client = Client()
+        self.route = "/login/"
+        self.email = "test@example.com"
+        self.password = "test"
+        Account(
+            email=self.email,
+            password=self.password,
+            role=Account.Role.SUPERVISOR,
+        ).save()
+    
+    def test_loadLogin(self):
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual(200, r.status_code, "Login does not load with status code 200")
+        self.assertEqual([], r.redirect_chain, "Login redirects to another page")
     
     def test_emptyLogin(self):
-        pass
+        for data in [{}, {"email": "", "password": ""}]:
+            r = self.client.post(self.route, data, follow=True)
+            self.assertEqual(400, r.status_code, f"Empty login with data {data} does not load with status code 400")
+            self.assertEqual([], r.redirect_chain, "Empty login with data {data} redirects to another page")
+            self.assertEqual(2, len(r.context["errors"]), "Empty login with data {data} does not produce 2 errors for empty fields")
 
     def test_successfulLogin(self):
         pass
