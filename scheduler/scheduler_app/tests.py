@@ -47,16 +47,18 @@ class LoginTest(TestCase):
         self.route = "/login/"
         self.email = "test@example.com"
         self.password = "test"
-        Account(
+        self.account = Account(
             email=self.email,
             password=self.password,
             role=Account.Role.SUPERVISOR,
-        ).save()
+        )
+        self.account.save()
     
     def test_loadLogin(self):
         r = self.client.get(self.route, follow=True)
-        self.assertEqual(200, r.status_code, "Login does not load with status code 200")
-        self.assertEqual([], r.redirect_chain, "Login redirects to another page")
+        self.assertEqual(200, r.status_code, "Login page does not load with status code 200")
+        self.assertEqual([], r.redirect_chain, "Login page redirects to another page")
+        self.assertEqual(0, len(r.context["errors"]), "Login page produces errors with no input")
     
     def test_emptyLogin(self):
         for data in [{}, {"email": "", "password": ""}]:
@@ -66,7 +68,21 @@ class LoginTest(TestCase):
             self.assertEqual(2, len(r.context["errors"]), "Empty login with data {data} does not produce 2 errors for empty fields")
 
     def test_successfulLogin(self):
-        pass
+        r = self.client.post(self.route, {"email": self.email, "password": self.password}, follow=True)
+        self.assertEqual(302, r.status_code, "Successful login does not load with status code 302")
+        self.assertEqual([("/", 302)], r.redirect_chain, "Successful login does not redirect to course dashboard")
+        self.assertIn("account", self.client.session, "Successful login does not add account to session")
+        self.assertEqual(self.account.id, self.client.session["account"], "Successful login adds wrong account to session")
 
-    def test_unsuccessfulLogin(self):
-        pass
+    def test_failedLogin(self):
+        previous_error = ""
+
+        for data in [{"email": self.email, "password": "wrong"}, {"email": "does@not.exist", "password": self.password}]:
+            r = self.client.post(self.route, data, follow=True)
+            self.assertEqual(401, r.status_code, f"Failed login with data {data} does not load with status code 401")
+            self.assertEqual([], r.redirect_chain, f"Failed login with data {data} redirects to another page")
+            self.assertNotIn("account", self.client.session, f"Failed login {data} adds account to session")
+            self.assertEqual(1, len(r.context["errors"]), f"Failed login with data {data} does not produce 1 error for failed login")
+            
+            if previous_error:
+                self.assertEqual(previous_error, r.context["errors"][0], "Errors for wrong username and wrong password are different")
