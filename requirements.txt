@@ -1,1 +1,2 @@
 Django
+passlib[argon2]

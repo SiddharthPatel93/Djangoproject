@@ -20,6 +20,12 @@ class Account(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def check_password(self, password: str) -> bool:
+        pass
+
+    def set_password(self, password: str):
+        pass
 
 class Course(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
