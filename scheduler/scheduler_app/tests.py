@@ -1,9 +1,11 @@
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import Client, TestCase
 from passlib.hash import argon2
 
 from .models import Account, Course, Section
+
+# Models
 
 class AccountTest(TestCase):
     def test_matchName(self):
@@ -36,3 +38,18 @@ class SectionTest(TestCase):
     def test_matchName(self):
         s = Section(num=902)
         self.assertEqual("902", s.__str__(), "Section name does not equal entered number")
+
+# Views
+
+class LoginTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+    
+    def test_emptyLogin(self):
+        pass
+
+    def test_successfulLogin(self):
+        pass
+
+    def test_unsuccessfulLogin(self):
+        pass
