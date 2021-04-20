@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from django.test import Client, TestCase
 from passlib.hash import argon2
-
+from classes.accountcreation import create_account
 from .models import Account, Course, Section
 
 # Models
@@ -97,3 +97,7 @@ class LoginTest(TestCase):
                 self.assertEqual(previous_error, error, "Errors for wrong username and wrong password are different")
             else:
                 previous_error = error
+                
+
+
+
