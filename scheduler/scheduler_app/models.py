@@ -1,4 +1,5 @@
 from django.db import models
+from passlib.hash import argon2
 
 MAX_LENGTH = 1023
 
@@ -20,6 +21,12 @@ class Account(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def check_password(self, password: str) -> bool:
+        return argon2.verify(password, self.password)
+
+    def set_password(self, password: str):
+        self.password = argon2.using().hash(password)
 
 class Course(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
