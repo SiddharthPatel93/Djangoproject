@@ -49,9 +49,9 @@ class LoginTest(TestCase):
         self.password = "test"
         self.account = Account(
             email=self.email,
-            password=self.password,
             role=Account.Role.SUPERVISOR,
         )
+        self.account.set_password(self.password)
         self.account.save()
     
     def test_loadLogin(self):
@@ -60,7 +60,7 @@ class LoginTest(TestCase):
         self.assertEqual([], r.redirect_chain, "Login page redirects to another page")
         self.assertNotIn("account", self.client.session, "Login page adds account to session")
         self.assertIsNotNone(r.context, "Login page does not render template")
-        self.assertEqual(0, len(r.context["errors"]), "Login page produces errors with no input")
+        self.assertNotIn("errors", r.context, "Login page includes errors list")
     
     def test_emptyLogin(self):
         for data in [{}, {"email": "", "password": ""}]:
@@ -69,12 +69,14 @@ class LoginTest(TestCase):
             self.assertEqual([], r.redirect_chain, f"Empty login with data {data} redirects to another page")
             self.assertNotIn("account", self.client.session, f"Empty login with data {data} adds account to session")
             self.assertIsNotNone(r.context, f"Empty login with data {data} does not render template")
+            self.assertIn("errors", r.context, f"Empty login with data {data} does not include errors list")
             self.assertEqual(2, len(r.context["errors"]), f"Empty login with data {data} does not produce 2 errors for empty fields")
 
     def test_successfulLogin(self):
-        r = self.client.post(self.route, {"email": self.email, "password": self.password}, follow=True)
+        r = self.client.post(self.route, {"email": self.email, "password": self.password})
         self.assertEqual(302, r.status_code, "Successful login does not load with status code 302")
-        self.assertEqual([("/", 302)], r.redirect_chain, "Successful login does not redirect to course dashboard")
+        self.assertIn("Location", r.headers, "Successful login does not redirect")
+        self.assertEqual("/", r.headers["Location"], "Successful login does not redirect to course dashboard")
         self.assertIn("account", self.client.session, "Successful login does not add account to session")
         self.assertEqual(self.account.id, self.client.session["account"], "Successful login adds wrong account to session")
 
@@ -87,6 +89,7 @@ class LoginTest(TestCase):
             self.assertEqual([], r.redirect_chain, f"Failed login with data {data} redirects to another page")
             self.assertNotIn("account", self.client.session, f"Failed login {data} adds account to session")
             self.assertIsNotNone(r.context, f"Failed login with data {data} does not render template")
+            self.assertIn("errors", r.context, f"Failed login with data {data} does not include errors list")
             self.assertEqual(1, len(r.context["errors"]), f"Failed login with data {data} does not produce 1 error for failed login")
             
             error = r.context["errors"][0]
