@@ -28,3 +28,10 @@ class LoginView(View):
             pass
 
         return render(request, "login.html", {"errors": ["Wrong email or password!"]}, status=401)
+
+class LogoutView(View):
+    def get(self, request):
+        pass
+
+    def post(self, request):
+        pass
