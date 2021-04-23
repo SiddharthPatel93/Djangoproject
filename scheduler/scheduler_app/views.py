@@ -9,9 +9,9 @@ def login(request):
     errors = []
     
     if not (email := request.POST.get("email", "")):
-        errors.append("Email is empty!")
+        errors.append("Please enter an email!")
     if not (password := request.POST.get("password", "")):
-        errors.append("Password is empty!")
+        errors.append("Please enter a password!")
 
     if errors:
         return render(request, "login.html", {"errors": errors}, status=400)
