@@ -31,7 +31,10 @@ class LoginView(View):
 
 class LogoutView(View):
     def get(self, request):
-        pass
+        return render(request, "back.html", status=405)
 
     def post(self, request):
-        pass
+        if "account" in request.session:
+            del request.session["account"]
+        
+        return redirect("/login/")
