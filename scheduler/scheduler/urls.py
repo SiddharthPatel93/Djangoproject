@@ -20,5 +20,5 @@ from scheduler_app import views # type: ignore
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', views.login),
+    path('login/', views.LoginView.as_view()),
 ]
