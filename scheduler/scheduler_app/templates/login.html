@@ -5,8 +5,7 @@
 {% block main %}
     <div class="container d-flex align-items-center vh-100">
         <div class="row flex-fill">
-            <div class="col-sm"></div>
-            <form method="POST" class="col-sm">
+            <form method="POST" class="col-sm-4 mx-auto">
                 {% csrf_token %}
     
                 <div class="form-group mb-3">
@@ -29,7 +28,6 @@
     
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
-            <div class="col-sm"></div>
         </div>
     </div>
 {% endblock %}

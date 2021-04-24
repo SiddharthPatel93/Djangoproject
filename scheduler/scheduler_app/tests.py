@@ -97,3 +97,29 @@ class LoginTest(TestCase):
                 self.assertEqual(previous_error, error, "Errors for wrong username and wrong password are different")
             else:
                 previous_error = error
+
+class LogoutView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route = "/logout/"
+    
+    def test_wrongMethod(self):
+        r = self.client.get(self.route)
+        self.assertEqual(405, r.status_code, "Making logout GET request does not load with status code 405")
+        self.assertIn(b"history.back()", r.content, "Making logout GET request does not redirect user to previous page")
+    
+    def perform_logout(self):
+        return self.client.post(self.route, follow=True)
+
+    def test_loggedIn(self):
+        logged_out = self.perform_logout()
+        # https://docs.djangoproject.com/en/3.2/topics/testing/tools/#persistent-state
+        s = self.client.session
+        s["account"] = 1
+        s.save()
+        logged_in = self.perform_logout()
+        
+        self.assertLess(0, len(logged_in.redirect_chain), "Logout does not redirect user")
+        self.assertEqual(logged_in.redirect_chain, logged_out.redirect_chain,
+            "Logout does not produce equal redirects for logged-in and logged-out accounts")
+        self.assertNotIn("account", self.client.session, "Logout does not erase session account")

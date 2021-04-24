@@ -28,3 +28,13 @@ class LoginView(View):
             pass
 
         return render(request, "login.html", {"errors": ["Wrong email or password!"]}, status=401)
+
+class LogoutView(View):
+    def get(self, request):
+        return render(request, "back.html", status=405)
+
+    def post(self, request):
+        if "account" in request.session:
+            del request.session["account"]
+        
+        return redirect("/login/")
