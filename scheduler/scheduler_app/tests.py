@@ -1,7 +1,4 @@
-from unittest.mock import patch
-
 from django.test import Client, TestCase
-from passlib.hash import argon2
 
 from .models import Account, Course, Section
 
