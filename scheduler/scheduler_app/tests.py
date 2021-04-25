@@ -1,5 +1,6 @@
 from django.test import Client, TestCase
 
+from scheduler.classes import users
 from .models import Account, Course, Section
 
 # Models
@@ -105,3 +106,58 @@ class LogoutView(TestCase):
         self.assertEqual(logged_in.redirect_chain, logged_out.redirect_chain,
             "Logout does not produce equal redirects for logged-in and logged-out accounts")
         self.assertNotIn("account", self.client.session, "Logout does not erase session account")
+
+class UsersView(TestCase):
+    def test_listUsers(self):
+        """
+        Check if all users are being populated in the view.
+        Setup function not included since this is the only case with users I can think of.
+
+        You can add users here: http://127.0.0.1:8000/admin/scheduler_app/account/add/
+
+        Check:
+        - Permissions (see lines 99-102 for how to set account manually. check if it fails with nonexistent account #)
+        """
+
+class DeleteView(TestCase):
+    def setUp(self):
+        """Create test accounts and client."""
+    
+    def test_deleteUserUnit(self):
+        """
+        Test users.perform_delete.
+
+        Check:
+        - If account exists
+        """
+    
+    def test_deleteExistentUser(self):
+        """
+        Test if existent user gets deleted right with the view.
+
+        Check:
+        - Permissions
+        - Lack of error message
+        - Redirect
+        - User actually deleted
+        """
+    
+    def test_deleteNonexistentUser(self):
+        """
+        Test if nonexistent user fails to get deleted with the view.
+        Use your discretion with implementing these last two.
+        It is possible I am being anal with all possible cases.
+
+        Check:
+        - Permissions
+        - Error message
+        - Redirect
+        - No extraneous deletion taking place
+        """
+    
+    def test_deleteOwnUser(self):
+        """
+        Test if the user deleting a user can't delete themself with the view.
+
+        Check same qualities as last one.
+        """
