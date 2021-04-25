@@ -1,6 +1,7 @@
+from django.forms.models import model_to_dict
 from django.test import Client, TestCase
 
-from scheduler.classes import users
+from .classes import users
 from .models import Account, Course, Section
 
 # Models
@@ -32,10 +33,9 @@ class LoginTest(TestCase):
         self.password = "test"
         self.account = Account(
             email=self.email,
+            password=self.password,
             role=Account.Role.SUPERVISOR,
         )
-        self.account.set_password(self.password)
-        self.account.save()
     
     def test_loadLogin(self):
         r = self.client.get(self.route, follow=True)
@@ -161,3 +161,106 @@ class DeleteView(TestCase):
 
         Check same qualities as last one.
         """
+
+class UserEditView(TestCase):
+    def login(self, account):
+        s = self.client.session
+        s["account"] = account.id
+        s.save()
+    
+    def setUp(self):
+        self.client = Client()
+        self.route = "/users/edit"
+
+        self.user = Account.objects.create(
+            name="TA",
+            role=Account.Role.TA,
+            email="ta@ta.ta",
+            password="TA",
+            phone="TA",
+            address="TA",
+            office_hours="TA",
+        )
+        self.user_route = f"{self.route}/{self.user.id}/"
+        self.supervisor = Account.objects.create(
+            name="Supervisor",
+            role=Account.Role.SUPERVISOR,
+            email="supervisor@supervisor.supervisor",
+            password="supervisor",
+            phone="supervisor",
+            address="supervisor",
+            office_hours="supervisor",
+        )
+        self.supervisor_route = f"{self.route}/{self.supervisor.id}/"
+
+        self.login(self.supervisor)
+    
+    def test_unitEditsUser(self):
+        data = {
+            "name": "name",
+            "role": Account.Role.INSTRUCTOR,
+            "email": "email@email.email",
+            "password": "password",
+            "phone": "phone",
+            "address": "address",
+            "office_hours": "office_hours"
+        }
+        good_edit = users.perform_edit(self.supervisor, self.user, data)
+        self.assertEqual(0, len(good_edit), "Making correct edit to user produces errors")
+        
+        for key, value in data.items():
+            self.assertEqual(value, self.user[key], f"User edit function does not correctly change key {key}")
+    
+    def test_unitValidatesFields(self):
+        role_edit = users.perform_edit(self.supervisor, self.supervisor, {
+            "role": Account.Role.INSTRUCTOR,
+        })
+        self.assertEqual(1, len(role_edit), f"User edit function does not block supervisor editing own role")
+
+        email_edit = users.perform_edit(self.supervisor, self.user, {
+            "email": "bad_email",
+        })
+        self.assertEqual(1, len(email_edit), f"User edit function does not validate email field")
+    
+    def test_unitPermissions(self):
+        edit = users.perform_edit(self.user, self.supervisor, {
+            "name": "name"
+        })
+        self.assertEqual(1, len(edit), "User edit function does not block user editing other accounts")
+    
+    def test_nonexistentUser(self):
+        r = self.client.get(f"{self.route}/999/")
+        self.assertEqual(404, r.status_code, "User edit page of nonexistent user does not load with 404 status code")
+    
+    def test_userPermissions(self):
+        self.login(self.user)
+        r = self.client.get(self.supervisor_route)
+        self.assertEqual(403, r.status_code, "User edit page of any user other than currently logged-in unprivileged user does not load with 403 status code")
+    
+    def test_existentUser(self):
+        r = self.client.get(self.user_route)
+        self.assertEqual(200, r.status_code, "User edit page of existent user does not load with status code 200")
+        for key, value in model_to_dict(self.user).items():
+            self.assertEqual(value, r.context[key], f"User edit page does not show field {key}")
+
+    def test_roleVisibility(self):
+        r = self.client.get(self.supervisor_route)
+        self.assertNotIn("role", r.context, "User edit page for logged-in supervisor shows role selector")
+
+        self.login(self.user)
+        r = self.client.get(self.user_route)
+        self.assertNotIn("role", r.context, "User edit page for logged-in user shows role selector")
+    
+    def test_editUser(self):
+        data = {
+            "name": "name",
+            "email": "email@email.email",
+            "password": "password",
+            "phone": "phone",
+            "address": "address",
+            "office_hours": "office_hours",
+        }
+        r = self.client.post(self.user_route, data)
+
+        for key, value in data:
+            self.assertEqual(value, r.context[key], f"User edit page does not change field {key}")

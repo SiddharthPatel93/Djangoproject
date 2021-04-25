@@ -47,3 +47,10 @@ class DeleteUserView(View):
         Attempt to delete the specified user.
         Redirect to /users/ after, potentially with error.
         """
+
+class EditUserView(View):
+    def get(self, request, account=0):
+        pass
+
+    def post(self, request, account=0):
+        pass
