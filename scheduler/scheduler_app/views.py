@@ -19,11 +19,9 @@ class LoginView(View):
             return render(request, "login.html", {"errors": errors}, status=400)
 
         try:
-            a = Account.objects.get(email=email)
-
-            if a.check_password(password):
-                request.session["account"] = a.id
-                return redirect("/")
+            a = Account.objects.get(email=email, password=password)
+            request.session["account"] = a.id
+            return redirect("/")
         except Account.DoesNotExist:
             pass
 
@@ -38,3 +36,14 @@ class LogoutView(View):
             del request.session["account"]
         
         return redirect("/login/")
+
+class ViewUsersView(View):
+    def get(self, request):
+        """Render template of all users as a list."""
+
+class DeleteUserView(View):
+    def post(self, request, account: int):
+        """
+        Attempt to delete the specified user.
+        Redirect to /users/ after, potentially with error.
+        """

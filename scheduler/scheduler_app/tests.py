@@ -1,8 +1,6 @@
-from unittest.mock import patch
-
 from django.test import Client, TestCase
-from passlib.hash import argon2
 
+from scheduler.classes import users
 from .models import Account, Course, Section
 
 # Models
@@ -12,21 +10,6 @@ class AccountTest(TestCase):
         name = "Jimothy"
         a = Account(name=name)
         self.assertEqual(name, a.__str__(), "Account name does not equal entered name")
-
-    def test_checkPassword(self):
-        a = Account(password="$argon2id$v=19$m=102400,t=2,p=8$YSwlBOCc8z5HKAUAAIBw7g$YwFCp+9Vdrv+v6Dxd2FY7Q")
-        self.assertTrue(a.check_password("right"), "Account says right password is wrong")
-        self.assertFalse(a.check_password("wrong"), "Account says wrong password is right")
-    
-    def test_setPassword(self):
-        a = Account()
-
-        real_using = argon2.using
-        with patch("passlib.hash.argon2.using", lambda: real_using(salt=b"himalayan")):
-            a.set_password("right")
-        
-        self.assertEqual("$argon2id$v=19$m=102400,t=2,p=8$aGltYWxheWFu$1ah3MW6jG4JC7EvDBQD+hg", \
-            a.password, "Account does not set password correctly")
 
 class CourseTest(TestCase):
     def test_matchName(self):
@@ -123,3 +106,58 @@ class LogoutView(TestCase):
         self.assertEqual(logged_in.redirect_chain, logged_out.redirect_chain,
             "Logout does not produce equal redirects for logged-in and logged-out accounts")
         self.assertNotIn("account", self.client.session, "Logout does not erase session account")
+
+class UsersView(TestCase):
+    def test_listUsers(self):
+        """
+        Check if all users are being populated in the view.
+        Setup function not included since this is the only case with users I can think of.
+
+        You can add users here: http://127.0.0.1:8000/admin/scheduler_app/account/add/
+
+        Check:
+        - Permissions (see lines 99-102 for how to set account manually. check if it fails with nonexistent account #)
+        """
+
+class DeleteView(TestCase):
+    def setUp(self):
+        """Create test accounts and client."""
+    
+    def test_deleteUserUnit(self):
+        """
+        Test users.perform_delete.
+
+        Check:
+        - If account exists
+        """
+    
+    def test_deleteExistentUser(self):
+        """
+        Test if existent user gets deleted right with the view.
+
+        Check:
+        - Permissions
+        - Lack of error message
+        - Redirect
+        - User actually deleted
+        """
+    
+    def test_deleteNonexistentUser(self):
+        """
+        Test if nonexistent user fails to get deleted with the view.
+        Use your discretion with implementing these last two.
+        It is possible I am being anal with all possible cases.
+
+        Check:
+        - Permissions
+        - Error message
+        - Redirect
+        - No extraneous deletion taking place
+        """
+    
+    def test_deleteOwnUser(self):
+        """
+        Test if the user deleting a user can't delete themself with the view.
+
+        Check same qualities as last one.
+        """
