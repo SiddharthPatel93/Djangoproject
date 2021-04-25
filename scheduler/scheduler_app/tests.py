@@ -222,12 +222,6 @@ class UserEditView(TestCase):
         })
         self.assertEqual(1, len(email_edit), f"User edit function does not validate email field")
     
-    def test_unitPermissions(self):
-        edit = users.perform_edit(self.user, self.supervisor, {
-            "name": "name"
-        })
-        self.assertEqual(1, len(edit), "User edit function does not block user editing other accounts")
-    
     def test_login(self):
         r = self.client.get(self.user_route, follow=True)
         self.assertEqual(["/login/", 302], r.redirect_chain, "Logged-out user edit page does not redirect to login")
