@@ -229,8 +229,8 @@ class UserEditView(TestCase):
         self.assertEqual(1, len(edit), "User edit function does not block user editing other accounts")
     
     def test_login(self):
-        r = self.client.get(self.user_route)
-        self.assertEqual(403, r.status_code, "User edit page is accessible to logged-out user")
+        r = self.client.get(self.user_route, follow=True)
+        self.assertEqual(["/login/", 302], r.redirect_chain, "Logged-out user edit page does not redirect to login")
     
     def test_nonexistentUser(self):
         r = self.client.get(f"{self.route}/999/")
