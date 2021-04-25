@@ -12,8 +12,6 @@ class Account(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
     role = models.IntegerField(choices=Role.choices)
     email = models.EmailField()
-    # Argon2id password hash. Security is important even for school projects
-    # More info: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
     password = models.CharField(max_length=MAX_LENGTH)
     phone = models.CharField(max_length=MAX_LENGTH)
     address = models.CharField(max_length=MAX_LENGTH)
@@ -21,12 +19,6 @@ class Account(models.Model):
 
     def __str__(self):
         return self.name
-    
-    def check_password(self, password: str) -> bool:
-        return argon2.verify(password, self.password)
-
-    def set_password(self, password: str):
-        self.password = argon2.using().hash(password)
 
 class Course(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
