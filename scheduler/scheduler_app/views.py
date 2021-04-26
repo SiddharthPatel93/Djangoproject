@@ -86,13 +86,33 @@ class EditUserView(View):
         
         errors = users.perform_edit(requester, account, request.POST)
 
-        if not errors:
-            account.save()
-
         data = model_to_dict(account)
         if account.id == requester.id and "role" in data:
             del data["role"]
         data["errors"] = errors
         
         return render(request, "user_edit.html", {"roles": Account.Role.choices, "updated": len(errors) == 0, **data}, status=200 if not errors else 401)
+
+class CreateUserView(View):
+    def get(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
         
+        requester = Account.objects.get(pk=request.session["account"])
+        if requester.role != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
+        
+        return render(request, "user_create.html", {"roles": Account.Role.choices})
+
+    def post(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+        if requester.role != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
+
+        if (errors := users.perform_create(request.POST)):
+            return render(request, "user_create.html", {"errors": errors}, status=401)
+        else:
+            return redirect("/users/?user_created=true")
