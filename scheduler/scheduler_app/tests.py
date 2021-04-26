@@ -407,3 +407,12 @@ class ViewCoursesTest(TestCase):
         self.user = Account.objects.create(role=Account.Role.TA)
         CourseMembership.objects.create(account=self.user, course=self.accessible_course)
         self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_unitUserAccess(self):
+        user_courses = courses.get_courses(self.user)
+        self.assertEqual([self.accessible_course], user_courses, "Get courses function does not return correct courses for user")
+    
+    def test_unitSupervisorAccess(self):
+        supervisor_courses = courses.get_courses(self.supervisor)
+        self.assertIn(self.accessible_course, supervisor_courses, "Get courses function does not include accessible course for supervisor")
+        self.assertIn(self.inaccessible_course, supervisor_courses, "Get courses function does nnot include inaccessible course for supervisor")
