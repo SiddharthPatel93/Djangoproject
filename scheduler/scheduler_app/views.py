@@ -69,7 +69,7 @@ class EditUserView(View):
         if account.id == requester.id and "role" in data:
             del data["role"]
         
-        return render(request, "user_edit.html", data)
+        return render(request, "user_edit.html", {"roles": Account.Role.choices, **data})
 
     def post(self, request, account=0):
         if "account" not in request.session:
@@ -94,5 +94,5 @@ class EditUserView(View):
             del data["role"]
         data["errors"] = errors
         
-        return render(request, "user_edit.html", data, status=200 if not errors else 401)
+        return render(request, "user_edit.html", {"roles": Account.Role.choices, "updated": len(errors) == 0, **data}, status=200 if not errors else 401)
         

@@ -276,6 +276,7 @@ class UserEditView(TestCase):
         self.assertEqual(200, r.status_code, "User cannot change own info")
         for field, value in supervisor_info.items():
             self.assertEqual(value, r.context[field], f"Field {field} is not changed when editing own info as user")
+        self.assertTrue(r.context["updated"], "Updated message not shown to user")
         r = self.client.post(self.supervisor_route, supervisor_info)
         self.assertEqual(403, r.status_code, "User can change info of supervisor")
 
