@@ -162,7 +162,7 @@ class DeleteView(TestCase):
         Check same qualities as last one.
         """
 
-class UserEditView(TestCase):
+class UserEditTest(TestCase):
     def login(self, account):
         s = self.client.session
         s["account"] = account.id
@@ -294,3 +294,52 @@ class UserEditView(TestCase):
         self.assertEqual(200, r.status_code, "Supervisor cannot change own info")
         for field, value in user_info.items():
             self.assertEqual(value, r.context[field], f"Field {field} is not changed when editing own info as supervisor")
+
+class CreateUserTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.supervisor = Account.objects.create(
+            email="a@a.com",
+            role=Account.Role.SUPERVISOR,
+        )
+    
+    def test_unitMissingFields(self):
+        errors = users.perform_create({})
+        self.assertEqual(4, len(errors), "User create function does not return errors for missing fields")
+    
+    def test_unitValidateEmail(self):
+        user_details = {
+            "name": "user",
+            "role": Account.Role.TA,
+            "email": "bad",
+            "password": "password",
+        }
+        errors = users.perform_create(user_details)
+        self.assertEqual(1, len(errors), "User create function does not validate format of email")
+        errors = users.perform_create({"email": "a@a.com", **user_details})
+        self.assertEqual(1, len(errors), "User create function does not validate availability of email")
+    
+    def test_unitCreateUser(self):
+        user_details = {
+            "name": "name",
+            "role": Account.Role.TA,
+            "email": "a@a.com",
+            "password": "password",
+        }
+        errors = users.perform_create(user_details)
+        self.assertEqual(0, len(errors), "User create function produces errors when ignoring optional fields")
+        account = Account.objects.get(email=user_details["email"])
+        self.assertIsNotNone(account, "User create function does not create user")
+        
+        user_details = {
+            "email": "b@b.com",
+            "phone": "phone",
+            "address": "address",
+            "office_hours": "office_hours",
+            **user_details,
+        }
+        errors = users.perform_create(user_details)
+        account = Account.objects.get(email=user_details["email"])
+        data = model_to_dict(account)
+        for field, value in user_details.items():
+            self.assertEqual(value, data[field], f"User create function does not assign field {field}")

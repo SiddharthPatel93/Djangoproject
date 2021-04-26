@@ -95,4 +95,10 @@ class EditUserView(View):
         data["errors"] = errors
         
         return render(request, "user_edit.html", {"roles": Account.Role.choices, "updated": len(errors) == 0, **data}, status=200 if not errors else 401)
-        
+
+class CreateUserView(View):
+    def get(self, request):
+        pass
+
+    def post(self, request):
+        pass

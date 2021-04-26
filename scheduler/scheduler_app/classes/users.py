@@ -1,5 +1,8 @@
 from ..models import Account
 
+def perform_create(details: dict) -> list[str]:
+    pass
+
 def perform_delete(account: int) -> bool:
     """
     Attempt to delete a user.
