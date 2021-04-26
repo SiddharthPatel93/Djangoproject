@@ -8,7 +8,10 @@ from .models import Account
 
 class LoginView(View):
     def get(self, request):
-        return render(request, "login.html")
+        if "account" in request.session:
+            return redirect("/")
+        
+        return render(request, "login.html", {"nav": True})
     
     def post(self, request):
         errors = []
@@ -26,9 +29,7 @@ class LoginView(View):
             request.session["account"] = a.id
             return redirect("/")
         except Account.DoesNotExist:
-            pass
-
-        return render(request, "login.html", {"errors": ["Wrong email or password!"]}, status=401)
+            return render(request, "login.html", {"nav": True, "errors": ["Wrong email or password!"]}, status=401)
 
 class LogoutView(View):
     def get(self, request):

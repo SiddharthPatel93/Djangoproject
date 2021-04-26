@@ -38,6 +38,11 @@ class LoginTest(TestCase):
             password=self.password,
             role=Account.Role.SUPERVISOR,
         )
+
+    def login(self, account):
+        s = self.client.session
+        s["account"] = account.id
+        s.save()
     
     def test_loadLogin(self):
         r = self.client.get(self.route, follow=True)
@@ -46,6 +51,10 @@ class LoginTest(TestCase):
         self.assertNotIn("account", self.client.session, "Login page adds account to session")
         self.assertIsNotNone(r.context, "Login page does not render template")
         self.assertNotIn("errors", r.context, "Login page includes errors list")
+
+        self.login(self.account)
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual([("/", 302)], r.redirect_chain, "Login page does not redirect to dashboard when logged in")
     
     def test_emptyLogin(self):
         for data in [{}, {"email": "", "password": ""}]:

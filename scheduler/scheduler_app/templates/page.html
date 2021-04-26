@@ -13,6 +13,11 @@
     <title>TA Scheduler - {% block title %}{% endblock %}</title>
 </head>
 <body>
+    <!-- Navbar -->
+    {% if not nav %}
+        {% include "nav.html" %}
+    {% endif %}
+
     <!-- Content -->
     <main>
         {% block main %}
