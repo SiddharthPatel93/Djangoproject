@@ -3,8 +3,8 @@ from typing import Union
 from django.forms.models import model_to_dict
 from django.test import Client, TestCase
 
-from .classes import users
-from .models import Account, Course, Section
+from .classes import courses, users
+from .models import Account, Course, CourseMembership, Section
 
 # Models
 
@@ -397,3 +397,13 @@ class CreateUserTest(TestCase):
         })
         self.assertEqual(302, r.status_code, "Successful user creation does not load with status code 302")
         self.assertEqual("/users/?user_created=true", r.headers["Location"], "Successful user creation does not redirect to users page with flag set")
+
+class ViewCoursesTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.accessible_course = Course.objects.create(name="CS 361")
+        self.inaccessible_course = Course.objects.create(name="CS -666")
+        self.user = Account.objects.create(role=Account.Role.TA)
+        CourseMembership.objects.create(account=self.user, course=self.accessible_course)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)

@@ -26,4 +26,5 @@ urlpatterns = [
     path('users/create/', views.CreateUserView.as_view()),
     path('users/delete/<int:account>/', views.DeleteUserView.as_view()),
     path('users/edit/<int:account>/', views.EditUserView.as_view()),
+    path('courses/', views.ViewCoursesView.as_view()),
 ]

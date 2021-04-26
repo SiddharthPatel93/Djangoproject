@@ -116,3 +116,10 @@ class CreateUserView(View):
             return render(request, "user_create.html", {"errors": errors}, status=401)
         else:
             return redirect("/users/?user_created=true")
+
+class ViewCoursesView(View):
+    def get(self, request):
+        pass
+
+    def post(self, requeset):
+        pass
