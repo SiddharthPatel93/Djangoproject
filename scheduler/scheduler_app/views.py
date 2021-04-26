@@ -125,6 +125,7 @@ class ViewCoursesView(View):
         requester = Account.objects.get(pk=request.session["account"])
 
         return render(request, "courses.html", {
-            "courses": courses.get_courses(requester),
+            "courses": [{ "pk": course.pk, "name": course.name, "members": course.members.count()} \
+                for course in courses.get_courses(requester)],
             "supervisor": requester.role == Account.Role.SUPERVISOR,
         })
