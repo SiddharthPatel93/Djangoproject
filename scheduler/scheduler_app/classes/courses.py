@@ -1,5 +1,11 @@
 from ..models import Account, Course
 
+def get(requester: Account) -> list[Course]:
+    if requester.role == Account.Role.SUPERVISOR:
+        return list(Course.objects.all())
+    
+    return list(requester.courses.all())
+
 def create(name: str) -> list[str]:
     if not name:
         return ["Please enter a name!"]
@@ -8,9 +14,3 @@ def create(name: str) -> list[str]:
     
     Course.objects.create(name=name)
     return []
-
-def get_courses(requester: Account) -> list[Course]:
-    if requester.role == Account.Role.SUPERVISOR:
-        return list(Course.objects.all())
-    
-    return list(requester.courses.all())

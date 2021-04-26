@@ -32,9 +32,6 @@ class LoginView(View):
             return render(request, "login.html", {"nav": True, "errors": ["Wrong email or password!"]}, status=401)
 
 class LogoutView(View):
-    def get(self, request):
-        return render(request, "back.html", status=405)
-
     def post(self, request):
         if "account" in request.session:
             del request.session["account"]
@@ -127,7 +124,7 @@ class ViewCoursesView(View):
 
         return render(request, "courses.html", {
             "courses": [{ "pk": course.pk, "name": course.name, "members": course.members.count()} \
-                for course in courses.get_courses(requester)],
+                for course in courses.get(requester)],
             "supervisor": requester.role == Account.Role.SUPERVISOR,
         })
 

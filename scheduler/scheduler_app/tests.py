@@ -27,6 +27,7 @@ class SectionTest(TestCase):
 
 # Views
 
+# https://docs.djangoproject.com/en/3.2/topics/testing/tools/#persistent-state
 def login(client: Client, account: Account):
     s = client.session
     s["account"] = account.id
@@ -96,24 +97,17 @@ class LogoutView(TestCase):
     def setUp(self):
         self.client = Client()
         self.route = "/logout/"
-    
-    def test_wrongMethod(self):
-        r = self.client.get(self.route)
-        self.assertEqual(405, r.status_code, "Making logout GET request does not load with status code 405")
-        self.assertIn(b"history.back()", r.content, "Making logout GET request does not redirect user to previous page")
+        self.account = Account.objects.create(role=Account.Role.TA)
     
     def perform_logout(self):
         return self.client.post(self.route, follow=True)
 
     def test_loggedIn(self):
         logged_out = self.perform_logout()
-        # https://docs.djangoproject.com/en/3.2/topics/testing/tools/#persistent-state
-        s = self.client.session
-        s["account"] = 1
-        s.save()
+        login(self.client, self.account)
         logged_in = self.perform_logout()
         
-        self.assertLess(0, len(logged_in.redirect_chain), "Logout does not redirect user")
+        self.assertEqual([("/login/", 302)], logged_in.redirect_chain, "Logout page does not redirect user to login page")
         self.assertEqual(logged_in.redirect_chain, logged_out.redirect_chain,
             "Logout does not produce equal redirects for logged-in and logged-out accounts")
         self.assertNotIn("account", self.client.session, "Logout does not erase session account")
@@ -409,11 +403,11 @@ class ViewCoursesTest(TestCase):
         self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
     
     def test_unitUserAccess(self):
-        user_courses = courses.get_courses(self.user)
+        user_courses = courses.get(self.user)
         self.assertEqual([self.accessible_course], user_courses, "Get courses function does not return correct courses for user")
     
     def test_unitSupervisorAccess(self):
-        supervisor_courses = courses.get_courses(self.supervisor)
+        supervisor_courses = courses.get(self.supervisor)
         self.assertIn(self.accessible_course, supervisor_courses, "Get courses function does not include accessible course for supervisor")
         self.assertIn(self.inaccessible_course, supervisor_courses, "Get courses function does nnot include inaccessible course for supervisor")
     
