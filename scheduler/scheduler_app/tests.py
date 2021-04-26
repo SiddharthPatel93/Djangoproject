@@ -456,7 +456,7 @@ class CreateCourseTest(TestCase):
         bad_name = "CS 361"
         errors = courses.create(bad_name)
         self.assertEqual(1, len(errors), "Course creation function fails to check for duplicate name")
-        self.assertEqual(0, self.get_courses(bad_name), "Course creation function creates course with duplicate name")
+        self.assertEqual(1, self.get_courses(bad_name), "Course creation function creates course with duplicate name")
     
     def test_unitCreatesCourse(self):
         name = "New Course"

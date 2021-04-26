@@ -1,7 +1,13 @@
 from ..models import Account, Course
 
 def create(name: str) -> list[str]:
-    pass
+    if not name:
+        return ["Please enter a name!"]
+    elif Course.objects.filter(name=name).exists():
+        return ["Please enter a name not taken by an existing course!"]
+    
+    Course.objects.create(name=name)
+    return []
 
 def get_courses(requester: Account) -> list[Course]:
     if requester.role == Account.Role.SUPERVISOR:
