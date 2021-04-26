@@ -3,7 +3,7 @@ from django.http.response import Http404, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.views import View
 
-from .classes import users
+from .classes import courses, users
 from .models import Account
 
 class LoginView(View):
@@ -119,4 +119,12 @@ class CreateUserView(View):
 
 class ViewCoursesView(View):
     def get(self, request):
-        pass
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+
+        return render(request, "courses.html", {
+            "courses": courses.get_courses(requester),
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+        })
