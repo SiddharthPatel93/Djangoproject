@@ -1,6 +1,7 @@
+from django.forms.models import model_to_dict
 from django.test import Client, TestCase
 
-from scheduler.classes import users
+from .classes import users
 from .models import Account, Course, Section
 
 # Models
@@ -30,12 +31,11 @@ class LoginTest(TestCase):
         self.route = "/login/"
         self.email = "test@example.com"
         self.password = "test"
-        self.account = Account(
+        self.account = Account.objects.create(
             email=self.email,
+            password=self.password,
             role=Account.Role.SUPERVISOR,
         )
-        self.account.set_password(self.password)
-        self.account.save()
     
     def test_loadLogin(self):
         r = self.client.get(self.route, follow=True)
@@ -161,3 +161,136 @@ class DeleteView(TestCase):
 
         Check same qualities as last one.
         """
+
+class UserEditView(TestCase):
+    def login(self, account):
+        s = self.client.session
+        s["account"] = account.id
+        s.save()
+    
+    def setUp(self):
+        self.client = Client()
+        self.route = "/users/edit"
+
+        self.user = Account.objects.create(
+            name="TA",
+            role=Account.Role.TA,
+            email="ta@ta.ta",
+            password="TA",
+            phone="TA",
+            address="TA",
+            office_hours="TA",
+        )
+        self.user_route = f"{self.route}/{self.user.id}/"
+        self.supervisor = Account.objects.create(
+            name="Supervisor",
+            role=Account.Role.SUPERVISOR,
+            email="supervisor@supervisor.supervisor",
+            password="supervisor",
+            phone="supervisor",
+            address="supervisor",
+            office_hours="supervisor",
+        )
+        self.supervisor_route = f"{self.route}/{self.supervisor.id}/"
+    
+    def test_unitEditsUser(self):
+        data = {
+            "name": "name",
+            "role": Account.Role.INSTRUCTOR,
+            "password": "password",
+            "phone": "phone",
+            "address": "address",
+            "office_hours": "office_hours",
+        }
+        good_edit = users.perform_edit(self.supervisor, self.user, data)
+        self.assertEqual(0, len(good_edit), "Making correct edit to user produces errors")
+        
+        user = model_to_dict(self.user)
+        del user["id"]
+        del user["email"]
+        for field, value in data.items():
+            self.assertEqual(value, user[field], f"User edit function does not correctly change field {field}")
+    
+    def test_unitValidatesFields(self):
+        role_edit = users.perform_edit(self.user, self.user, {
+            "role": Account.Role.INSTRUCTOR.value,
+        })
+        self.assertEqual(1, len(role_edit), f"User edit function does not block user from editing own role")
+
+        role_edit = users.perform_edit(self.supervisor, self.supervisor, {
+            "role": Account.Role.INSTRUCTOR.value,
+        })
+        self.assertEqual(1, len(role_edit), "User edit function does not block supervisor from editing own role")
+    
+    def test_login(self):
+        r = self.client.get(self.user_route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Logged-out user is not redirected to login page when accessing user edit page")
+    
+    def test_userPermissions(self):
+        self.login(self.user)
+        r = self.client.get(self.user_route)
+        self.assertEqual(200, r.status_code, "Unprivileged user cannot access own user edit page")
+        r = self.client.get(self.supervisor_route)
+        self.assertEqual(403, r.status_code, "Unprivileged user can access other user edit pages")
+        
+        self.login(self.supervisor)
+        r = self.client.get(self.user_route)
+        self.assertEqual(200, r.status_code, "Privileged user cannot access other user edit pages")
+    
+    def test_accessFields(self):
+        self.login(self.user)
+        r = self.client.get(self.user_route)
+        for field in ["name", "password", "phone", "address", "office_hours"]:
+            self.assertIn(field, r.context, f"Field {field} does not appear in own user edit page as user")
+        self.assertNotIn("role", r.context, "Role appears in user edit page as user")
+
+        self.login(self.supervisor)
+        r = self.client.get(self.user_route)
+        for field in ["name", "role", "password", "phone", "address", "office_hours"]:
+            self.assertIn(field, r.context, f"Field {field} does not appear in other user edit page as supervisor")
+        r = self.client.get(self.supervisor_route)
+        for field in ["name", "password", "phone", "address", "office_hours"]:
+            self.assertIn(field, r.context, f"Field {field} does not appear in own user edit page as supervisor")
+        self.assertNotIn("role", r.context, "Role appears in own user edit page as supervisor")
+    
+    def test_displayErrors(self):
+        self.login(self.user)
+        r = self.client.post(self.user_route, {
+            "role": Account.Role.INSTRUCTOR.value,
+        })
+        self.assertEqual(1, len(r.context["errors"]), "Editing own role does not produce error as user")
+
+        self.login(self.supervisor)
+        r = self.client.post(self.supervisor_route, {
+            "role": Account.Role.INSTRUCTOR.value,
+        })
+        self.assertEqual(1, len(r.context["errors"]), "Editing own role does not produce error as supervisor")
+    
+    def test_changeUserInfo(self):
+        self.login(self.user)
+        supervisor_info = model_to_dict(self.supervisor)
+        del supervisor_info["id"]
+        del supervisor_info["role"]
+        del supervisor_info["email"]
+        r = self.client.post(self.user_route, supervisor_info)
+        self.assertEqual(200, r.status_code, "User cannot change own info")
+        for field, value in supervisor_info.items():
+            self.assertEqual(value, r.context[field], f"Field {field} is not changed when editing own info as user")
+        self.assertTrue(r.context["updated"], "Updated message not shown to user")
+        r = self.client.post(self.supervisor_route, supervisor_info)
+        self.assertEqual(403, r.status_code, "User can change info of supervisor")
+
+        self.login(self.supervisor)
+        supervisor_info["role"] = Account.Role.INSTRUCTOR.value
+        r = self.client.post(self.user_route, supervisor_info)
+        self.assertEqual(200, r.status_code, "Supervisor cannot change user info")
+        for field, value in supervisor_info.items():
+            self.assertEqual(value, r.context[field], f"Field {field} is not changed when editing other user info as supervisor")
+        user_info = model_to_dict(self.user)
+        del user_info["id"]
+        del user_info["role"]
+        del user_info["email"]
+        r = self.client.post(self.supervisor_route, user_info)
+        self.assertEqual(200, r.status_code, "Supervisor cannot change own info")
+        for field, value in user_info.items():
+            self.assertEqual(value, r.context[field], f"Field {field} is not changed when editing own info as supervisor")
