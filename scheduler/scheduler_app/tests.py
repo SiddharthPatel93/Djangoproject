@@ -466,15 +466,21 @@ class CreateCourseTest(TestCase):
     
     def test_needLogin(self):
         r = self.client.get(self.route, follow=True)
-        self.assertEqual([("/login/", 302)], r.redirect_chain, "Course creation page does not redirect to login page when logged out")
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing course creation page does not redirect to login page when logged out")
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing course creation page does not redirect to login page when logged out")
         
         login(self.user)
         r = self.client.get(self.route)
-        self.assertEqual(403, r.status_code, "Course creation page is not forbidden to unprivileged user")
+        self.assertEqual(403, r.status_code, "GETing ccourse creation page is not forbidden to unprivileged user")
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "POSTing course creation page is not forbidden to unprivileged user")
         
         login(self.supervisor)
         r = self.client.get(self.route)
-        self.assertEqual(200, r.status_code, "Course creation is not accessible to supervisor")
+        self.assertEqual(200, r.status_code, "GETing course creation is not accessible to supervisor")
+        r = self.client.post(self.route)
+        self.assertEqual(401, r.status_code, "POSTing course creation is not accessible to supervisor")
     
     def test_errorVisibility(self):
         login(self.client, self.supervisor)
