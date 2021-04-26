@@ -365,15 +365,21 @@ class CreateUserTest(TestCase):
         s["account"] = account.id
         s.save()
     
-    def test_getPage(self):
+    def test_pagePermissions(self):
         r = self.client.get(self.route)
-        self.assertEqual(403, r.status_code, "User create page does not load with status code 403 when logged out")
+        self.assertEqual(403, r.status_code, "GETing user create page does not load with status code 403 when logged out")
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "POSTing user create page does not load with status code 403 when logged out")
         self.login(self.user)
         r = self.client.get(self.route)
-        self.assertEqual(403, r.status_code, "User create page does not load with status code 403 when unprivileged user")
+        self.assertEqual(403, r.status_code, "GETing user create page does not load with status code 403 when unprivileged user")
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "POSTing user create page does not load with status code 403 when unprivileged user")
         self.login(self.supervisor)
         r = self.client.get(self.route)
-        self.assertEqual(200, r.status_code, "User create page does not load with status code 200 when supervisor")
+        self.assertEqual(200, r.status_code, "GETing create page does not load with status code 200 when supervisor")
+        r = self.client.post(self.route)
+        self.assertEqual(401, r.status_code, "POSTing create page does not load with status code 200 when supervisor")
     
     def test_errorVisibility(self):
         r = self.client.post(self.route, {})

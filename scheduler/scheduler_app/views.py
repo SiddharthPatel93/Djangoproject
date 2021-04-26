@@ -95,7 +95,17 @@ class EditUserView(View):
 
 class CreateUserView(View):
     def get(self, request):
-        pass
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+        if requester.role != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
 
     def post(self, request):
-        pass
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+        if requester.role != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
