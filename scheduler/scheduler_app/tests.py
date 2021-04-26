@@ -308,6 +308,9 @@ class CreateUserTest(TestCase):
             role=Account.Role.SUPERVISOR,
         )
     
+    def get_user(self, user_details: dict) -> Account:
+        return Account.objects.get(email=user_details["email"])
+    
     def test_unitMissingFields(self):
         errors = users.perform_create({})
         self.assertEqual(4, len(errors), "User create function does not return errors for missing fields")
@@ -321,8 +324,11 @@ class CreateUserTest(TestCase):
         }
         errors = users.perform_create(user_details)
         self.assertEqual(1, len(errors), "User create function does not validate format of email")
-        errors = users.perform_create({"email": "a@a.com", **user_details})
+        self.assertIsNone(self.get_user(user_details), "User create function creates user with bad email")
+        user_details["email"] = "a@a.com"
+        errors = users.perform_create(user_details)
         self.assertEqual(1, len(errors), "User create function does not validate availability of email")
+        self.assertIsNone(self.get_user(user_details), "User create function creates user with taken email")
     
     def test_unitCreateUser(self):
         user_details = {
@@ -333,7 +339,7 @@ class CreateUserTest(TestCase):
         }
         errors = users.perform_create(user_details)
         self.assertEqual(0, len(errors), "User create function produces errors when ignoring optional fields")
-        account = Account.objects.get(email=user_details["email"])
+        account = self.get_user(user_details)
         self.assertIsNotNone(account, "User create function does not create user")
         
         user_details = {
@@ -344,7 +350,7 @@ class CreateUserTest(TestCase):
             **user_details,
         }
         errors = users.perform_create(user_details)
-        account = Account.objects.get(email=user_details["email"])
+        account = self.get_user(user_details)
         data = model_to_dict(account)
         for field, value in user_details.items():
             self.assertEqual(value, data[field], f"User create function does not assign field {field}")
