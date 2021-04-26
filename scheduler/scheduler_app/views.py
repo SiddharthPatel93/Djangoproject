@@ -102,7 +102,7 @@ class CreateUserView(View):
         if requester.role != Account.Role.SUPERVISOR:
             return HttpResponseForbidden("You are not a supervisor.")
         
-        return render(request, "user_create.html")
+        return render(request, "user_create.html", {"roles": Account.Role.choices})
 
     def post(self, request):
         if "account" not in request.session:

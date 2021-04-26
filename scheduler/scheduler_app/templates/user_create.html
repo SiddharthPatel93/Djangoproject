@@ -3,4 +3,62 @@
 {% block title %}Create User{% endblock %}
 
 {% block main %}
+<div class="container d-flex align-items-center vh-100">
+    <div class="row flex-fill">
+        <form method="POST" class="col-sm-4 mx-auto">
+            {% csrf_token %}
+
+            <h1>Create User</h1>
+    
+            <div class="form-group mb-3">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" name="name" placeholder="Enter name" required>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="role">Role</label>
+                <select class="form-select" name="role" required>
+                    {% for role in roles %}
+                        <option value="{{ role.0 }}"{% if role.0 == 2 %} selected{% endif %}>{{ role.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" name="email" placeholder="Email" required>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" name="password" placeholder="Password">
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="phone">Phone number</label>
+                <input type="text" class="form-control" name="phone" placeholder="Phone number">
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="address">Address</label>
+                <input type="text" class="form-control" name="address" placeholder="Address">
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="office_hours">Office hours</label>
+                <input type="text" class="form-control" name="office_hours" placeholder="Office hours">
+            </div>
+
+            {% if errors %}
+                <ul>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
