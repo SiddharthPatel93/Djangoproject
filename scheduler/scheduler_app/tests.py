@@ -208,7 +208,7 @@ class UserEditTest(TestCase):
             "address": "address",
             "office_hours": "office_hours",
         }
-        good_edit = users.perform_edit(self.supervisor, self.user, data)
+        good_edit = users.edit(self.supervisor, self.user, data)
         self.assertEqual(0, len(good_edit), "Making correct edit to user produces errors")
         
         user = model_to_dict(self.user)
@@ -218,12 +218,12 @@ class UserEditTest(TestCase):
             self.assertEqual(value, user[field], f"User edit function does not correctly change field {field}")
     
     def test_unitValidatesFields(self):
-        role_edit = users.perform_edit(self.user, self.user, {
+        role_edit = users.edit(self.user, self.user, {
             "role": Account.Role.INSTRUCTOR.value,
         })
         self.assertEqual(1, len(role_edit), f"User edit function does not block user from editing own role")
 
-        role_edit = users.perform_edit(self.supervisor, self.supervisor, {
+        role_edit = users.edit(self.supervisor, self.supervisor, {
             "role": Account.Role.INSTRUCTOR.value,
         })
         self.assertEqual(1, len(role_edit), "User edit function does not block supervisor from editing own role")
@@ -326,7 +326,7 @@ class CreateUserTest(TestCase):
             return None
     
     def test_unitMissingFields(self):
-        errors = users.perform_create({})
+        errors = users.create({})
         self.assertEqual(4, len(errors), "User create function does not return errors for missing fields")
     
     def test_unitValidateEmail(self):
@@ -336,11 +336,11 @@ class CreateUserTest(TestCase):
             "email": "bad",
             "password": "password",
         }
-        errors = users.perform_create(user_details)
+        errors = users.create(user_details)
         self.assertEqual(1, len(errors), "User create function does not validate format of email")
         self.assertIsNone(self.get_user(user_details), "User create function creates user with bad email")
         user_details["email"] = "a@a.com"
-        errors = users.perform_create(user_details)
+        errors = users.create(user_details)
         self.assertEqual(1, len(errors), "User create function does not validate availability of email")
         self.assertIsNotNone(self.get_user(user_details), "User create function creates user with taken email")
     
@@ -351,7 +351,7 @@ class CreateUserTest(TestCase):
             "email": "c@c.com",
             "password": "password",
         }
-        errors = users.perform_create(user_details)
+        errors = users.create(user_details)
         self.assertEqual(0, len(errors), "User create function produces errors when ignoring optional fields")
         account = self.get_user(user_details)
         self.assertIsNotNone(account, "User create function does not create user")
@@ -363,7 +363,7 @@ class CreateUserTest(TestCase):
             "address": "address",
             "office_hours": "office_hours",
         }
-        errors = users.perform_create(user_details)
+        errors = users.create(user_details)
         account = self.get_user(user_details)
         data = model_to_dict(account)
         for field, value in user_details.items():
@@ -447,5 +447,34 @@ class ViewCoursesTest(TestCase):
     def test_supervisorAccess(self):
         self.login(self.supervisor)
         r = self.client.get(self.route)
-        self.assertEqual(2, len(r.context["courses"]), "Courses list does not include correct courses for supervisor")
-        self.assertTrue(r.context["supervisor"], "Courses list does not show management tools for supervisor")
+        self.assertEqual(2, len(r.context["courses"]), "Courses list fails to include correct courses for supervisor")
+        self.assertTrue(r.context["supervisor"], "Courses list fails to show management tools for supervisor")
+
+class CreateCourseTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route = "/courses/create/"
+        
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+        self.existing_course = Course.objects.create(name="CS 361")
+    
+    def get_courses(self, name: str) -> int:
+        return Course.objects.filter(name=name).count()
+    
+    def test_unitValidateName(self):
+        bad_name = ""
+        errors = courses.create(bad_name)
+        self.assertEqual(1, len(errors), "Course creation function fails to check for empty name")
+        self.assertEqual(0, self.get_courses(bad_name), f"Course creation function creates course with name {repr(bad_name)}")
+        
+        bad_name = "CS 361"
+        errors = courses.create(bad_name)
+        self.assertEqual(1, len(errors), "Course creation function fails to check for duplicate name")
+        self.assertEqual(0, self.get_courses(bad_name), f"Course creation function creates course with name {repr(bad_name)}")
+    
+    def test_unitCreatesCourse(self):
+        name = "New Course"
+        errors = courses.create(name)
+        self.assertEqual(0, len(errors), "Course creation function outputs error with valid arguments")
+        self.assertLess(0, Course.objects.filter(name=name).count(), "Course creation function fails to create course")

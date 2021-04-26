@@ -85,7 +85,7 @@ class EditUserView(View):
         except Account.DoesNotExist:
             raise Http404("User does not exist")
         
-        errors = users.perform_edit(requester, account, request.POST)
+        errors = users.edit(requester, account, request.POST)
 
         data = model_to_dict(account)
         if account.id == requester.id and "role" in data:
@@ -113,7 +113,7 @@ class CreateUserView(View):
         if requester.role != Account.Role.SUPERVISOR:
             return HttpResponseForbidden("You are not a supervisor.")
 
-        if (errors := users.perform_create(request.POST)):
+        if (errors := users.create(request.POST)):
             return render(request, "user_create.html", {"errors": errors}, status=401)
         else:
             return redirect("/users/?user_created=true")
@@ -130,3 +130,10 @@ class ViewCoursesView(View):
                 for course in courses.get_courses(requester)],
             "supervisor": requester.role == Account.Role.SUPERVISOR,
         })
+
+class CreateCourseView(View):
+    def get(self, request):
+        pass
+
+    def post(self, request):
+        pass
