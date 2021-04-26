@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.forms.models import model_to_dict
 from django.test import Client, TestCase
 
@@ -308,8 +310,11 @@ class CreateUserTest(TestCase):
             role=Account.Role.SUPERVISOR,
         )
     
-    def get_user(self, user_details: dict) -> Account:
-        return Account.objects.get(email=user_details["email"])
+    def get_user(self, user_details: dict) -> Union[Account, None]:
+        try:
+            return Account.objects.get(email=user_details["email"])
+        except (Account.DoesNotExist, Account.MultipleObjectsReturned):
+            return None
     
     def test_unitMissingFields(self):
         errors = users.perform_create({})
@@ -328,13 +333,13 @@ class CreateUserTest(TestCase):
         user_details["email"] = "a@a.com"
         errors = users.perform_create(user_details)
         self.assertEqual(1, len(errors), "User create function does not validate availability of email")
-        self.assertIsNone(self.get_user(user_details), "User create function creates user with taken email")
+        self.assertIsNotNone(self.get_user(user_details), "User create function creates user with taken email")
     
     def test_unitCreateUser(self):
         user_details = {
             "name": "name",
             "role": Account.Role.TA,
-            "email": "a@a.com",
+            "email": "c@c.com",
             "password": "password",
         }
         errors = users.perform_create(user_details)
@@ -343,11 +348,11 @@ class CreateUserTest(TestCase):
         self.assertIsNotNone(account, "User create function does not create user")
         
         user_details = {
-            "email": "b@b.com",
+            **user_details,
+            "email": "d@d.com",
             "phone": "phone",
             "address": "address",
             "office_hours": "office_hours",
-            **user_details,
         }
         errors = users.perform_create(user_details)
         account = self.get_user(user_details)
