@@ -22,6 +22,7 @@ class Account(models.Model):
 
 class Course(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
+    # String through parameter is necessary due to mutual dependency of classes
     members = models.ManyToManyField(Account, through="CourseMembership")
 
     def __str__(self):
@@ -35,7 +36,6 @@ class CourseMembership(models.Model):
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     num = models.IntegerField()
-    # String through parameter is necessary due to mutual dependency of classes
     members = models.ManyToManyField(Account, related_name="sections")
 
     def __str__(self):
