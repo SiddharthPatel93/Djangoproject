@@ -470,13 +470,13 @@ class CreateCourseTest(TestCase):
         r = self.client.post(self.route, follow=True)
         self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing course creation page does not redirect to login page when logged out")
         
-        login(self.user)
+        login(self.client, self.user)
         r = self.client.get(self.route)
         self.assertEqual(403, r.status_code, "GETing ccourse creation page is not forbidden to unprivileged user")
         r = self.client.post(self.route)
         self.assertEqual(403, r.status_code, "POSTing course creation page is not forbidden to unprivileged user")
         
-        login(self.supervisor)
+        login(self.client, self.supervisor)
         r = self.client.get(self.route)
         self.assertEqual(200, r.status_code, "GETing course creation is not accessible to supervisor")
         r = self.client.post(self.route)
@@ -491,5 +491,5 @@ class CreateCourseTest(TestCase):
     def test_courseCreation(self):
         login(self.client, self.supervisor)
         r = self.client.post(self.route, {"name": "CS 395"}, follow=True)
-        self.assertEqual([("/courses/")], r.redirect_chain, "Creating course with valid name fails to redirect to courses page")
-        self.assertEqual(2, r.context["courses"], "Creating course with valid name fails to create course")
+        self.assertEqual([("/courses/?course_created=true", 302)], r.redirect_chain, "Creating course with valid name fails to redirect to courses page")
+        self.assertEqual(2, len(r.context["courses"]), "Creating course with valid name fails to create course")

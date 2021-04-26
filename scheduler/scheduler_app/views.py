@@ -133,7 +133,26 @@ class ViewCoursesView(View):
 
 class CreateCourseView(View):
     def get(self, request):
-        pass
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+        if requester.role != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
+        
+        return render(request, "course_create.html")
 
     def post(self, request):
-        pass
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+        if requester.role != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
+        
+        errors = courses.create(request.POST.get("name", ""))
+
+        if errors:
+            return render(request, "course_create.html", {"errors": errors}, status=401)
+        else:
+            return redirect("/courses/?course_created=true")
