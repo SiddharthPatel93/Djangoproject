@@ -101,6 +101,8 @@ class CreateUserView(View):
         requester = Account.objects.get(pk=request.session["account"])
         if requester.role != Account.Role.SUPERVISOR:
             return HttpResponseForbidden("You are not a supervisor.")
+        
+        return render(request, "user_create.html")
 
     def post(self, request):
         if "account" not in request.session:
@@ -109,3 +111,8 @@ class CreateUserView(View):
         requester = Account.objects.get(pk=request.session["account"])
         if requester.role != Account.Role.SUPERVISOR:
             return HttpResponseForbidden("You are not a supervisor.")
+
+        if (errors := users.perform_create(request.POST)):
+            return render(request, "user_create.html", {"errors": errors}, status=401)
+        else:
+            return redirect("/users/?user_created=true")
