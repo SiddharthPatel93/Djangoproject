@@ -31,7 +31,7 @@ class LoginTest(TestCase):
         self.route = "/login/"
         self.email = "test@example.com"
         self.password = "test"
-        self.account = Account(
+        self.account = Account.objects.create(
             email=self.email,
             password=self.password,
             role=Account.Role.SUPERVISOR,
@@ -192,73 +192,104 @@ class UserEditView(TestCase):
             office_hours="supervisor",
         )
         self.supervisor_route = f"{self.route}/{self.supervisor.id}/"
-
-        self.login(self.supervisor)
     
     def test_unitEditsUser(self):
         data = {
             "name": "name",
             "role": Account.Role.INSTRUCTOR,
-            "email": "email@email.email",
-            "password": "password",
-            "phone": "phone",
-            "address": "address",
-            "office_hours": "office_hours"
-        }
-        good_edit = users.perform_edit(self.supervisor, self.user, data)
-        self.assertEqual(0, len(good_edit), "Making correct edit to user produces errors")
-        
-        for key, value in data.items():
-            self.assertEqual(value, self.user[key], f"User edit function does not correctly change key {key}")
-    
-    def test_unitValidatesFields(self):
-        role_edit = users.perform_edit(self.supervisor, self.supervisor, {
-            "role": Account.Role.INSTRUCTOR,
-        })
-        self.assertEqual(1, len(role_edit), f"User edit function does not block supervisor editing own role")
-
-        email_edit = users.perform_edit(self.supervisor, self.user, {
-            "email": "bad_email",
-        })
-        self.assertEqual(1, len(email_edit), f"User edit function does not validate email field")
-    
-    def test_login(self):
-        r = self.client.get(self.user_route, follow=True)
-        self.assertEqual(["/login/", 302], r.redirect_chain, "Logged-out user edit page does not redirect to login")
-    
-    def test_nonexistentUser(self):
-        r = self.client.get(f"{self.route}/999/")
-        self.assertEqual(404, r.status_code, "User edit page of nonexistent user does not load with 404 status code")
-    
-    def test_userPermissions(self):
-        self.login(self.user)
-        r = self.client.get(self.supervisor_route)
-        self.assertEqual(403, r.status_code, "User edit page of any user other than currently logged-in unprivileged user does not load with 403 status code")
-    
-    def test_existentUser(self):
-        r = self.client.get(self.user_route)
-        self.assertEqual(200, r.status_code, "User edit page of existent user does not load with status code 200")
-        for key, value in model_to_dict(self.user).items():
-            self.assertEqual(value, r.context[key], f"User edit page does not show field {key}")
-
-    def test_roleVisibility(self):
-        r = self.client.get(self.supervisor_route)
-        self.assertNotIn("role", r.context, "User edit page for logged-in supervisor shows role selector")
-
-        self.login(self.user)
-        r = self.client.get(self.user_route)
-        self.assertNotIn("role", r.context, "User edit page for logged-in user shows role selector")
-    
-    def test_editUser(self):
-        data = {
-            "name": "name",
-            "email": "email@email.email",
             "password": "password",
             "phone": "phone",
             "address": "address",
             "office_hours": "office_hours",
         }
-        r = self.client.post(self.user_route, data)
+        good_edit = users.perform_edit(self.supervisor, self.user, data)
+        self.assertEqual(0, len(good_edit), "Making correct edit to user produces errors")
+        
+        user = model_to_dict(self.user)
+        del user["id"]
+        del user["email"]
+        for field, value in data.items():
+            self.assertEqual(value, user[field], f"User edit function does not correctly change field {field}")
+    
+    def test_unitValidatesFields(self):
+        role_edit = users.perform_edit(self.user, self.user, {
+            "role": Account.Role.INSTRUCTOR.value,
+        })
+        self.assertEqual(1, len(role_edit), f"User edit function does not block user from editing own role")
 
-        for key, value in data:
-            self.assertEqual(value, r.context[key], f"User edit page does not change field {key}")
+        role_edit = users.perform_edit(self.supervisor, self.supervisor, {
+            "role": Account.Role.INSTRUCTOR.value,
+        })
+        self.assertEqual(1, len(role_edit), "User edit function does not block supervisor from editing own role")
+    
+    def test_login(self):
+        r = self.client.get(self.user_route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Logged-out user is not redirected to login page when accessing user edit page")
+    
+    def test_userPermissions(self):
+        self.login(self.user)
+        r = self.client.get(self.user_route)
+        self.assertEqual(200, r.status_code, "Unprivileged user cannot access own user edit page")
+        r = self.client.get(self.supervisor_route)
+        self.assertEqual(403, r.status_code, "Unprivileged user can access other user edit pages")
+        
+        self.login(self.supervisor)
+        r = self.client.get(self.user_route)
+        self.assertEqual(200, r.status_code, "Privileged user cannot access other user edit pages")
+    
+    def test_accessFields(self):
+        self.login(self.user)
+        r = self.client.get(self.user_route)
+        for field in ["name", "password", "phone", "address", "office_hours"]:
+            self.assertIn(field, r.context, f"Field {field} does not appear in own user edit page as user")
+        self.assertNotIn("role", r.context, "Role appears in user edit page as user")
+
+        self.login(self.supervisor)
+        r = self.client.get(self.user_route)
+        for field in ["name", "role", "password", "phone", "address", "office_hours"]:
+            self.assertIn(field, r.context, f"Field {field} does not appear in other user edit page as supervisor")
+        r = self.client.get(self.supervisor_route)
+        for field in ["name", "password", "phone", "address", "office_hours"]:
+            self.assertIn(field, r.context, f"Field {field} does not appear in own user edit page as supervisor")
+        self.assertNotIn("role", r.context, "Role appears in own user edit page as supervisor")
+    
+    def test_displayErrors(self):
+        self.login(self.user)
+        r = self.client.post(self.user_route, {
+            "role": Account.Role.INSTRUCTOR.value,
+        })
+        self.assertEqual(1, len(r.context["errors"]), "Editing own role does not produce error as user")
+
+        self.login(self.supervisor)
+        r = self.client.post(self.supervisor_route, {
+            "role": Account.Role.INSTRUCTOR.value,
+        })
+        self.assertEqual(1, len(r.context["errors"]), "Editing own role does not produce error as supervisor")
+    
+    def test_changeUserInfo(self):
+        self.login(self.user)
+        supervisor_info = model_to_dict(self.supervisor)
+        del supervisor_info["id"]
+        del supervisor_info["role"]
+        del supervisor_info["email"]
+        r = self.client.post(self.user_route, supervisor_info)
+        self.assertEqual(200, r.status_code, "User cannot change own info")
+        for field, value in supervisor_info.items():
+            self.assertEqual(value, r.context[field], f"Field {field} is not changed when editing own info as user")
+        r = self.client.post(self.supervisor_route, supervisor_info)
+        self.assertEqual(403, r.status_code, "User can change info of supervisor")
+
+        self.login(self.supervisor)
+        supervisor_info["role"] = Account.Role.INSTRUCTOR.value
+        r = self.client.post(self.user_route, supervisor_info)
+        self.assertEqual(200, r.status_code, "Supervisor cannot change user info")
+        for field, value in supervisor_info.items():
+            self.assertEqual(value, r.context[field], f"Field {field} is not changed when editing other user info as supervisor")
+        user_info = model_to_dict(self.user)
+        del user_info["id"]
+        del user_info["role"]
+        del user_info["email"]
+        r = self.client.post(self.supervisor_route, user_info)
+        self.assertEqual(200, r.status_code, "Supervisor cannot change own info")
+        for field, value in user_info.items():
+            self.assertEqual(value, r.context[field], f"Field {field} is not changed when editing own info as supervisor")

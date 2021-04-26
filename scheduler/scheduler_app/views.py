@@ -1,6 +1,9 @@
+from django.forms.models import model_to_dict
+from django.http.response import Http404, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.views import View
 
+from .classes import users
 from .models import Account
 
 class LoginView(View):
@@ -50,7 +53,46 @@ class DeleteUserView(View):
 
 class EditUserView(View):
     def get(self, request, account=0):
-        pass
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+        if requester.role != Account.Role.SUPERVISOR and account != requester.id:
+            return HttpResponseForbidden("You are not a supervisor.")
+
+        try:
+            account = Account.objects.get(pk=account)
+        except Account.DoesNotExist:
+            raise Http404("User does not exist")
+
+        data = model_to_dict(account)
+        if account.id == requester.id and "role" in data:
+            del data["role"]
+        
+        return render(request, "user_edit.html", data)
 
     def post(self, request, account=0):
-        pass
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+        if requester.role != Account.Role.SUPERVISOR and account != requester.id:
+            return HttpResponseForbidden("You are not a supervisor.")
+
+        try:
+            account = Account.objects.get(pk=account)
+        except Account.DoesNotExist:
+            raise Http404("User does not exist")
+        
+        errors = users.perform_edit(requester, account, request.POST)
+
+        if not errors:
+            account.save()
+
+        data = model_to_dict(account)
+        if account.id == requester.id and "role" in data:
+            del data["role"]
+        data["errors"] = errors
+        
+        return render(request, "user_edit.html", data, status=200 if not errors else 401)
+        
