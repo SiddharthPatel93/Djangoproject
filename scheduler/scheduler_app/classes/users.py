@@ -22,5 +22,8 @@ def perform_edit(requester: Account, account: Account, details: dict) -> list[st
     account.phone = details.get("phone", account.phone)
     account.address = details.get("address", account.address)
     account.office_hours = details.get("office_hours", account.office_hours)
+
+    if not errors:
+        account.save()
     
     return errors

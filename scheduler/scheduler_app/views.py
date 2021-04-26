@@ -86,9 +86,6 @@ class EditUserView(View):
         
         errors = users.perform_edit(requester, account, request.POST)
 
-        if not errors:
-            account.save()
-
         data = model_to_dict(account)
         if account.id == requester.id and "role" in data:
             del data["role"]
