@@ -11,6 +11,10 @@
                     <a class="btn btn-success" href="/courses/create/">New</a>
                 </div>
 
+                {% if request.GET.course_created %}
+                    <h5>Course successfully created!</h5>
+                {% endif %}
+
                 <table class="table table-striped align-middle">
                     <thead>
                         <th scope="col">Name</th>
