@@ -163,11 +163,6 @@ class DeleteView(TestCase):
         """
 
 class UserEditTest(TestCase):
-    def login(self, account):
-        s = self.client.session
-        s["account"] = account.id
-        s.save()
-    
     def setUp(self):
         self.client = Client()
         self.route = "/users/edit"
@@ -221,6 +216,11 @@ class UserEditTest(TestCase):
             "role": Account.Role.INSTRUCTOR.value,
         })
         self.assertEqual(1, len(role_edit), "User edit function does not block supervisor from editing own role")
+
+    def login(self, account):
+        s = self.client.session
+        s["account"] = account.id
+        s.save()
     
     def test_login(self):
         r = self.client.get(self.user_route, follow=True)
@@ -298,8 +298,13 @@ class UserEditTest(TestCase):
 class CreateUserTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.supervisor = Account.objects.create(
+        self.route = "/users/create/",
+        self.user = Account.objects.create(
             email="a@a.com",
+            role=Account.Role.TA,
+        )
+        self.supervisor = Account.objects.create(
+            email="b@b.com",
             role=Account.Role.SUPERVISOR,
         )
     
@@ -343,3 +348,32 @@ class CreateUserTest(TestCase):
         data = model_to_dict(account)
         for field, value in user_details.items():
             self.assertEqual(value, data[field], f"User create function does not assign field {field}")
+
+    def login(self, account):
+        s = self.client.session
+        s["account"] = account.id
+        s.save()
+    
+    def test_getPage(self):
+        r = self.client.get(self.route)
+        self.assertEqual(403, r.status_code, "User create page does not load with status code 403 when logged out")
+        self.login(self.user)
+        r = self.client.get(self.route)
+        self.assertEqual(403, r.status_code, "User create page does not load with status code 403 when unprivileged user")
+        self.login(self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(200, r.status_code, "User create page does not load with status code 200 when supervisor")
+    
+    def test_errorVisibility(self):
+        r = self.client.post(self.route, {})
+        self.assertEqual(401, r.status_code, "User creation with error does not load with status code 401")
+        self.assertLess(0, r.context["errors"], "User create page does not show errors")
+    
+    def test_createUser(self):
+        r = self.client.post(self.route, {
+            "name": "name",
+            "role": Account.Role.SUPERVISOR,
+            "email": "c@c.com",
+            "password": "password",
+        }, follow=True)
+        self.assertEqual([("/users/", 302)], r.redirect_chain, "Successful user creation does not redirect to users page")
