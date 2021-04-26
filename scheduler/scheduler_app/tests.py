@@ -27,6 +27,11 @@ class SectionTest(TestCase):
 
 # Views
 
+def login(client: Client, account: Account):
+    s = client.session
+    s["account"] = account.id
+    s.save()
+
 class LoginTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -38,11 +43,6 @@ class LoginTest(TestCase):
             password=self.password,
             role=Account.Role.SUPERVISOR,
         )
-
-    def login(self, account):
-        s = self.client.session
-        s["account"] = account.id
-        s.save()
     
     def test_loadLogin(self):
         r = self.client.get(self.route, follow=True)
@@ -52,7 +52,7 @@ class LoginTest(TestCase):
         self.assertIsNotNone(r.context, "Login page does not render template")
         self.assertNotIn("errors", r.context, "Login page includes errors list")
 
-        self.login(self.account)
+        login(self.client, self.account)
         r = self.client.get(self.route, follow=True)
         self.assertEqual([("/", 302)], r.redirect_chain, "Login page does not redirect to dashboard when logged in")
     
@@ -227,35 +227,30 @@ class UserEditTest(TestCase):
             "role": Account.Role.INSTRUCTOR.value,
         })
         self.assertEqual(1, len(role_edit), "User edit function does not block supervisor from editing own role")
-
-    def login(self, account):
-        s = self.client.session
-        s["account"] = account.id
-        s.save()
     
     def test_login(self):
         r = self.client.get(self.user_route, follow=True)
         self.assertEqual([("/login/", 302)], r.redirect_chain, "Logged-out user is not redirected to login page when accessing user edit page")
     
     def test_userPermissions(self):
-        self.login(self.user)
+        login(self.client, self.user)
         r = self.client.get(self.user_route)
         self.assertEqual(200, r.status_code, "Unprivileged user cannot access own user edit page")
         r = self.client.get(self.supervisor_route)
         self.assertEqual(403, r.status_code, "Unprivileged user can access other user edit pages")
         
-        self.login(self.supervisor)
+        login(self.client, self.supervisor)
         r = self.client.get(self.user_route)
         self.assertEqual(200, r.status_code, "Privileged user cannot access other user edit pages")
     
     def test_accessFields(self):
-        self.login(self.user)
+        login(self.client, self.user)
         r = self.client.get(self.user_route)
         for field in ["name", "password", "phone", "address", "office_hours"]:
             self.assertIn(field, r.context, f"Field {field} does not appear in own user edit page as user")
         self.assertNotIn("role", r.context, "Role appears in user edit page as user")
 
-        self.login(self.supervisor)
+        login(self.client, self.supervisor)
         r = self.client.get(self.user_route)
         for field in ["name", "role", "password", "phone", "address", "office_hours"]:
             self.assertIn(field, r.context, f"Field {field} does not appear in other user edit page as supervisor")
@@ -265,20 +260,20 @@ class UserEditTest(TestCase):
         self.assertNotIn("role", r.context, "Role appears in own user edit page as supervisor")
     
     def test_displayErrors(self):
-        self.login(self.user)
+        login(self.client, self.user)
         r = self.client.post(self.user_route, {
             "role": Account.Role.INSTRUCTOR.value,
         })
         self.assertEqual(1, len(r.context["errors"]), "Editing own role does not produce error as user")
 
-        self.login(self.supervisor)
+        login(self.client, self.supervisor)
         r = self.client.post(self.supervisor_route, {
             "role": Account.Role.INSTRUCTOR.value,
         })
         self.assertEqual(1, len(r.context["errors"]), "Editing own role does not produce error as supervisor")
     
     def test_changeUserInfo(self):
-        self.login(self.user)
+        login(self.client, self.user)
         supervisor_info = model_to_dict(self.supervisor)
         del supervisor_info["id"]
         del supervisor_info["role"]
@@ -291,7 +286,7 @@ class UserEditTest(TestCase):
         r = self.client.post(self.supervisor_route, supervisor_info)
         self.assertEqual(403, r.status_code, "User can change info of supervisor")
 
-        self.login(self.supervisor)
+        login(self.client, self.supervisor)
         supervisor_info["role"] = Account.Role.INSTRUCTOR.value
         r = self.client.post(self.user_route, supervisor_info)
         self.assertEqual(200, r.status_code, "Supervisor cannot change user info")
@@ -368,36 +363,31 @@ class CreateUserTest(TestCase):
         data = model_to_dict(account)
         for field, value in user_details.items():
             self.assertEqual(value, data[field], f"User create function does not assign field {field}")
-
-    def login(self, account):
-        s = self.client.session
-        s["account"] = account.id
-        s.save()
     
     def test_pagePermissions(self):
         r = self.client.get(self.route, follow=True)
         self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing user create page does not redirect to login page when logged out")
         r = self.client.post(self.route, follow=True)
         self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing user create page does not redirect to login page when logged out")
-        self.login(self.user)
+        login(self.client, self.user)
         r = self.client.get(self.route)
         self.assertEqual(403, r.status_code, "GETing user create page does not load with status code 403 when unprivileged user")
         r = self.client.post(self.route)
         self.assertEqual(403, r.status_code, "POSTing user create page does not load with status code 403 when unprivileged user")
-        self.login(self.supervisor)
+        login(self.client, self.supervisor)
         r = self.client.get(self.route)
         self.assertEqual(200, r.status_code, "GETing create page does not load with status code 200 when supervisor")
         r = self.client.post(self.route)
         self.assertEqual(401, r.status_code, "POSTing create page does not load with status code 401 when supervisor")
     
     def test_errorVisibility(self):
-        self.login(self.supervisor)
+        login(self.client, self.supervisor)
         r = self.client.post(self.route)
         self.assertEqual(401, r.status_code, "User creation with error does not load with status code 401")
         self.assertLess(0, len(r.context["errors"]), "User create page does not show errors")
     
     def test_createUser(self):
-        self.login(self.supervisor)
+        login(self.client, self.supervisor)
         r = self.client.post(self.route, {
             "name": "name",
             "role": Account.Role.SUPERVISOR,
@@ -426,26 +416,21 @@ class ViewCoursesTest(TestCase):
         supervisor_courses = courses.get_courses(self.supervisor)
         self.assertIn(self.accessible_course, supervisor_courses, "Get courses function does not include accessible course for supervisor")
         self.assertIn(self.inaccessible_course, supervisor_courses, "Get courses function does nnot include inaccessible course for supervisor")
-
-    def login(self, account):
-        s = self.client.session
-        s["account"] = account.id
-        s.save()
     
     def test_login(self):
         r = self.client.get(self.route, follow=True)
         self.assertEqual([("/login/", 302)], r.redirect_chain, "Courses list does not redirect to login page when logged out")
-        self.login(self.user)
+        login(self.client, self.user)
         self.assertEqual(200, r.status_code, "Courses list does not load with status code 200 when logged in")
     
     def test_userAccess(self):
-        self.login(self.user)
+        login(self.client, self.user)
         r = self.client.get(self.route)
         self.assertEqual(1, len(r.context["courses"]), "Courses list does not include correct courses for user")
         self.assertFalse(r.context["supervisor"], "Courses list shows management tools for user")
     
     def test_supervisorAccess(self):
-        self.login(self.supervisor)
+        login(self.client, self.supervisor)
         r = self.client.get(self.route)
         self.assertEqual(2, len(r.context["courses"]), "Courses list fails to include correct courses for supervisor")
         self.assertTrue(r.context["supervisor"], "Courses list fails to show management tools for supervisor")
@@ -466,15 +451,39 @@ class CreateCourseTest(TestCase):
         bad_name = ""
         errors = courses.create(bad_name)
         self.assertEqual(1, len(errors), "Course creation function fails to check for empty name")
-        self.assertEqual(0, self.get_courses(bad_name), f"Course creation function creates course with name {repr(bad_name)}")
-        
+        self.assertEqual(0, self.get_courses(bad_name), "Course creation function creates course with blank name")
+
         bad_name = "CS 361"
         errors = courses.create(bad_name)
         self.assertEqual(1, len(errors), "Course creation function fails to check for duplicate name")
-        self.assertEqual(0, self.get_courses(bad_name), f"Course creation function creates course with name {repr(bad_name)}")
+        self.assertEqual(0, self.get_courses(bad_name), "Course creation function creates course with duplicate name")
     
     def test_unitCreatesCourse(self):
         name = "New Course"
         errors = courses.create(name)
         self.assertEqual(0, len(errors), "Course creation function outputs error with valid arguments")
         self.assertLess(0, Course.objects.filter(name=name).count(), "Course creation function fails to create course")
+    
+    def test_needLogin(self):
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Course creation page does not redirect to login page when logged out")
+        
+        login(self.user)
+        r = self.client.get(self.route)
+        self.assertEqual(403, r.status_code, "Course creation page is not forbidden to unprivileged user")
+        
+        login(self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(200, r.status_code, "Course creation is not accessible to supervisor")
+    
+    def test_errorVisibility(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route, {"name": ""})
+        self.assertEqual(401, r.status_code, "Creating course with invalid name fails to load with status code 401")
+        self.assertEqual(1, len(r.context["errors"]), "Creating course with invalid name fails to display errors")
+    
+    def test_courseCreation(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route, {"name": "CS 395"}, follow=True)
+        self.assertEqual([("/courses/")], r.redirect_chain, "Creating course with valid name fails to redirect to courses page")
+        self.assertEqual(2, r.context["courses"], "Creating course with valid name fails to create course")
