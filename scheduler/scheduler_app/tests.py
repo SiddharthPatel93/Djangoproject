@@ -401,6 +401,7 @@ class CreateUserTest(TestCase):
 class ViewCoursesTest(TestCase):
     def setUp(self):
         self.client = Client()
+        self.route = "/courses/"
 
         self.accessible_course = Course.objects.create(name="CS 361")
         self.inaccessible_course = Course.objects.create(name="CS -666")
@@ -416,3 +417,26 @@ class ViewCoursesTest(TestCase):
         supervisor_courses = courses.get_courses(self.supervisor)
         self.assertIn(self.accessible_course, supervisor_courses, "Get courses function does not include accessible course for supervisor")
         self.assertIn(self.inaccessible_course, supervisor_courses, "Get courses function does nnot include inaccessible course for supervisor")
+
+    def login(self, account):
+        s = self.client.session
+        s["account"] = account.id
+        s.save()
+    
+    def test_login(self):
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Courses list does not redirect to login page when logged out")
+        self.login(self.user)
+        self.assertEqual(200, r.status_code, "Courses list does not load with status code 200 when logged in")
+    
+    def test_userAccess(self):
+        self.login(self.user)
+        r = self.client.get(self.route)
+        self.assertEqual(1, len(r.context["courses"]), "Courses list does not include correct courses for user")
+        self.assertFalse(r.context["supervisor"], "Courses list shows management tools for user")
+    
+    def test_supervisorAccess(self):
+        self.login(self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(2, len(r.context["courses"]), "Courses list does not include correct courses for supervisor")
+        self.assertTrue(r.context["supervisor"], "Courses list does not show management tools for supervisor")

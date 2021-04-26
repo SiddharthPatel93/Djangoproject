@@ -120,6 +120,3 @@ class CreateUserView(View):
 class ViewCoursesView(View):
     def get(self, request):
         pass
-
-    def post(self, requeset):
-        pass
