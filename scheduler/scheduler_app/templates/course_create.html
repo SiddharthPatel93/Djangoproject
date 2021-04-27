@@ -1,0 +1,30 @@
+{% extends "page.html" %}
+
+{% block title %}Create Course{% endblock %}
+
+{% block main %}
+    <div class="container">
+        <div class="row">
+            <form method="POST" class="col-sm-4 mx-auto">
+                {% csrf_token %}
+
+                <h1>Create Course</h1>
+        
+                <div class="form-group mb-3">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" name="name" placeholder="Enter name" required>
+                </div>
+
+                {% if errors %}
+                    <ul>
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <button class="btn btn-primary" type="submit">Create</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

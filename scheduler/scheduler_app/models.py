@@ -12,8 +12,6 @@ class Account(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
     role = models.IntegerField(choices=Role.choices)
     email = models.EmailField()
-    # Argon2id password hash. Security is important even for school projects
-    # More info: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
     password = models.CharField(max_length=MAX_LENGTH)
     phone = models.CharField(max_length=MAX_LENGTH)
     address = models.CharField(max_length=MAX_LENGTH)
@@ -22,12 +20,6 @@ class Account(models.Model):
 
     def __str__(self):
         return self.name
-    
-    def check_password(self, password: str) -> bool:
-        return argon2.verify(password, self.password)
-
-    def set_password(self, password: str):
-        self.password = argon2.using().hash(password)
 
     def set_email(self):
         email = self.email
@@ -61,7 +53,8 @@ class Account(models.Model):
 
 class Course(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
-    members = models.ManyToManyField(Account, through="CourseMembership")
+    # String through parameter is necessary due to mutual dependency of classes
+    members = models.ManyToManyField(Account, through="CourseMembership", related_name="courses")
 
     def __str__(self):
         return self.name
@@ -70,12 +63,12 @@ class CourseMembership(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     grader = models.BooleanField(default=False)
+    sections = models.IntegerField(default=1)
 
 class Section(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    num = models.IntegerField()
-    # String through parameter is necessary due to mutual dependency of classes
-    members = models.ManyToManyField(Account, related_name="sections")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="sections")
+    num = models.CharField(max_length=MAX_LENGTH)
+    ta = models.OneToOneField(Account, related_name="ta", null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return str(self.num)

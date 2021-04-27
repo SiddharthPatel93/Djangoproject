@@ -20,5 +20,13 @@ from scheduler_app import views # type: ignore
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', views.login),
+    path('login/', views.LoginView.as_view()),
+    path('logout/', views.LogoutView.as_view()),
+    path('users/', views.ViewUsersView.as_view()),
+    path('users/create/', views.CreateUserView.as_view()),
+    path('users/delete/<int:account>/', views.DeleteUserView.as_view()),
+    path('users/edit/<int:account>/', views.EditUserView.as_view()),
+    path('courses/', views.ViewCoursesView.as_view()),
+    path('courses/create/', views.CreateCourseView.as_view()),
+    path('courses/<int:course>/', views.ViewCourseView.as_view()),
 ]
