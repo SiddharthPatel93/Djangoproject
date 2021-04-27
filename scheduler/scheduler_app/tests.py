@@ -3,7 +3,7 @@ from typing import Union
 from django.forms.models import model_to_dict
 from django.test import Client, TestCase
 
-from .classes import courses, users
+from .classes import courses, sections, users
 from .models import Account, Course, CourseMembership, Section
 
 # Models
@@ -507,18 +507,18 @@ class ViewCourseTest(TestCase):
     
     def test_unitEmptyNum(self):
         num = ""
-        errors = courses.create_section(self.accessible_course, num)
+        errors = sections.create(self.accessible_course, num)
         self.assertEqual(1, len(errors), "Section creation function fails to produce an error when asked to create a section with a blank number")
         self.assertEqual(0, self.get_sections(num), "Section creation function creates a section with a blank number")
     
     def test_unitDuplicateNum(self):
-        errors = courses.create_section(self.accessible_course, self.section.num)
+        errors = sections.create(self.accessible_course, self.section.num)
         self.assertEqual(1, len(errors), "Section creation function fails to produce an error when asked to create a section with a duplicate number")
         self.assertEqual(1, self.get_sections(self.section.num), "Section creation function creates a section with a duplicate number")
     
     def test_unitCreatesSection(self):
         num = "002"
-        errors = courses.create_section(self.accessible_course, num)
+        errors = sections.create(self.accessible_course, num)
         self.assertEqual(0, len(errors), "Section creation function fails to create valid section without errors")
         self.assertEqual(1, self.get_sections(num), "Section creation function fails to create valid section")
     

@@ -3,7 +3,7 @@ from django.http.response import Http404, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.views import View
 
-from .classes import courses, users
+from .classes import courses, sections, users
 from .models import Account, Course
 
 class LoginView(View):
@@ -191,7 +191,7 @@ class ViewCourseView(View):
         if not supervisor:
             return HttpResponseForbidden("You are not a supervisor.")
         
-        errors = courses.create_section(course, request.POST.get("num", ""))
+        errors = sections.create(course, request.POST.get("num", ""))
 
         return render(request, "course.html", {
             "course": course.name,
