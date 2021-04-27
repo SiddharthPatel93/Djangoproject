@@ -3,8 +3,8 @@
 {% block title %}Create User{% endblock %}
 
 {% block main %}
-<div class="container d-flex align-items-center vh-100">
-    <div class="row flex-fill">
+<div class="container">
+    <div class="row">
         <form method="POST" class="col-sm-4 mx-auto">
             {% csrf_token %}
 
@@ -57,7 +57,7 @@
                 </ul>
             {% endif %}
 
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button class="btn btn-primary" type="submit">Create</button>
         </form>
     </div>
 </div>
