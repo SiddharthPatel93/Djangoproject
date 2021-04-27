@@ -491,7 +491,7 @@ class CreateCourseTest(TestCase):
 class ViewCourseTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.route = "/courses/"
+        self.route = "/courses"
 
         self.accessible_course = Course.objects.create(name="CS 361")
         self.accessible_route = f"{self.route}/{self.accessible_course.pk}/"
@@ -523,6 +523,7 @@ class ViewCourseTest(TestCase):
         self.assertEqual(1, self.get_sections(num), "Section creation function fails to create valid section")
     
     def test_nonexistentCourse(self):
+        login(self.client, self.user)
         r = self.client.get(f"{self.route}/999/")
         self.assertEqual(404, r.status_code, "Nonexistent course fails to load with status code 404")
     
@@ -560,11 +561,11 @@ class ViewCourseTest(TestCase):
 
     def test_errorVisibility(self):
         login(self.client, self.supervisor)
-        r = self.client.post(self.accessible_course)
+        r = self.client.post(self.accessible_route)
         self.assertEqual(1, len(r.context["errors"]), "Errors are not visible on course page")
     
     def test_createSection(self):
         login(self.client, self.supervisor)
-        r = self.client.post(self.accessible_course, {"num": "002"})
+        r = self.client.post(self.accessible_route, {"num": "002"})
         self.assertEqual(200, r.status_code, "Course page fails to load with status code 200 after creating valid section")
         self.assertEqual(2, r.context["sections"].count(), "Course page fails to create valid course section")

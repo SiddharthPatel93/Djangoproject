@@ -28,5 +28,5 @@ urlpatterns = [
     path('users/edit/<int:account>/', views.EditUserView.as_view()),
     path('courses/', views.ViewCoursesView.as_view()),
     path('courses/create/', views.CreateCourseView.as_view()),
-    path('courses/<int:account>/', views.ViewCourseView.as_view()),
+    path('courses/<int:course>/', views.ViewCourseView.as_view()),
 ]

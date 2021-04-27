@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render
 from django.views import View
 
 from .classes import courses, users
-from .models import Account
+from .models import Account, Course
 
 class LoginView(View):
     def get(self, request):
@@ -155,8 +155,43 @@ class CreateCourseView(View):
             return redirect("/courses/?course_created=true")
 
 class ViewCourseView(View):
-    def get(self, request, account=0):
-        pass
+    def get(self, request, course=0):
+        if "account" not in request.session:
+            return redirect("/login/")
 
-    def post(self, request, account=0):
-        pass
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+        
+        if requester.role != Account.Role.SUPERVISOR and course not in courses.get(requester):
+            return HttpResponseForbidden("You do not have access to this course.")
+        
+        return render(request, "course.html", {
+            "course": course.name,
+            "sections": course.sections.all(),
+        })
+
+    def post(self, request, course=0):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            return Http404("Course does not exist")
+        
+        requester = Account.objects.get(pk=request.session["account"])
+        
+        if requester.role != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
+        
+        errors = courses.create_section(course, request.POST.get("num", ""))
+
+        return render(request, "course.html", {
+            "course": course.name,
+            "sections": course.sections.all(),
+            "errors": errors,
+        }, status=401 if errors else 200)
