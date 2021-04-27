@@ -37,7 +37,7 @@ class CourseMembership(models.Model):
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     num = models.IntegerField()
-    TA = models.OneToOneField(Account, related_name="TA")
+    TA = models.OneToOneField(Account, related_name="ta", null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return str(self.num)
