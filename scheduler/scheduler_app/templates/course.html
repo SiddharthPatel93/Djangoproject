@@ -9,27 +9,28 @@
             <h1>{{ course.name }}</h1>
             <hr>
 
-            <h3>Create Section</h3>
-            <form method="POST">
-                {% csrf_token %}
-                
-                <div class="form-group mb-3">
-                    <label for="num">Number</label>
-                    <input type="text" class="form-control" name="num" placeholder="Enter number" required>
-                </div>
+            {% if supervisor %}
+                <h3>Create Section</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="form-group mb-3">
+                        <label for="num">Number</label>
+                        <input type="text" class="form-control" name="num" placeholder="Enter number" required>
+                    </div>
 
-                {% if errors %}
-                    <ul>
-                        {% for error in errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
+                    {% if errors %}
+                        <ul>
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
 
-                <button class="btn btn-primary" type="submit">Create</button>
-            </form>
-
-            <hr>
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </form>
+                <hr>
+            {% endif %}
 
             <h3>Sections</h3>
             <table class="table table-striped">
