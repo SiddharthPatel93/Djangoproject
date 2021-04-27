@@ -171,7 +171,7 @@ class ViewCourseView(View):
             return HttpResponseForbidden("You do not have access to this course.")
         
         return render(request, "course.html", {
-            "course": course.name,
+            "course": course,
             "sections": course.sections.all(),
             "supervisor": supervisor,
         })
@@ -194,7 +194,7 @@ class ViewCourseView(View):
         errors = sections.create(course, request.POST.get("num", ""))
 
         return render(request, "course.html", {
-            "course": course.name,
+            "course": course,
             "sections": course.sections.all(),
             "errors": errors,
             "supervisor": supervisor,
