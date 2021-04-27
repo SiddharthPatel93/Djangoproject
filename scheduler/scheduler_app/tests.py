@@ -503,18 +503,18 @@ class ViewCourseTest(TestCase):
         self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
     
     def get_sections(self, num: str) -> int:
-        return Course.objects.filter(num=self.section.num).count()
+        return Section.objects.filter(num=num).count()
     
     def test_unitEmptyNum(self):
         num = ""
         errors = courses.create_section(self.accessible_course, num)
         self.assertEqual(1, len(errors), "Section creation function fails to produce an error when asked to create a section with a blank number")
-        self.assertEqual(1, self.get_sections(num), "Section creation function creates a section with a blank number")
+        self.assertEqual(0, self.get_sections(num), "Section creation function creates a section with a blank number")
     
     def test_unitDuplicateNum(self):
         errors = courses.create_section(self.accessible_course, self.section.num)
         self.assertEqual(1, len(errors), "Section creation function fails to produce an error when asked to create a section with a duplicate number")
-        self.assertEqual(0, self.get_sections(self.section.num), "Section creation function creates a section with a duplicate number")
+        self.assertEqual(1, self.get_sections(self.section.num), "Section creation function creates a section with a duplicate number")
     
     def test_unitCreatesSection(self):
         num = "002"
