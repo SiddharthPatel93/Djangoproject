@@ -14,6 +14,13 @@
                             <li class="navbar-item">
                                 <a class="nav-link" href="/courses/">Courses</a>
                             </li>
+                            <li class="navbar-item">
+                                <form method="POST" action="/logout/" name="logout">
+                                    {% csrf_token %}
+                                    
+                                    <a class="nav-link" href="javascript:document.logout.submit();">Logout</a>
+                                </form>
+                            </li>
                         </ul>
                     </div>
                 </div>
