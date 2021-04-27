@@ -35,7 +35,7 @@ class CourseMembership(models.Model):
 
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    num = models.IntegerField()
+    num = models.CharField(max_length=MAX_LENGTH)
     members = models.ManyToManyField(Account, related_name="sections")
 
     def __str__(self):
