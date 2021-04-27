@@ -30,7 +30,7 @@ class SectionTest(TestCase):
 # https://docs.djangoproject.com/en/3.2/topics/testing/tools/#persistent-state
 def login(client: Client, account: Account):
     s = client.session
-    s["account"] = account.id
+    s["account"] = account.pk
     s.save()
 
 class LoginTest(TestCase):
@@ -73,7 +73,7 @@ class LoginTest(TestCase):
         self.assertIn("Location", r.headers, "Successful login does not redirect")
         self.assertEqual("/", r.headers["Location"], "Successful login does not redirect to course dashboard")
         self.assertIn("account", self.client.session, "Successful login does not add account to session")
-        self.assertEqual(self.account.id, self.client.session["account"], "Successful login adds wrong account to session")
+        self.assertEqual(self.account.pk, self.client.session["account"], "Successful login adds wrong account to session")
 
     def test_failedLogin(self):
         previous_error = ""
@@ -181,7 +181,7 @@ class UserEditTest(TestCase):
             address="TA",
             office_hours="TA",
         )
-        self.user_route = f"{self.route}/{self.user.id}/"
+        self.user_route = f"{self.route}/{self.user.pk}/"
         self.supervisor = Account.objects.create(
             name="Supervisor",
             role=Account.Role.SUPERVISOR,
@@ -191,7 +191,7 @@ class UserEditTest(TestCase):
             address="supervisor",
             office_hours="supervisor",
         )
-        self.supervisor_route = f"{self.route}/{self.supervisor.id}/"
+        self.supervisor_route = f"{self.route}/{self.supervisor.pk}/"
     
     def test_unitEditsUser(self):
         data = {
