@@ -558,7 +558,7 @@ class ViewCourseTest(TestCase):
     def test_loadsCourseData(self):
         login(self.client, self.supervisor)
         r = self.client.get(self.accessible_route)
-        self.assertEqual(self.accessible_course.name, r.context["course"], "Course page fails to load course name")
+        self.assertEqual(self.accessible_course, r.context["course"], "Course page fails to load course info")
         self.assertEqual(1, r.context["sections"].count(), "Course page fails to load course sections")
 
     def test_errorVisibility(self):
