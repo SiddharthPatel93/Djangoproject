@@ -46,7 +46,7 @@ def edit(requester: Account, account: Account, details: dict) -> list[str]:
 
     account.name = details.get("name", account.name)
     if "role" in details:
-        if requester.id != account.id:
+        if requester.pk != account.pk:
             account.role = Account.Role(int(details["role"]))
         else:
             errors.append("A user cannot change their own role")
