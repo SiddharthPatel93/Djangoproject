@@ -26,7 +26,11 @@
                     <tbody>
                         {% for course in courses %}
                             <tr>
-                                <td>{{ course.name }}</td>
+                                <td>
+                                    <a href="/courses/{{ course.pk }}/">
+                                        {{ course.name }}
+                                    </a>
+                                </td>
                                 <td>{{ course.members }}</td>
                                 {% if supervisor %}
                                     <td>
