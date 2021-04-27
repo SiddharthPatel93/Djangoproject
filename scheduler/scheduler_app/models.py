@@ -34,7 +34,7 @@ class CourseMembership(models.Model):
     grader = models.BooleanField(default=False)
 
 class Section(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="sections")
     num = models.CharField(max_length=MAX_LENGTH)
     members = models.ManyToManyField(Account, related_name="sections")
 
