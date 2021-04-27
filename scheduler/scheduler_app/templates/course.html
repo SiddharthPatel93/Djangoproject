@@ -6,7 +6,7 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-4 mx-auto">
-            <h1>{{ course }}</h1>
+            <h1>{{ course.name }}</h1>
             <hr>
 
             <h3>Create Section</h3>
@@ -36,12 +36,23 @@
                 <thead>
                     <tr>
                         <th scope="col">Number</th>
+                        {% if supervisor %}
+                            <th scope="col">Actions</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for section in sections %}
                         <tr>
                             <td>{{ section.num }}</td>
+                            {% if supervisor %}
+                                <td>
+                                    <form method="POST" action="/sections/delete/{{ course.pk }}/" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                                    </form>
+                                </td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
 
