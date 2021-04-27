@@ -153,3 +153,10 @@ class CreateCourseView(View):
             return render(request, "course_create.html", {"errors": errors}, status=401)
         else:
             return redirect("/courses/?course_created=true")
+
+class ViewCourseView(View):
+    def get(self, request):
+        pass
+
+    def post(self, request):
+        pass

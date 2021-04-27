@@ -14,3 +14,6 @@ def create(name: str) -> list[str]:
     
     Course.objects.create(name=name)
     return []
+
+def create_section(course: Course, num: str) -> list[str]:
+    pass

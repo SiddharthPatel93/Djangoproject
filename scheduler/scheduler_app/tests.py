@@ -487,3 +487,35 @@ class CreateCourseTest(TestCase):
         r = self.client.post(self.route, {"name": "CS 395"}, follow=True)
         self.assertEqual([("/courses/?course_created=true", 302)], r.redirect_chain, "Creating course with valid name fails to redirect to courses page")
         self.assertEqual(2, len(r.context["courses"]), "Creating course with valid name fails to create course")
+
+class ViewCourseTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route = "/courses/"
+
+        self.accessible_course = Course.objects.create(name="CS 361")
+        self.section = Section.objects.create(course=self.accessible_course, num="001")
+        self.inaccessible_course = Course.objects.create(name="CS -999")
+        self.user = Account.objects.create(role=Account.Role.TA)
+        CourseMembership.objects.create(account=self.user, course=self.accessible_course)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def get_sections(self, num: str) -> int:
+        return Course.objects.filter(num=self.section.num).count()
+    
+    def test_unitEmptyNum(self):
+        num = ""
+        errors = courses.create_section(self.accessible_course, num)
+        self.assertEqual(1, len(errors), "Section creation function fails to produce an error when asked to create a section with a blank number")
+        self.assertEqual(1, self.get_sections(num), "Section creation function creates a section with a blank number")
+    
+    def test_unitDuplicateNum(self):
+        errors = courses.create_section(self.accessible_course, self.section.num)
+        self.assertEqual(1, len(errors), "Section creation function fails to produce an error when asked to create a section with a duplicate number")
+        self.assertEqual(0, self.get_sections(self.section.num), "Section creation function creates a section with a duplicate number")
+    
+    def test_unitCreatesSection(self):
+        num = "002"
+        errors = courses.create_section(self.accessible_course, num)
+        self.assertEqual(0, len(errors), "Section creation function fails to create valid section without errors")
+        self.assertEqual(1, self.get_sections(num), "Section creation function fails to create valid section")
