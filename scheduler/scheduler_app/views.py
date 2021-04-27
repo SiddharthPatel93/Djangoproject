@@ -165,13 +165,15 @@ class ViewCourseView(View):
             raise Http404("Course does not exist")
         
         requester = Account.objects.get(pk=request.session["account"])
+        supervisor = requester.role == Account.Role.SUPERVISOR
         
-        if requester.role != Account.Role.SUPERVISOR and course not in courses.get(requester):
+        if not supervisor and course not in courses.get(requester):
             return HttpResponseForbidden("You do not have access to this course.")
         
         return render(request, "course.html", {
             "course": course.name,
             "sections": course.sections.all(),
+            "supervisor": supervisor,
         })
 
     def post(self, request, course=0):
@@ -184,8 +186,9 @@ class ViewCourseView(View):
             return Http404("Course does not exist")
         
         requester = Account.objects.get(pk=request.session["account"])
+        supervisor = requester.role == Account.Role.SUPERVISOR
         
-        if requester.role != Account.Role.SUPERVISOR:
+        if not supervisor:
             return HttpResponseForbidden("You are not a supervisor.")
         
         errors = courses.create_section(course, request.POST.get("num", ""))
@@ -194,4 +197,5 @@ class ViewCourseView(View):
             "course": course.name,
             "sections": course.sections.all(),
             "errors": errors,
+            "supervisor": supervisor,
         }, status=401 if errors else 200)
