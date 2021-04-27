@@ -494,8 +494,10 @@ class ViewCourseTest(TestCase):
         self.route = "/courses/"
 
         self.accessible_course = Course.objects.create(name="CS 361")
+        self.accessible_route = f"{self.route}/{self.accessible_course.pk}/"
         self.section = Section.objects.create(course=self.accessible_course, num="001")
         self.inaccessible_course = Course.objects.create(name="CS -999")
+        self.inaccessible_route = f"{self.route}/{self.inaccessible_course.pk}/"
         self.user = Account.objects.create(role=Account.Role.TA)
         CourseMembership.objects.create(account=self.user, course=self.accessible_course)
         self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
@@ -519,3 +521,50 @@ class ViewCourseTest(TestCase):
         errors = courses.create_section(self.accessible_course, num)
         self.assertEqual(0, len(errors), "Section creation function fails to create valid section without errors")
         self.assertEqual(1, self.get_sections(num), "Section creation function fails to create valid section")
+    
+    def test_nonexistentCourse(self):
+        r = self.client.get(f"{self.route}/999/")
+        self.assertEqual(404, r.status_code, "Nonexistent course fails to load with status code 404")
+    
+    def test_needLogin(self):
+        r = self.client.get(self.accessible_route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing course page while logged out fails to redirect to login page")
+        r = self.client.post(self.accessible_route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing course page while logged out fails to redirect to login page")
+
+        login(self.client, self.user)
+        r = self.client.get(self.accessible_route)
+        self.assertEqual(200, r.status_code, "GETing accessible course page fails to load with status code 200 as user")
+        r = self.client.post(self.accessible_route)
+        self.assertEqual(403, r.status_code, "POSTing accessible course page fails to load with status code 403 as user")
+        r = self.client.get(self.inaccessible_route)
+        self.assertEqual(403, r.status_code, "GETing inaccessible course page fails to load with status code 403 as user")
+        r = self.client.post(self.inaccessible_route)
+        self.assertEqual(403, r.status_code, "POSTing inaccessible course page fails to load with status code 403 as user")
+
+        login(self.client, self.supervisor)
+        r = self.client.get(self.accessible_route)
+        self.assertEqual(200, r.status_code, "GETing accessible course page fails to load with status code 200 as supervisor")
+        r = self.client.post(self.accessible_route)
+        self.assertEqual(401, r.status_code, "POSTing accessible course page fails to load with status code 401 as supervisor")
+        r = self.client.get(self.inaccessible_route)
+        self.assertEqual(200, r.status_code, "GETing inaccessible course page fails to load with status code 200 as supervisor")
+        r = self.client.post(self.inaccessible_route)
+        self.assertEqual(401, r.status_code, "POSTing inaccessible course page fails to load with status code 401 as supervisor")
+    
+    def test_loadsCourseData(self):
+        login(self.client, self.supervisor)
+        r = self.client.get(self.accessible_route)
+        self.assertEqual(self.accessible_course.name, r.context["course"], "Course page fails to load course name")
+        self.assertEqual(1, r.context["sections"].count(), "Course page fails to load course sections")
+
+    def test_errorVisibility(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.accessible_course)
+        self.assertEqual(1, len(r.context["errors"]), "Errors are not visible on course page")
+    
+    def test_createSection(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.accessible_course, {"num": "002"})
+        self.assertEqual(200, r.status_code, "Course page fails to load with status code 200 after creating valid section")
+        self.assertEqual(2, r.context["sections"].count(), "Course page fails to create valid course section")

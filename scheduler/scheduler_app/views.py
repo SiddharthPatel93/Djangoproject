@@ -155,8 +155,8 @@ class CreateCourseView(View):
             return redirect("/courses/?course_created=true")
 
 class ViewCourseView(View):
-    def get(self, request):
+    def get(self, request, account=0):
         pass
 
-    def post(self, request):
+    def post(self, request, account=0):
         pass
