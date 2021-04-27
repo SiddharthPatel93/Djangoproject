@@ -1,6 +1,6 @@
 {% extends "page.html" %}
 
-{% block title %}Edit User{% endblock %}
+{% block title %}Edit {% if id == request.session.account %}Your Profile{% else %}User{% endif %}{% endblock %}
 
 {% block main %}
 <div class="container">
