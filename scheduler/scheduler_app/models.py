@@ -32,11 +32,12 @@ class CourseMembership(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     grader = models.BooleanField(default=False)
+    sections = models.IntegerField(default=1)
 
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="sections")
     num = models.CharField(max_length=MAX_LENGTH)
-    members = models.ManyToManyField(Account, related_name="sections")
+    TA = models.OneToOneField(Account, related_name="ta", null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return str(self.num)
