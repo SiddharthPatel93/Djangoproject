@@ -26,7 +26,7 @@ class LoginView(View):
 
         try:
             a = Account.objects.get(email=email, password=password)
-            request.session["account"] = a.id
+            request.session["account"] = a.pk
             return redirect("/")
         except Account.DoesNotExist:
             return render(request, "login.html", {"nav": True, "errors": ["Wrong email or password!"]}, status=401)
@@ -55,7 +55,7 @@ class EditUserView(View):
             return redirect("/login/")
         
         requester = Account.objects.get(pk=request.session["account"])
-        if requester.role != Account.Role.SUPERVISOR and account != requester.id:
+        if requester.role != Account.Role.SUPERVISOR and account != requester.pk:
             return HttpResponseForbidden("You are not a supervisor.")
 
         try:
@@ -64,7 +64,7 @@ class EditUserView(View):
             raise Http404("User does not exist")
 
         data = model_to_dict(account)
-        if account.id == requester.id and "role" in data:
+        if account.pk == requester.pk and "role" in data:
             del data["role"]
         
         return render(request, "user_edit.html", {"roles": Account.Role.choices, **data})
@@ -74,7 +74,7 @@ class EditUserView(View):
             return redirect("/login/")
         
         requester = Account.objects.get(pk=request.session["account"])
-        if requester.role != Account.Role.SUPERVISOR and account != requester.id:
+        if requester.role != Account.Role.SUPERVISOR and account != requester.pk:
             return HttpResponseForbidden("You are not a supervisor.")
 
         try:
@@ -85,7 +85,7 @@ class EditUserView(View):
         errors = users.edit(requester, account, request.POST)
 
         data = model_to_dict(account)
-        if account.id == requester.id and "role" in data:
+        if account.pk == requester.pk and "role" in data:
             del data["role"]
         data["errors"] = errors
         
