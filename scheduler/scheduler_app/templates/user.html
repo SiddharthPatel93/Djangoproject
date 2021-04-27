@@ -8,7 +8,7 @@
         <form method="POST" class="col-sm-4 mx-auto">
             {% csrf_token %}
 
-            <h1>Edit User</h1>
+            <h1>Edit {% if id == request.session.account %}Your Profile{% else %}User{% endif %}</h1>
     
             <div class="form-group mb-3">
                 <label for="name">Name</label>
