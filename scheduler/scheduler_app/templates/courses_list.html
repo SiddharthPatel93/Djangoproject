@@ -1,4 +1,5 @@
 {% extends "page.html" %}
+{% load static %}
 
 {% block title %}Courses{% endblock %}
 
@@ -37,7 +38,7 @@
                                 <td>
                                     <form method="POST" action="/courses/delete/{{ course.pk }}/" style="display: inline;">
                                         {% csrf_token %}
-                                        <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                                        <button class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Delete</button>
                                     </form>
                                 </td>
                             {% endif %}
@@ -54,4 +55,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static "scripts/actions.js" %}"></script>
 {% endblock %}
