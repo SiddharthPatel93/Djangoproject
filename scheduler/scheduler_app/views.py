@@ -26,8 +26,9 @@ class LoginView(View):
 
         try:
             a = Account.objects.get(email=email, password=password)
+
             request.session["account"] = a.pk
-            return redirect("/")
+            return redirect("/homepage/")
         except Account.DoesNotExist:
             return render(request, "login.html", {"nav": True, "errors": ["Wrong email or password!"]}, status=401)
 
@@ -199,3 +200,18 @@ class ViewCourseView(View):
             "errors": errors,
             "supervisor": supervisor,
         }, status=401 if errors else 200)
+
+class homepageView(View):
+    def get(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        return render(request, "supervisor.html", {
+            "user": requester,
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+        })
+
+
+
