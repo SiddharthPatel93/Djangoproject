@@ -170,7 +170,7 @@ class DeleteView(TestCase):
 class UserEditTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.route = "/users/edit"
+        self.route = "/users"
 
         self.user = Account.objects.create(
             name="TA",
