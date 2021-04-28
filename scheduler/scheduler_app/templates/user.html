@@ -1,14 +1,14 @@
 {% extends "page.html" %}
 
-{% block title %}Edit User{% endblock %}
+{% block title %}Edit {% if id == request.session.account %}Your Profile{% else %}User{% endif %}{% endblock %}
 
 {% block main %}
-<div class="container d-flex align-items-center vh-100">
-    <div class="row flex-fill">
+<div class="container">
+    <div class="row">
         <form method="POST" class="col-sm-4 mx-auto">
             {% csrf_token %}
 
-            <h1>Edit User</h1>
+            <h1>Edit {% if id == request.session.account %}Your Profile{% else %}User{% endif %}</h1>
     
             <div class="form-group mb-3">
                 <label for="name">Name</label>
