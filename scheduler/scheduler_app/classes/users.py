@@ -3,6 +3,12 @@ from django.core.validators import validate_email
 
 from ..models import Account
 
+
+def get(requester: Account) -> list[Account]:
+
+    return list(Account.objects.all())
+    return list(requester.users.all())
+
 def create(details: dict) -> list[str]:
     errors = []
 
