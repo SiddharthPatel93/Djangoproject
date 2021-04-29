@@ -586,11 +586,6 @@ class DeleteCourseTest(TestCase):
         courses.delete(self.course)
         self.assertEqual(0, Course.objects.filter(name=self.course.name).count(), "Course deletion function fails to delete course")
     
-    def test_courseExists(self):
-        login(self.client, self.supervisor)
-        r = self.client.post(self.route_base.format(999))
-        self.assertEqual(404, r.status_code, "Deleting nonexistent course fails to load with status code 404")
-    
     def test_needsSupervisor(self):
         r = self.client.post(self.route, follow=True)
         self.assertEqual([("/login/", 302)], r.redirect_chain, "Deleting course while logged out fails to redirect to login")
@@ -598,7 +593,13 @@ class DeleteCourseTest(TestCase):
         login(self.client, self.user)
         r = self.client.post(self.route)
         self.assertEqual(403, r.status_code, "Deleting course while user fails to load with status code 403")
-
+    
+    def test_courseExists(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route_base.format(999))
+        self.assertEqual(404, r.status_code, "Deleting nonexistent course fails to load with status code 404")
+    
+    def test_deletesCourse(self):
         login(self.client, self.supervisor)
         r = self.client.post(self.route, follow=True)
         self.assertEqual([("/courses/", 302)], r.redirect_chain, "Deleting course while supervisor fails to redirect to courses list")
@@ -609,3 +610,36 @@ class DeleteSectionTest(TestCase):
         self.client = Client()
         self.course = Course.objects.create(name="CS 361")
         self.section = Section.objects.create(course=self.course)
+        self.route_base = "/courses/{}/sections/{}/delete/"
+        self.route = self.route_base.format(self.course.pk, self.section.pk)
+
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_unitDeletesSection(self):
+        sections.delete(self.section)
+        self.assertEqual(0, Section.objects.filter(pk=self.section.pk).count(), "Section deletion function fails to delete section")
+    
+    def test_needsSupervisor(self):
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Deleting section while logged out fails to redirect to login")
+        
+        login(self.client, self.user)
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "Deleting section while user fails to load with status code 403")
+    
+    def test_sectionExists(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route_base.format(self.course.pk, 999))
+        self.assertEqual(404, r.status_code, "Deleting nonexistent section fails to load with status code 404")
+    
+    def test_deletesSection(self):
+        login(self.client, self.supervisor)
+
+        urls = ["correct", "incorrect"]
+
+        for i, route in [self.route, self.route_base.format(999, self.section.pk)]:
+            r = self.client.post(route, follow=True)
+            self.assertEqual([(f"/courses/{self.course.pk}/", 302)], r.redirect_chain, f"Deleting section with {urls[i]} while supervisor fails to redirect to course page")
+            self.assertNotIn(self.course.pk, [section.pk for section in r.context["sections"]], f"Deleting section with {urls[i]} while supervisor fails to delete section")
+        r = self.client.post(self.route, follow=True)
