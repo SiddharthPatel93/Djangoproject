@@ -9,7 +9,7 @@ from .models import Account, Course
 class LoginView(View):
     def get(self, request):
         if "account" in request.session:
-            return redirect("/")
+            return redirect("/courses/")
         
         return render(request, "login.html", {"nav": True})
     
@@ -28,7 +28,7 @@ class LoginView(View):
             a = Account.objects.get(email=email, password=password)
 
             request.session["account"] = a.pk
-            return redirect("/homepage/")
+            return redirect("/courses/")
         except Account.DoesNotExist:
             return render(request, "login.html", {"nav": True, "errors": ["Wrong email or password!"]}, status=401)
 

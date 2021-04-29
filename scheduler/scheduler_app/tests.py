@@ -55,7 +55,7 @@ class LoginTest(TestCase):
 
         login(self.client, self.account)
         r = self.client.get(self.route, follow=True)
-        self.assertEqual([("/", 302)], r.redirect_chain, "Login page does not redirect to dashboard when logged in")
+        self.assertEqual([("/courses/", 302)], r.redirect_chain, "Login page does not redirect to dashboard when logged in")
     
     def test_emptyLogin(self):
         for data in [{}, {"email": "", "password": ""}]:
@@ -71,7 +71,7 @@ class LoginTest(TestCase):
         r = self.client.post(self.route, {"email": self.email, "password": self.password})
         self.assertEqual(302, r.status_code, "Successful login does not load with status code 302")
         self.assertIn("Location", r.headers, "Successful login does not redirect")
-        self.assertEqual("/", r.headers["Location"], "Successful login does not redirect to course dashboard")
+        self.assertEqual("/courses/", r.headers["Location"], "Successful login does not redirect to course dashboard")
         self.assertIn("account", self.client.session, "Successful login does not add account to session")
         self.assertEqual(self.account.pk, self.client.session["account"], "Successful login adds wrong account to session")
 
