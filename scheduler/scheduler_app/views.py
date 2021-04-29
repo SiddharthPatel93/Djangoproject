@@ -213,5 +213,6 @@ class homepageView(View):
             "supervisor": requester.role == Account.Role.SUPERVISOR,
         })
 
-
-
+class DeleteCourseView(View):
+    def post(self, request):
+        pass

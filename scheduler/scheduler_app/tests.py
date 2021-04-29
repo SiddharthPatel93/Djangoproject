@@ -571,3 +571,7 @@ class ViewCourseTest(TestCase):
         r = self.client.post(self.accessible_route, {"num": "002"})
         self.assertEqual(200, r.status_code, "Course page fails to load with status code 200 after creating valid section")
         self.assertEqual(2, r.context["sections"].count(), "Course page fails to create valid course section")
+
+class DeleteCourseTest(TestCase):
+    def setUp(self):
+        self.client = Client()

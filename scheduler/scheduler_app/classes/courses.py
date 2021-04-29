@@ -1,4 +1,4 @@
-from ..models import Account, Course, Section
+from ..models import Account, Course
 
 def get(requester: Account) -> list[Course]:
     if requester.role == Account.Role.SUPERVISOR:
@@ -14,3 +14,6 @@ def create(name: str) -> list[str]:
     
     Course.objects.create(name=name)
     return []
+
+def delete(course: Course):
+    pass
