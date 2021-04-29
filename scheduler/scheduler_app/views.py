@@ -214,5 +214,5 @@ class homepageView(View):
         })
 
 class DeleteCourseView(View):
-    def post(self, request):
+    def post(self, request, course=0):
         pass
