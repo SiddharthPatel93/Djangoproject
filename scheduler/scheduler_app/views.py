@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render
 from django.views import View
 
 from .classes import courses, sections, users
-from .models import Account, Course
+from .models import Account, Course, Section
 
 class LoginView(View):
     def get(self, request):
@@ -233,4 +233,18 @@ class DeleteCourseView(View):
 
 class DeleteSectionView(View):
     def post(self, request, course=0, section=0):
-        pass
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        if Account.objects.get(pk=request.session["account"]).role \
+                != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
+        
+        try:
+            section = Section.objects.get(pk=section)
+        except Section.DoesNotExist:
+            raise Http404("Section does not exist")
+        
+        sections.delete(section)
+
+        return redirect(f"/courses/{section.course.pk}/")
