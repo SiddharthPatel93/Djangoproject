@@ -575,3 +575,25 @@ class ViewCourseTest(TestCase):
 class DeleteCourseTest(TestCase):
     def setUp(self):
         self.client = Client()
+        self.course = Course.objects.create(name="CS 361")
+        self.route = f"/courses/{self.course.pk}/delete/"
+
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_unitDeletesCourse(self):
+        courses.delete(self.course)
+        self.assertEqual(0, Course.objects.filter(name=self.course.name), "Course deletion function fails to delete course")
+    
+    def test_needsSupervisor(self):
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Deleting course while logged out fails to redirect to login")
+        
+        login(self.client, self.user)
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "Deleting course while user fails to load with status code 403")
+
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/courses/", 302)], r.redirect_chain, "Deleting course while supervisor fails to redirect to courses list")
+        self.assertNotIn(self.course.pk, [course["pk"] for course in r.context["courses"]], "Deleting course while supervisor fails to delete course")
