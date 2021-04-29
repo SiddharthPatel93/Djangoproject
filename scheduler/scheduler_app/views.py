@@ -218,7 +218,7 @@ class DeleteCourseView(View):
         if "account" not in request.session:
             return redirect("/login/")
 
-        if (requester := Account.objects.get(pk=request.session["account"])).role \
+        if Account.objects.get(pk=request.session["account"]).role \
                 != Account.Role.SUPERVISOR:
             return HttpResponseForbidden("You are not a supervisor.")
         
