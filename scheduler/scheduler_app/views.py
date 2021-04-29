@@ -4,12 +4,12 @@ from django.shortcuts import redirect, render
 from django.views import View
 
 from .classes import courses, sections, users
-from .models import Account, Course
+from .models import Account, Course, Section
 
 class LoginView(View):
     def get(self, request):
         if "account" in request.session:
-            return redirect("/")
+            return redirect("/courses/")
         
         return render(request, "login.html", {"nav": True})
     
@@ -28,7 +28,7 @@ class LoginView(View):
             a = Account.objects.get(email=email, password=password)
 
             request.session["account"] = a.pk
-            return redirect("/homepage/")
+            return redirect("/courses/")
         except Account.DoesNotExist:
             return render(request, "login.html", {"nav": True, "errors": ["Wrong email or password!"]}, status=401)
 
@@ -39,7 +39,7 @@ class LogoutView(View):
         
         return redirect("/login/")
 
-class ViewUsersView(View):
+class ListUsersView(View):
     def get(self, request):
         """Render template of all users as a list."""
 
@@ -116,7 +116,7 @@ class CreateUserView(View):
         else:
             return redirect("/users/?user_created=true")
 
-class ViewCoursesView(View):
+class ListCoursesView(View):
     def get(self, request):
         if "account" not in request.session:
             return redirect("/login/")
@@ -213,5 +213,38 @@ class homepageView(View):
             "supervisor": requester.role == Account.Role.SUPERVISOR,
         })
 
+class DeleteCourseView(View):
+    def post(self, request, course=0):
+        if "account" not in request.session:
+            return redirect("/login/")
 
+        if Account.objects.get(pk=request.session["account"]).role \
+                != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
+        
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+        
+        courses.delete(course)
 
+        return redirect("/courses/")
+
+class DeleteSectionView(View):
+    def post(self, request, course=0, section=0):
+        if "account" not in request.session:
+            return redirect("/login/")
+        
+        if Account.objects.get(pk=request.session["account"]).role \
+                != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
+        
+        try:
+            section = Section.objects.get(pk=section)
+        except Section.DoesNotExist:
+            raise Http404("Section does not exist")
+        
+        sections.delete(section)
+
+        return redirect(f"/courses/{section.course.pk}/")

@@ -55,7 +55,7 @@ class LoginTest(TestCase):
 
         login(self.client, self.account)
         r = self.client.get(self.route, follow=True)
-        self.assertEqual([("/", 302)], r.redirect_chain, "Login page does not redirect to dashboard when logged in")
+        self.assertEqual([("/courses/", 302)], r.redirect_chain, "Login page does not redirect to dashboard when logged in")
     
     def test_emptyLogin(self):
         for data in [{}, {"email": "", "password": ""}]:
@@ -71,7 +71,7 @@ class LoginTest(TestCase):
         r = self.client.post(self.route, {"email": self.email, "password": self.password})
         self.assertEqual(302, r.status_code, "Successful login does not load with status code 302")
         self.assertIn("Location", r.headers, "Successful login does not redirect")
-        self.assertEqual("/", r.headers["Location"], "Successful login does not redirect to course dashboard")
+        self.assertEqual("/courses/", r.headers["Location"], "Successful login does not redirect to course dashboard")
         self.assertIn("account", self.client.session, "Successful login does not add account to session")
         self.assertEqual(self.account.pk, self.client.session["account"], "Successful login adds wrong account to session")
 
@@ -391,7 +391,7 @@ class CreateUserTest(TestCase):
         self.assertEqual(302, r.status_code, "Successful user creation does not load with status code 302")
         self.assertEqual("/users/?user_created=true", r.headers["Location"], "Successful user creation does not redirect to users page with flag set")
 
-class ViewCoursesTest(TestCase):
+class ListCoursesTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.route = "/courses/"
@@ -571,3 +571,76 @@ class ViewCourseTest(TestCase):
         r = self.client.post(self.accessible_route, {"num": "002"})
         self.assertEqual(200, r.status_code, "Course page fails to load with status code 200 after creating valid section")
         self.assertEqual(2, r.context["sections"].count(), "Course page fails to create valid course section")
+
+class DeleteCourseTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.course = Course.objects.create(name="CS 361")
+        self.route_base = "/courses/{}/delete/"
+        self.route = self.route_base.format(self.course.pk)
+
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_unitDeletesCourse(self):
+        courses.delete(self.course)
+        self.assertEqual(0, Course.objects.filter(name=self.course.name).count(), "Course deletion function fails to delete course")
+    
+    def test_needsSupervisor(self):
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Deleting course while logged out fails to redirect to login")
+        
+        login(self.client, self.user)
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "Deleting course while user fails to load with status code 403")
+    
+    def test_courseExists(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route_base.format(999))
+        self.assertEqual(404, r.status_code, "Deleting nonexistent course fails to load with status code 404")
+    
+    def test_deletesCourse(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/courses/", 302)], r.redirect_chain, "Deleting course while supervisor fails to redirect to courses list")
+        self.assertNotIn(self.course.pk, [course["pk"] for course in r.context["courses"]], "Deleting course while supervisor fails to delete course")
+
+class DeleteSectionTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.course = Course.objects.create(name="CS 361")
+        self.section = Section.objects.create(course=self.course)
+        self.route_base = "/courses/{}/sections/{}/delete/"
+        self.route = self.route_base.format(self.course.pk, self.section.pk)
+
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_unitDeletesSection(self):
+        sections.delete(self.section)
+        self.assertEqual(0, Section.objects.filter(pk=self.section.pk).count(), "Section deletion function fails to delete section")
+    
+    def test_needsSupervisor(self):
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Deleting section while logged out fails to redirect to login")
+        
+        login(self.client, self.user)
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "Deleting section while user fails to load with status code 403")
+    
+    def test_sectionExists(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route_base.format(self.course.pk, 999))
+        self.assertEqual(404, r.status_code, "Deleting nonexistent section fails to load with status code 404")
+    
+    def test_deletesSectionWithCorrectCourse(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([(f"/courses/{self.course.pk}/", 302)], r.redirect_chain, f"Deleting valid section with correct course while supervisor fails to redirect to course page")
+        self.assertNotIn(self.course.pk, [section.pk for section in r.context["sections"]], f"Deleting valid section with correct course while supervisor fails to delete section")
+    
+    def test_deletesSectionWithIncorrectCourse(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([(f"/courses/{self.course.pk}/", 302)], r.redirect_chain, f"Deleting valid section with incorrect course while supervisor fails to redirect to course page")
+        self.assertNotIn(self.course.pk, [section.pk for section in r.context["sections"]], f"Deleting valid section with incorrect course while supervisor fails to delete section")
