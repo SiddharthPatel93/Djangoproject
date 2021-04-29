@@ -391,7 +391,7 @@ class CreateUserTest(TestCase):
         self.assertEqual(302, r.status_code, "Successful user creation does not load with status code 302")
         self.assertEqual("/users/?user_created=true", r.headers["Location"], "Successful user creation does not redirect to users page with flag set")
 
-class ViewCoursesTest(TestCase):
+class ListCoursesTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.route = "/courses/"

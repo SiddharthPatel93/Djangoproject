@@ -39,7 +39,7 @@ class LogoutView(View):
         
         return redirect("/login/")
 
-class ViewUsersView(View):
+class ListUsersView(View):
     def get(self, request):
         """Render template of all users as a list."""
 
@@ -116,7 +116,7 @@ class CreateUserView(View):
         else:
             return redirect("/users/?user_created=true")
 
-class ViewCoursesView(View):
+class ListCoursesView(View):
     def get(self, request):
         if "account" not in request.session:
             return redirect("/login/")
