@@ -576,7 +576,8 @@ class DeleteCourseTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.course = Course.objects.create(name="CS 361")
-        self.route = f"/courses/{self.course.pk}/delete/"
+        self.route_base = "/courses/{}/delete/"
+        self.route = self.route_base.format(self.course.pk)
 
         self.user = Account.objects.create(role=Account.Role.TA)
         self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
@@ -584,6 +585,11 @@ class DeleteCourseTest(TestCase):
     def test_unitDeletesCourse(self):
         courses.delete(self.course)
         self.assertEqual(0, Course.objects.filter(name=self.course.name), "Course deletion function fails to delete course")
+    
+    def test_courseExists(self):
+        login(self.client, self.supervisor)
+        r = self.client.post(self.route_base.format(999))
+        self.assertEqual(404, r.status_code, "Deleting nonexistent course fails to load with status code 404")
     
     def test_needsSupervisor(self):
         r = self.client.post(self.route, follow=True)
