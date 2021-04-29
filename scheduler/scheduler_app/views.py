@@ -230,3 +230,7 @@ class DeleteCourseView(View):
         courses.delete(course)
 
         return redirect("/courses/")
+
+class DeleteSectionView(View):
+    def post(self, request, course=0, section=0):
+        pass

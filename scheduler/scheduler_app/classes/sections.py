@@ -8,3 +8,6 @@ def create(course: Course, num: str) -> list[str]:
     
     Section.objects.create(course=course, num=num)
     return []
+
+def delete(section: Section):
+    pass
