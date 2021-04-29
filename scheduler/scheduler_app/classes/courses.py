@@ -16,4 +16,4 @@ def create(name: str) -> list[str]:
     return []
 
 def delete(course: Course):
-    pass
+    course.delete()

@@ -215,4 +215,18 @@ class homepageView(View):
 
 class DeleteCourseView(View):
     def post(self, request, course=0):
-        pass
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        if (requester := Account.objects.get(pk=request.session["account"])).role \
+                != Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You are not a supervisor.")
+        
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+        
+        courses.delete(course)
+
+        return redirect("/courses/")
