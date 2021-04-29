@@ -10,4 +10,4 @@ def create(course: Course, num: str) -> list[str]:
     return []
 
 def delete(section: Section):
-    pass
+    section.delete()
