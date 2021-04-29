@@ -584,7 +584,7 @@ class DeleteCourseTest(TestCase):
     
     def test_unitDeletesCourse(self):
         courses.delete(self.course)
-        self.assertEqual(0, Course.objects.filter(name=self.course.name), "Course deletion function fails to delete course")
+        self.assertEqual(0, Course.objects.filter(name=self.course.name).count(), "Course deletion function fails to delete course")
     
     def test_courseExists(self):
         login(self.client, self.supervisor)
