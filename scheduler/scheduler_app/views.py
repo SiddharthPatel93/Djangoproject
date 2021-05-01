@@ -4,6 +4,7 @@ from django.shortcuts import redirect, render
 from django.views import View
 
 from .classes import courses, sections, users
+from .classes.permissions import check_permissions
 from .models import Account, Course, Section
 
 class LoginView(View):
@@ -51,11 +52,8 @@ class DeleteUserView(View):
         """
 
 class EditUserView(View):
-    def get(self, request, account=0):
-        if "account" not in request.session:
-            return redirect("/login/")
-        
-        requester = Account.objects.get(pk=request.session["account"])
+    @check_permissions(check_supervisor=False)
+    def get(self, request, requester: Account, account=0):
         if requester.role != Account.Role.SUPERVISOR and account != requester.pk:
             return HttpResponseForbidden("You are not a supervisor.")
 
@@ -69,12 +67,9 @@ class EditUserView(View):
             del data["role"]
         
         return render(request, "user.html", {"roles": Account.Role.choices, **data})
-
-    def post(self, request, account=0):
-        if "account" not in request.session:
-            return redirect("/login/")
-        
-        requester = Account.objects.get(pk=request.session["account"])
+    
+    @check_permissions(check_supervisor=False)
+    def post(self, request, requester: Account, account=0):
         if requester.role != Account.Role.SUPERVISOR and account != requester.pk:
             return HttpResponseForbidden("You are not a supervisor.")
 
@@ -93,36 +88,20 @@ class EditUserView(View):
         return render(request, "user.html", {"roles": Account.Role.choices, "updated": len(errors) == 0, **data}, status=200 if not errors else 401)
 
 class CreateUserView(View):
-    def get(self, request):
-        if "account" not in request.session:
-            return redirect("/login/")
-        
-        requester = Account.objects.get(pk=request.session["account"])
-        if requester.role != Account.Role.SUPERVISOR:
-            return HttpResponseForbidden("You are not a supervisor.")
-        
+    @check_permissions()
+    def get(self, request, *args):
         return render(request, "user_create.html", {"roles": Account.Role.choices})
-
-    def post(self, request):
-        if "account" not in request.session:
-            return redirect("/login/")
-        
-        requester = Account.objects.get(pk=request.session["account"])
-        if requester.role != Account.Role.SUPERVISOR:
-            return HttpResponseForbidden("You are not a supervisor.")
-
+    
+    @check_permissions()
+    def post(self, request, *args):
         if (errors := users.create(request.POST)):
             return render(request, "user_create.html", {"errors": errors}, status=401)
         else:
             return redirect("/users/?user_created=true")
 
 class ListCoursesView(View):
-    def get(self, request):
-        if "account" not in request.session:
-            return redirect("/login/")
-        
-        requester = Account.objects.get(pk=request.session["account"])
-
+    @check_permissions(check_supervisor=False)
+    def get(self, request, requester: Account):
         return render(request, "courses_list.html", {
             "courses": [{ "pk": course.pk, "name": course.name} \
                 for course in courses.get(requester)],
@@ -130,24 +109,12 @@ class ListCoursesView(View):
         })
 
 class CreateCourseView(View):
-    def get(self, request):
-        if "account" not in request.session:
-            return redirect("/login/")
-        
-        requester = Account.objects.get(pk=request.session["account"])
-        if requester.role != Account.Role.SUPERVISOR:
-            return HttpResponseForbidden("You are not a supervisor.")
-        
+    @check_permissions()
+    def get(self, request, *args):
         return render(request, "course_create.html")
-
-    def post(self, request):
-        if "account" not in request.session:
-            return redirect("/login/")
-        
-        requester = Account.objects.get(pk=request.session["account"])
-        if requester.role != Account.Role.SUPERVISOR:
-            return HttpResponseForbidden("You are not a supervisor.")
-        
+    
+    @check_permissions()
+    def post(self, request, *args):
         errors = courses.create(request.POST.get("name", ""))
 
         if errors:
@@ -156,16 +123,13 @@ class CreateCourseView(View):
             return redirect("/courses/?course_created=true")
 
 class ViewCourseView(View):
-    def get(self, request, course=0):
-        if "account" not in request.session:
-            return redirect("/login/")
-
+    @check_permissions(check_supervisor=False)
+    def get(self, request, requester: Account, course=0):
         try:
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             raise Http404("Course does not exist")
         
-        requester = Account.objects.get(pk=request.session["account"])
         supervisor = requester.role == Account.Role.SUPERVISOR
         
         if not supervisor and course not in courses.get(requester):
@@ -176,21 +140,13 @@ class ViewCourseView(View):
             "sections": course.sections.all(),
             "supervisor": supervisor,
         })
-
-    def post(self, request, course=0):
-        if "account" not in request.session:
-            return redirect("/login/")
-
+    
+    @check_permissions()
+    def post(self, request, *args, course=0):
         try:
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             return Http404("Course does not exist")
-        
-        requester = Account.objects.get(pk=request.session["account"])
-        supervisor = requester.role == Account.Role.SUPERVISOR
-        
-        if not supervisor:
-            return HttpResponseForbidden("You are not a supervisor.")
         
         errors = sections.create(course, request.POST.get("num", ""))
 
@@ -198,30 +154,20 @@ class ViewCourseView(View):
             "course": course,
             "sections": course.sections.all(),
             "errors": errors,
-            "supervisor": supervisor,
+            "supervisor": True,
         }, status=401 if errors else 200)
 
 class homepageView(View):
-    def get(self, request):
-        if "account" not in request.session:
-            return redirect("/login/")
-
-        requester = Account.objects.get(pk=request.session["account"])
-
+    @check_permissions(check_supervisor=False)
+    def get(self, request, requester: Account):
         return render(request, "supervisor.html", {
             "user": requester,
             "supervisor": requester.role == Account.Role.SUPERVISOR,
         })
 
 class DeleteCourseView(View):
-    def post(self, request, course=0):
-        if "account" not in request.session:
-            return redirect("/login/")
-
-        if Account.objects.get(pk=request.session["account"]).role \
-                != Account.Role.SUPERVISOR:
-            return HttpResponseForbidden("You are not a supervisor.")
-        
+    @check_permissions()
+    def post(self, request, *args, course=0):
         try:
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
@@ -232,14 +178,8 @@ class DeleteCourseView(View):
         return redirect("/courses/")
 
 class DeleteSectionView(View):
-    def post(self, request, course=0, section=0):
-        if "account" not in request.session:
-            return redirect("/login/")
-        
-        if Account.objects.get(pk=request.session["account"]).role \
-                != Account.Role.SUPERVISOR:
-            return HttpResponseForbidden("You are not a supervisor.")
-        
+    @check_permissions()
+    def post(self, request, *args, course=0, section=0):
         try:
             section = Section.objects.get(pk=section)
         except Section.DoesNotExist:
