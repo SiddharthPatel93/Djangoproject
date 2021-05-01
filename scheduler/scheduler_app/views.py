@@ -167,7 +167,7 @@ class homepageView(View):
 
 class DeleteCourseView(View):
     @check_permissions()
-    def post(self, request, *args, course=0):
+    def post(self, *args, course=0):
         try:
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
@@ -179,7 +179,7 @@ class DeleteCourseView(View):
 
 class DeleteSectionView(View):
     @check_permissions()
-    def post(self, request, *args, course=0, section=0):
+    def post(self, *args, section=0, **kwargs):
         try:
             section = Section.objects.get(pk=section)
         except Section.DoesNotExist:
