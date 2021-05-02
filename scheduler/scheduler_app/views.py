@@ -51,7 +51,7 @@ class DeleteUserView(View):
         Redirect to /users/ after, potentially with error.
         """
 
-class EditUserView(View):
+class ViewUserView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account, account=0):
         if requester.role != Account.Role.SUPERVISOR and account != requester.pk:

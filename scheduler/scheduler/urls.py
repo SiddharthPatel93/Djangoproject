@@ -29,7 +29,7 @@ urlpatterns = [
     path('logout/', views.LogoutView.as_view()),
     path('users/', views.ListUsersView.as_view()),
     path('users/create/', views.CreateUserView.as_view()),
-    path('users/<int:account>/', views.EditUserView.as_view()),
+    path('users/<int:account>/', views.ViewUserView.as_view()),
     path('users/<int:account>/delete/', views.DeleteUserView.as_view()),
     path('courses/', views.ListCoursesView.as_view()),
     path('courses/create/', views.CreateCourseView.as_view()),

@@ -167,7 +167,7 @@ class DeleteUserTest(TestCase):
         Check same qualities as last one.
         """
 
-class EditUserTest(TestCase):
+class ViewUserTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.route = "/users"
