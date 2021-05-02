@@ -2,6 +2,7 @@ from functools import wraps
 
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import redirect
+from django.test import Client
 
 from ..models import Account
 
@@ -21,3 +22,12 @@ def check_permissions(check_supervisor=True):
         return perform_checks
     
     return wrap_view
+
+# https://docs.djangoproject.com/en/3.2/topics/testing/tools/#persistent-state
+def login(client: Client, account: Account):
+    if account.pk is None:
+        raise ValueError("Cannot login with unsaved account")
+    
+    s = client.session
+    s["account"] = account.pk
+    s.save()
