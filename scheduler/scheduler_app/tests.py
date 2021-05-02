@@ -112,7 +112,7 @@ class LogoutView(TestCase):
             "Logout does not produce equal redirects for logged-in and logged-out accounts")
         self.assertNotIn("account", self.client.session, "Logout does not erase session account")
 
-class UsersView(TestCase):
+class ListUsersTest(TestCase):
     def test_listUsers(self):
         """
         Check if all users are being populated in the view.
@@ -124,7 +124,7 @@ class UsersView(TestCase):
         - Permissions (see lines 99-102 for how to set account manually. check if it fails with nonexistent account #)
         """
 
-class DeleteView(TestCase):
+class DeleteUserTest(TestCase):
     def setUp(self):
         """Create test accounts and client."""
     
@@ -167,7 +167,7 @@ class DeleteView(TestCase):
         Check same qualities as last one.
         """
 
-class UserEditTest(TestCase):
+class EditUserTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.route = "/users"
