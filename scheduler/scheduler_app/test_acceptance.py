@@ -57,22 +57,26 @@ class ViewUserTest(TestCase):
         for field in ["name", "email", "password", "phone", "address", "office_hours"]:
             self.assertIsNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is readonly when viewing own profile as user")
         for field in ["role"]:
-            self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is not readonly when viewing own profile as user")
+            self.assertIsNotNone(soup.select_one(f"*[name={field}][disabled]"), f"Field {field} is not readonly when viewing own profile as user")
         soup = BeautifulSoup(self.client.get(self.supervisor_route).content, "lxml")
         for field in ["password"]:
             self.assertIsNone(soup.select_one(f"*[name={field}]"), f"Field {field} is present when viewing other profile as user")
-        for field in ["name", "role", "email", "phone", "address", "office_hours"]:
+        for field in ["name", "email", "phone", "address", "office_hours"]:
             self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is not readonly when viewing other profile as user")
+        for field in ["role"]:
+            self.assertIsNotNone(soup.select_one(f"*[name={field}][disabled]"), f"Field {field} is not readonly when viewing own profile as user")
 
         permissions.login(self.client, self.supervisor)
         soup = BeautifulSoup(self.client.get(self.user_route).content, "lxml")
-        for field in ["name", "role", "email", "password", "phone", "address", "office_hours"]:
+        for field in ["name","email", "password", "phone", "address", "office_hours"]:
             self.assertIsNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is readonly when viewing other profile as supervisor")
+        for field in ["role"]:
+            self.assertIsNone(soup.select_one(f"*[name={field}][disabled]"), f"Field {field} is readonly when viewing other profile as supervisor")
         soup = BeautifulSoup(self.client.get(self.supervisor_route).content, "lxml")
         for field in ["name", "email", "password", "phone", "address", "office_hours"]:
             self.assertIsNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is readonly when viewing own profile as supervisor")
         for field in ["role"]:
-            self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is not readonly when viewing own profile as supervisor")
+            self.assertIsNotNone(soup.select_one(f"*[name={field}][disabled]"), f"Field {field} is not readonly when viewing own profile as supervisor")
     
     def test_displayErrors(self):
         permissions.login(self.client, self.user)

@@ -17,7 +17,7 @@
 
             <div class="form-group mb-3">
                 <label for="role">Role</label>
-                <select class="form-select" name="role" required{% if own_profile or not supervisor %} readonly{% endif %}>
+                <select class="form-select" name="role" required{% if own_profile or not supervisor %} disabled{% endif %}>
                     {% for this_role in roles %}
                         <option value="{{ this_role.0 }}"{% if this_role.0 == role %} selected{% endif %}>{{ this_role.1 }}</option>
                     {% endfor %}
