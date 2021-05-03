@@ -65,7 +65,7 @@ class ViewUserTest(TestCase):
     
     def test_fieldAccessibility(self):
         self.assert_accessibility_case(self.user, self.user_route, "own profile as user", [], ["role"])
-        self.assert_accessibility_case(self.user, self.supervisor_route, "other profile as user", ["password"], ["name", "role", "email", "phone", "address", "office_hours"])
+        self.assert_accessibility_case(self.user, self.supervisor_route, "other profile as user", ["password", "phone", "address"], ["name", "role", "email", "office_hours"])
         self.assert_accessibility_case(self.supervisor, self.user_route, "other profile as supervisor", [], [])
         self.assert_accessibility_case(self.supervisor, self.supervisor_route, "own profile as supervisor", [], ["role"])
     
