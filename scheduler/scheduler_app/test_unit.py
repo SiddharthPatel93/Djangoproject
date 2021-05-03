@@ -63,6 +63,10 @@ class EditUserTest(TestCase):
         role_edit = users.edit(self.user, self.user, {"role": Account.Role.INSTRUCTOR.value})
         self.assertEqual(1, len(role_edit), "User edit function fails to block user from editing own role")
     
+    def test_acceptsInPlaceEmail(self):
+        email_edit = users.edit(self.user, self.user, {"email": self.user.email})
+        self.assertEqual(0, len(email_edit), "User edit function fails to replace user email with existing one")
+    
     def test_checksValidEmail(self):
         email_edit = users.edit(self.user, self.user, {"email": "invalid"})
         self.assertEqual(1, len(email_edit), "User edit function fails to block user from changing email to invalid one")
