@@ -50,6 +50,15 @@ def edit(requester: Account, account: Account, details: dict) -> list[str]:
             account.role = Account.Role(int(details["role"]))
         else:
             errors.append("A user cannot change their own role")
+    if "email" in details:
+        if Account.objects.filter(email=details["email"]).exists():
+            errors.append("Please enter an unused email!")
+        else:
+            try:
+                validate_email(details["email"])
+                account.email = details["email"]
+            except ValidationError:
+                errors.append("Please enter a valid email!")
     account.password = details.get("password", account.password)
     account.phone = details.get("phone", account.phone)
     account.address = details.get("address", account.address)
