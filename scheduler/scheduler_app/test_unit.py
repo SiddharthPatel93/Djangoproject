@@ -41,7 +41,7 @@ class EditUserTest(TestCase):
             office_hours="supervisor",
         )
     
-    def test_unitEditsUser(self):
+    def test_editsUser(self):
         data = {
             "name": "name",
             "role": Account.Role.INSTRUCTOR,
@@ -59,15 +59,15 @@ class EditUserTest(TestCase):
         for field, value in data.items():
             self.assertEqual(value, user[field], f"User edit function fails to correctly change field {field}")
     
-    def test_unitRejectsOwnRole(self):
+    def test_rejectsOwnRole(self):
         role_edit = users.edit(self.user, self.user, {"role": Account.Role.INSTRUCTOR.value})
         self.assertEqual(1, len(role_edit), "User edit function fails to block user from editing own role")
     
-    def test_unitChecksValidEmail(self):
+    def test_checksValidEmail(self):
         email_edit = users.edit(self.user, self.user, {"email": "invalid"})
         self.assertEqual(1, len(email_edit), "User edit function fails to block user from changing email to invalid one")
     
-    def test_unitChecksDuplicateEmail(self):
+    def test_checksDuplicateEmail(self):
         email_edit = users.edit(self.user, self.user, {"email": self.supervisor.email})
         self.assertEqual(1, len(email_edit), "User edit function fails to block user from changing email to duplicate one")
     
