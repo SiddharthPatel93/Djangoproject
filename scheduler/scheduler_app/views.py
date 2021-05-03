@@ -51,22 +51,20 @@ class DeleteUserView(View):
         Redirect to /users/ after, potentially with error.
         """
 
-class EditUserView(View):
+class ViewUserView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account, account=0):
-        if requester.role != Account.Role.SUPERVISOR and account != requester.pk:
-            return HttpResponseForbidden("You are not a supervisor.")
-
         try:
             account = Account.objects.get(pk=account)
         except Account.DoesNotExist:
             raise Http404("User does not exist")
-
-        data = model_to_dict(account)
-        if account.pk == requester.pk and "role" in data:
-            del data["role"]
         
-        return render(request, "user.html", {"roles": Account.Role.choices, **data})
+        return render(request, "user.html", {
+            "roles": Account.Role.choices,
+            "own_profile": account.pk == request.session["account"],
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+            **model_to_dict(account),
+        })
     
     @check_permissions(check_supervisor=False)
     def post(self, request, requester: Account, account=0):
@@ -79,13 +77,14 @@ class EditUserView(View):
             raise Http404("User does not exist")
         
         errors = users.edit(requester, account, request.POST)
-
-        data = model_to_dict(account)
-        if account.pk == requester.pk and "role" in data:
-            del data["role"]
-        data["errors"] = errors
         
-        return render(request, "user.html", {"roles": Account.Role.choices, "updated": len(errors) == 0, **data}, status=200 if not errors else 401)
+        return render(request, "user.html", {
+            "roles": Account.Role.choices,
+            "errors": errors,
+            "own_profile": account.pk == request.session["account"],
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+            **model_to_dict(account),
+        }, status=200 if not errors else 401)
 
 class CreateUserView(View):
     @check_permissions()
