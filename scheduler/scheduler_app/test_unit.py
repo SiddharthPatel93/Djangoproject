@@ -3,7 +3,7 @@ from django.test import Client, TestCase
 from .classes import permissions
 from .models import Account
 
-class LoginTest(TestCase):
+class ClientLoginTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.existent_user = Account.objects.create(role=Account.Role.SUPERVISOR)
