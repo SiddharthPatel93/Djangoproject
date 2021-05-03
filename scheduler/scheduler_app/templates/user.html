@@ -8,7 +8,7 @@
         <form method="POST" class="col-sm-4 mx-auto">
             {% csrf_token %}
 
-            <h1>Edit {% if own_profile %}Your{% else %}User{% endif %} Profile</h1>
+            <h1>{% if own_profile or supervisor %}Edit{% else %}View{% endif %} {% if own_profile %}Your{% else %}User{% endif %} Profile</h1>
     
             <div class="form-group mb-3">
                 <label for="name">Name</label>
@@ -61,8 +61,10 @@
             {% elif errors != None %}
                 <p>{% if own_profile %}Your{% else %}User{% endif %} profile was updated successfully!</p>
             {% endif %}
-
-            <button type="submit" class="btn btn-primary">Submit</button>
+                
+            {% if own_profile or supervisor %}
+                <button type="submit" class="btn btn-primary">Submit</button>
+            {% endif %}
         </form>
     </div>
 </div>
