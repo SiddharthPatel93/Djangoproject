@@ -1,0 +1,38 @@
+{% extends "page.html" %}
+
+{% block title %}{{ name }}{% endblock %}
+
+{% block main %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4 mx-auto">
+            <h1>{{ user.name }}</h1>
+            <table>
+                <tr>
+                    <th>Role</th>
+                    <td> {{ user.get_role_string }}</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td> {{ user.get_email }}</td>
+                </tr>
+                <tr>
+                    <th>Phone</th>
+                    <td> {{ user.get_phone }}</td>
+                </tr>
+                <tr>
+                    <th>Office Hours</th>
+                    <td> {{ user.get_office_hours }}</td>
+                </tr>
+                <tr>
+                    <th>Address</th>
+                    <td> {{ user.get_address }}</td>
+                </tr>
+
+            </table>
+
+
+        </div>
+    </div>
+</div>
+{% endblock %}

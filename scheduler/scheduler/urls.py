@@ -17,13 +17,17 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 
+
+from django.conf import settings
+from django.conf.urls.static import static
+
 from django.contrib import admin
 from django.urls import path
 
 from scheduler_app import views # type: ignore
 
 urlpatterns = [
-    path('homepage/', views.homepageView.as_view()),
+    path('', views.homepageView.as_view()),
     path('admin/', admin.site.urls),
     path('login/', views.LoginView.as_view()),
     path('logout/', views.LogoutView.as_view()),
