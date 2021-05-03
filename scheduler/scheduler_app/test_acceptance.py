@@ -30,6 +30,7 @@ class ViewUserTest(TestCase):
             office_hours="supervisor",
         )
         self.supervisor_route = f"{self.route}/{self.supervisor.pk}/"
+        self.fields = ["name", "role", "email", "password", "phone", "address", "office_hours"]
     
     def test_permissions(self):
         r = self.client.get(self.user_route, follow=True)
@@ -49,34 +50,24 @@ class ViewUserTest(TestCase):
         r = self.client.post(self.supervisor_route)
         self.assertEqual(200, r.status_code, "POSTing own user view page as supervisor does not load with status code 200")
     
-    def test_fieldAccessibility(self):
-        permissions.login(self.client, self.user)
-        soup = BeautifulSoup(self.client.get(self.user_route).content, "lxml")
-        for field in ["name", "role", "email", "password", "phone", "address", "office_hours"]:
-            self.assertIsNotNone(soup.select_one(f"*[name={field}]"), f"Field {field} is not present when viewing own profile as user")
-        for field in ["name", "email", "password", "phone", "address", "office_hours"]:
-            self.assertIsNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is readonly when viewing own profile as user")
-        for field in ["role"]:
-            self.assertIsNotNone(soup.select_one(f"*[name={field}][disabled]"), f"Field {field} is not readonly when viewing own profile as user")
-        soup = BeautifulSoup(self.client.get(self.supervisor_route).content, "lxml")
-        for field in ["password"]:
-            self.assertIsNone(soup.select_one(f"*[name={field}]"), f"Field {field} is present when viewing other profile as user")
-        for field in ["name", "email", "phone", "address", "office_hours"]:
-            self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is not readonly when viewing other profile as user")
-        for field in ["role"]:
-            self.assertIsNotNone(soup.select_one(f"*[name={field}][disabled]"), f"Field {field} is not readonly when viewing own profile as user")
+    def assert_accessibility_case(self, user: Account, route: str, case: str, hidden: list[str], readonly: list[str]):
+        permissions.login(self.client, user)
+        soup = BeautifulSoup(self.client.get(route).content, "lxml")
 
-        permissions.login(self.client, self.supervisor)
-        soup = BeautifulSoup(self.client.get(self.user_route).content, "lxml")
-        for field in ["name","email", "password", "phone", "address", "office_hours"]:
-            self.assertIsNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is readonly when viewing other profile as supervisor")
-        for field in ["role"]:
-            self.assertIsNone(soup.select_one(f"*[name={field}][disabled]"), f"Field {field} is readonly when viewing other profile as supervisor")
-        soup = BeautifulSoup(self.client.get(self.supervisor_route).content, "lxml")
-        for field in ["name", "email", "password", "phone", "address", "office_hours"]:
-            self.assertIsNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is readonly when viewing own profile as supervisor")
-        for field in ["role"]:
-            self.assertIsNotNone(soup.select_one(f"*[name={field}][disabled]"), f"Field {field} is not readonly when viewing own profile as supervisor")
+        for field in [f for f in self.fields if f not in hidden]:
+            self.assertIsNotNone(soup.select_one(f"*[name={field}]"), f"Field {field} is not present when viewing {case}")
+        for field in hidden:
+            self.assertIsNone(soup.select_one(f"*[name={field}]"), f"Field {field} is present when viewing {case}")
+        for field in [f for f in self.fields if f not in readonly]:
+            self.assertIsNone(soup.select_one(f"*[name={field}][readonly], *[name={field}][disabled]"), f"Field {field} is readonly when viewing {case}")
+        for field in readonly:
+            self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly], *[name={field}][disabled]"), f"Field {field} is not readonly when viewing {case}")
+    
+    def test_fieldAccessibility(self):
+        self.assert_accessibility_case(self.user, self.user_route, "own profile as user", [], ["role"])
+        self.assert_accessibility_case(self.user, self.supervisor_route, "other profile as user", ["password"], ["name", "role", "email", "phone", "address", "office_hours"])
+        self.assert_accessibility_case(self.supervisor, self.user_route, "other profile as supervisor", [], [])
+        self.assert_accessibility_case(self.supervisor, self.supervisor_route, "own profile as supervisor", [], ["role"])
     
     def test_displayErrors(self):
         permissions.login(self.client, self.user)
