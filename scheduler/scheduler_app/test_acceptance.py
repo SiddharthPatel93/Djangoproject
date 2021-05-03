@@ -39,7 +39,7 @@ class ViewUserTest(TestCase):
         r = self.client.get(self.user_route)
         self.assertEqual(200, r.status_code, "GETing own user view page as user does not load with status code 200")
         r = self.client.post(self.user_route)
-        self.assertEqual(401, r.status_code, "POSTing own user view page as user does not load with status code 401")
+        self.assertEqual(200, r.status_code, "POSTing own user view page as user does not load with status code 200")
         r = self.client.get(self.supervisor_route)
         self.assertEqual(200, r.status_code, "GETing other user view page as user does not load with status code 200")
         r = self.client.post(self.supervisor_route)
@@ -47,30 +47,32 @@ class ViewUserTest(TestCase):
         
         permissions.login(self.client, self.supervisor)
         r = self.client.post(self.supervisor_route)
-        self.assertEqual(401, r.status_code, "POSTing own user view page as supervisor does not load with status code 401")
+        self.assertEqual(200, r.status_code, "POSTing own user view page as supervisor does not load with status code 200")
     
     def test_fieldAccessibility(self):
         permissions.login(self.client, self.user)
         soup = BeautifulSoup(self.client.get(self.user_route).content, "lxml")
         for field in ["name", "role", "email", "password", "phone", "address", "office_hours"]:
-            self.assertIsNotNone(soup.find(attrs={"name": field}), f"Field {field} is not present in user view page")
+            self.assertIsNotNone(soup.select_one(f"*[name={field}]"), f"Field {field} is not present when viewing own profile as user")
         for field in ["name", "email", "password", "phone", "address", "office_hours"]:
-            self.assertNotIn("readonly", soup.find(attrs={"name": field}), f"Field {field} is readonly when viewing own profile as user")
+            self.assertIsNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is readonly when viewing own profile as user")
         for field in ["role"]:
-            self.assertIn("readonly", soup.find(attrs={"name": field}), f"Field {field} is not readonly when viewing own profile as user")
+            self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is not readonly when viewing own profile as user")
         soup = BeautifulSoup(self.client.get(self.supervisor_route).content, "lxml")
-        for field in ["name", "role", "email", "password", "phone", "address", "office_hours"]:
-            self.assertIn("readonly", soup.find(attrs={"name": field}), f"Field {field} is not readonly when viewing other profile as user")
+        for field in ["password"]:
+            self.assertIsNone(soup.select_one(f"*[name={field}]"), f"Field {field} is present when viewing other profile as user")
+        for field in ["name", "role", "email", "phone", "address", "office_hours"]:
+            self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is not readonly when viewing other profile as user")
 
-        permissions.login(self.client, self.supervisor_route)
+        permissions.login(self.client, self.supervisor)
         soup = BeautifulSoup(self.client.get(self.user_route).content, "lxml")
         for field in ["name", "role", "email", "password", "phone", "address", "office_hours"]:
-            self.assertNotIn("readonly", soup.find(attrs={"name": field}), f"Field {field} is readonly when viewing other profile as supervisor")
+            self.assertIsNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is readonly when viewing other profile as supervisor")
         soup = BeautifulSoup(self.client.get(self.supervisor_route).content, "lxml")
         for field in ["name", "email", "password", "phone", "address", "office_hours"]:
-            self.assertNotIn("readonly", soup.find(attrs={"name": field}), f"Field {field} is readonly when viewing own profile as supervisor")
+            self.assertIsNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is readonly when viewing own profile as supervisor")
         for field in ["role"]:
-            self.assertIn("readonly", soup.find(attrs={"name": field}), f"Field {field} is not readonly when viewing own profile as supervisor")
+            self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly]"), f"Field {field} is not readonly when viewing own profile as supervisor")
     
     def test_displayErrors(self):
         permissions.login(self.client, self.user)
@@ -93,7 +95,6 @@ class ViewUserTest(TestCase):
         self.assertEqual(200, r.status_code, "User cannot change own info")
         for field, value in supervisor_info.items():
             self.assertEqual(value, r.context[field], f"Field {field} is not changed when editing own info as user")
-        self.assertTrue(r.context["updated"], "Updated message not shown to user")
         r = self.client.post(self.supervisor_route, supervisor_info)
         self.assertEqual(403, r.status_code, "User can change info of supervisor")
 
