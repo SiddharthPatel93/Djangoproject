@@ -7,25 +7,6 @@ from django.test import Client, TestCase
 from .classes import courses, permissions, sections, users
 from .models import Account, Course, CourseMembership, Section
 
-# Models
-
-class AccountTest(TestCase):
-    def test_matchName(self):
-        name = "Jimothy"
-        a = Account(name=name)
-        self.assertEqual(name, a.__str__(), "Account name does not equal entered name")
-
-class CourseTest(TestCase):
-    def test_matchName(self):
-        name = "CS 361"
-        c = Course(name=name)
-        self.assertEqual(name, c.__str__(), "Course name does not equal entered name")
-
-class SectionTest(TestCase):
-    def test_matchName(self):
-        s = Section(num=902)
-        self.assertEqual("902", s.__str__(), "Section name does not equal entered number")
-
 # Views
 
 class LoginTest(TestCase):
@@ -87,25 +68,6 @@ class LoginTest(TestCase):
                 self.assertEqual(previous_error, error, "Errors for wrong username and wrong password are different")
             else:
                 previous_error = error
-
-class LogoutView(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.route = "/logout/"
-        self.account = Account.objects.create(role=Account.Role.TA)
-    
-    def perform_logout(self):
-        return self.client.post(self.route, follow=True)
-
-    def test_loggedIn(self):
-        logged_out = self.perform_logout()
-        permissions.login(self.client, self.account)
-        logged_in = self.perform_logout()
-        
-        self.assertEqual([("/login/", 302)], logged_in.redirect_chain, "Logout page does not redirect user to login page")
-        self.assertEqual(logged_in.redirect_chain, logged_out.redirect_chain,
-            "Logout does not produce equal redirects for logged-in and logged-out accounts")
-        self.assertNotIn("account", self.client.session, "Logout does not erase session account")
 
 class ListUsersTest(TestCase):
     def test_listUsers(self):

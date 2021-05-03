@@ -5,6 +5,25 @@ from django.test import Client, TestCase
 from .classes import permissions
 from .models import Account
 
+class LogoutTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route = "/logout/"
+        self.account = Account.objects.create(role=Account.Role.TA)
+    
+    def perform_logout(self):
+        return self.client.post(self.route, follow=True)
+
+    def test_performsLogout(self):
+        logged_out = self.perform_logout()
+        permissions.login(self.client, self.account)
+        logged_in = self.perform_logout()
+        
+        self.assertEqual([("/login/", 302)], logged_in.redirect_chain, "Logout page does not redirect user to login page")
+        self.assertEqual(logged_in.redirect_chain, logged_out.redirect_chain,
+            "Logout does not produce equal redirects for logged-in and logged-out accounts")
+        self.assertNotIn("account", self.client.session, "Logout does not erase session account")
+
 class ViewUserTest(TestCase):
     def setUp(self):
         self.client = Client()
