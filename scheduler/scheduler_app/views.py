@@ -187,3 +187,70 @@ class DeleteSectionView(View):
         sections.delete(section)
 
         return redirect(f"/courses/{section.course.pk}/")
+class SectionAssignmentView(View):
+    def get(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        if requester.role is not Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You do not have access to this feature")
+
+        if courses not in courses.get(requester):
+            return HttpResponseForbidden("No courses available")
+
+        return render(request, "section_assignment.html")
+
+    def post(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        if requester.role is not Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You do not have access to this feature")
+
+        if courses not in courses.get(requester):
+            return HttpResponseForbidden("No courses available")
+
+        errors = Section.assignTA(courses.Course, courses.num, request.POST.get("name", ""))
+
+        if errors:
+            return render(request, "section_assignment.html", {"errors": errors}, status=401)
+        else:
+            return redirect("/section_assignment/")
+
+class CourseAssignmentView(View):
+    def get(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        if requester.role is not Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You do not have access to this feature")
+
+        if courses not in courses.get(requester):
+            return HttpResponseForbidden("No courses available")
+
+        return render(request, "course_assignment.html")
+
+    def post(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        if requester.role is not Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You do not have access to this feature")
+
+        if courses not in courses.get(requester):
+            return HttpResponseForbidden("No courses available")
+
+        errors = courses.assign(courses.Course, courses.num, request.POST.get("name", ""))
+
+        if errors:
+            return render(request, "course_assignment.html", {"errors": errors}, status=401)
+        else:
+            return redirect("/course_assignment/")
