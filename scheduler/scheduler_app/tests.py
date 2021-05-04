@@ -113,6 +113,28 @@ class LogoutView(TestCase):
         self.assertNotIn("account", self.client.session, "Logout does not erase session account")
 
 class UsersView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route = "/users/"
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+        self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
+        self.ta = Account.objects.create(role=Account.Role.TA)
+        self.test_course = Course.objects.create(name="CS 361")
+        CourseMembership.objects.create(account=self.ta, course=self.test_course)
+        CourseMembership.objects.create(account=self.instructor, course=self.test_course)
+
+    def test_supervisorAccess(self):
+        login(self.client, self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(3, len(r.context["users"]), "Users list fails to show all users in system")
+        self.assertTrue(r.context["supervisor"], "Users list fails to show management tools for supervisor")
+
+    def test_(self):
+        login(self.client, self.ta)
+        r = self.client.get(self.route)
+        self.assertEqual(2, len(r.context["users"]), "Users list fails to show only course members")
+        self.assertFalse(r.context["supervisor"], "Users list shows management tools")
+
     def test_listUsers(self):
         """
         Check if all users are being populated in the view.
@@ -123,6 +145,7 @@ class UsersView(TestCase):
         Check:
         - Permissions (see lines 99-102 for how to set account manually. check if it fails with nonexistent account #)
         """
+        return Account.objects.filter(name=Account.name).count()
 
 
 class DeleteView(TestCase):
