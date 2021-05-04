@@ -17,8 +17,39 @@ class Account(models.Model):
     address = models.CharField(max_length=MAX_LENGTH)
     office_hours = models.CharField(max_length=MAX_LENGTH)
 
+
     def __str__(self):
         return self.name
+
+    def set_email(self):
+        email = self.email
+
+    def get_email(self):
+        return self.email
+
+    def set_role(self):
+        role = self.role
+
+    def get_role(self):
+        return self.role
+
+    def set_phone(self):
+        phone = self.phone
+
+    def get_phone(self):
+        return self.phone
+
+    def set_address(self):
+        address = self.address
+
+    def get_address(self):
+        return self.address
+
+    def set_office_hours(self):
+        office_hours = self.office_hours
+
+    def get_office_hours(self):
+        return self.office_hours
 
 class Course(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)

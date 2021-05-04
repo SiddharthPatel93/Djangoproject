@@ -49,7 +49,7 @@
                             <td>{{ section.num }}</td>
                             {% if supervisor %}
                                 <td>
-                                    <form method="POST" action="/sections/delete/{{ course.pk }}/" style="display: inline;">
+                                    <form method="POST" action="sections/{{ section.pk }}/delete/" style="display: inline;">
                                         {% csrf_token %}
                                         <button class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Delete</button>
                                     </form>
