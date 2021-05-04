@@ -124,6 +124,7 @@ class UsersView(TestCase):
         - Permissions (see lines 99-102 for how to set account manually. check if it fails with nonexistent account #)
         """
 
+
 class DeleteView(TestCase):
     def setUp(self):
         """Create test accounts and client."""
