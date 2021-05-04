@@ -31,24 +31,24 @@ class LoginTest(TestCase):
 
         permissions.login(self.client, self.account)
         r = self.client.get(self.route, follow=True)
-        self.assertEqual([("/courses/", 302)], r.redirect_chain, "Login page does not redirect to dashboard when logged in")
+        self.assertEqual([("/courses/", 302)], r.redirect_chain, "Login page fails to redirect to dashboard when logged in")
     
     def test_emptyLogin(self):
         for data in [{}, {"email": "", "password": ""}]:
             r = self.client.post(self.route, data, follow=True)
-            self.assertEqual(400, r.status_code, f"Empty login with data {data} does not load with status code 400")
+            self.assertEqual(400, r.status_code, f"Empty login with data {data} fails to load with status code 400")
             self.assertEqual([], r.redirect_chain, f"Empty login with data {data} redirects to another page")
             self.assertNotIn("account", self.client.session, f"Empty login with data {data} adds account to session")
-            self.assertIsNotNone(r.context, f"Empty login with data {data} does not render template")
-            self.assertIn("errors", r.context, f"Empty login with data {data} does not include errors list")
-            self.assertEqual(2, len(r.context["errors"]), f"Empty login with data {data} does not produce 2 errors for empty fields")
+            self.assertIsNotNone(r.context, f"Empty login with data {data} fails to render template")
+            self.assertIn("errors", r.context, f"Empty login with data {data} fails to include errors list")
+            self.assertEqual(2, len(r.context["errors"]), f"Empty login with data {data} fails to produce 2 errors for empty fields")
 
     def test_successfulLogin(self):
         r = self.client.post(self.route, {"email": self.email, "password": self.password})
-        self.assertEqual(302, r.status_code, "Successful login does not load with status code 302")
-        self.assertIn("Location", r.headers, "Successful login does not redirect")
-        self.assertEqual("/courses/", r.headers["Location"], "Successful login does not redirect to course dashboard")
-        self.assertIn("account", self.client.session, "Successful login does not add account to session")
+        self.assertEqual(302, r.status_code, "Successful login fails to load with status code 302")
+        self.assertIn("Location", r.headers, "Successful login fails to redirect")
+        self.assertEqual("/courses/", r.headers["Location"], "Successful login fails to redirect to course dashboard")
+        self.assertIn("account", self.client.session, "Successful login fails to add account to session")
         self.assertEqual(self.account.pk, self.client.session["account"], "Successful login adds wrong account to session")
 
     def test_failedLogin(self):
@@ -56,12 +56,12 @@ class LoginTest(TestCase):
 
         for data in [{"email": self.email, "password": "wrong"}, {"email": "does@not.exist", "password": self.password}]:
             r = self.client.post(self.route, data, follow=True)
-            self.assertEqual(401, r.status_code, f"Failed login with data {data} does not load with status code 401")
+            self.assertEqual(401, r.status_code, f"Failed login with data {data} fails to load with status code 401")
             self.assertEqual([], r.redirect_chain, f"Failed login with data {data} redirects to another page")
             self.assertNotIn("account", self.client.session, f"Failed login {data} adds account to session")
-            self.assertIsNotNone(r.context, f"Failed login with data {data} does not render template")
-            self.assertIn("errors", r.context, f"Failed login with data {data} does not include errors list")
-            self.assertEqual(1, len(r.context["errors"]), f"Failed login with data {data} does not produce 1 error for failed login")
+            self.assertIsNotNone(r.context, f"Failed login with data {data} fails to render template")
+            self.assertIn("errors", r.context, f"Failed login with data {data} fails to include errors list")
+            self.assertEqual(1, len(r.context["errors"]), f"Failed login with data {data} fails to produce 1 error for failed login")
             
             error = r.context["errors"][0]
             if previous_error:
@@ -148,23 +148,23 @@ class ListCoursesTest(TestCase):
     
     def test_unitUserAccess(self):
         user_courses = courses.get(self.user)
-        self.assertEqual([self.accessible_course], user_courses, "Get courses function does not return correct courses for user")
+        self.assertEqual([self.accessible_course], user_courses, "Get courses function fails to return correct courses for user")
     
     def test_unitSupervisorAccess(self):
         supervisor_courses = courses.get(self.supervisor)
-        self.assertIn(self.accessible_course, supervisor_courses, "Get courses function does not include accessible course for supervisor")
+        self.assertIn(self.accessible_course, supervisor_courses, "Get courses function fails to include accessible course for supervisor")
         self.assertIn(self.inaccessible_course, supervisor_courses, "Get courses function does nnot include inaccessible course for supervisor")
     
     def test_login(self):
         r = self.client.get(self.route, follow=True)
-        self.assertEqual([("/login/", 302)], r.redirect_chain, "Courses list does not redirect to login page when logged out")
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Courses list fails to redirect to login page when logged out")
         permissions.login(self.client, self.user)
-        self.assertEqual(200, r.status_code, "Courses list does not load with status code 200 when logged in")
+        self.assertEqual(200, r.status_code, "Courses list fails to load with status code 200 when logged in")
     
     def test_userAccess(self):
         permissions.login(self.client, self.user)
         r = self.client.get(self.route)
-        self.assertEqual(1, len(r.context["courses"]), "Courses list does not include correct courses for user")
+        self.assertEqual(1, len(r.context["courses"]), "Courses list fails to include correct courses for user")
         self.assertFalse(r.context["supervisor"], "Courses list shows management tools for user")
     
     def test_supervisorAccess(self):
@@ -204,9 +204,9 @@ class CreateCourseTest(TestCase):
     
     def test_needLogin(self):
         r = self.client.get(self.route, follow=True)
-        self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing course creation page does not redirect to login page when logged out")
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing course creation page fails to redirect to login page when logged out")
         r = self.client.post(self.route, follow=True)
-        self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing course creation page does not redirect to login page when logged out")
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing course creation page fails to redirect to login page when logged out")
         
         permissions.login(self.client, self.user)
         r = self.client.get(self.route)
