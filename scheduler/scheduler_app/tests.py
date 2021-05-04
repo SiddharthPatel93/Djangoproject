@@ -70,16 +70,27 @@ class LoginTest(TestCase):
                 previous_error = error
 
 class ListUsersTest(TestCase):
-    def test_listUsers(self):
-        """
-        Check if all users are being populated in the view.
-        Setup function not included since this is the only case with users I can think of.
+    def setUp(self):
+        self.client = Client()
+        self.route = "/users/"
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+        self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
+        self.ta = Account.objects.create(role=Account.Role.TA)
+        self.test_course = Course.objects.create(name="CS 361")
+        CourseMembership.objects.create(account=self.ta, course=self.test_course)
+        CourseMembership.objects.create(account=self.instructor, course=self.test_course)
 
-        You can add users here: http://127.0.0.1:8000/admin/scheduler_app/account/add/
+    def test_supervisorAccess(self):
+        login(self.client, self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(3, len(r.context["users"]), "Users list fails to show all users in system")
+        self.assertTrue(r.context["supervisor"], "Users list fails to show management tools for supervisor")
 
-        Check:
-        - Permissions (see lines 99-102 for how to set account manually. check if it fails with nonexistent account #)
-        """
+    def test_userAccess(self):
+        login(self.client, self.ta)
+        r = self.client.get(self.route)
+        self.assertEqual(2, len(r.context["users"]), "Users list fails to show only course members")
+        self.assertFalse(r.context["supervisor"], "Users list shows management tools")
 
 class DeleteUserTest(TestCase):
     def setUp(self):

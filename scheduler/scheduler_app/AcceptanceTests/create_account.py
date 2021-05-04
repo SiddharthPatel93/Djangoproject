@@ -1,9 +1,6 @@
-from unittest.mock import patch
-
 from django.test import Client, TestCase
-from passlib.hash import argon2
-from classes.accountcreation import create_account
-from scheduler_app.models import Account, Course, Section
+from scheduler_app.classes.accountcreation import create_account
+from scheduler_app.models import Account
 
 
 class Account_creation(TestCase):

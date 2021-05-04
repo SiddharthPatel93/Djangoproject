@@ -23,7 +23,7 @@ from django.urls import path
 from scheduler_app import views # type: ignore
 
 urlpatterns = [
-    path('homepage/', views.homepageView.as_view()),
+    path('', views.HomepageView.as_view()),
     path('admin/', admin.site.urls),
     path('login/', views.LoginView.as_view()),
     path('logout/', views.LogoutView.as_view()),

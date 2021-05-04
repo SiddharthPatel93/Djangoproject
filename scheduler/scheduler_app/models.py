@@ -1,5 +1,4 @@
 from django.db import models
-from passlib.hash import argon2
 
 MAX_LENGTH = 1023
 

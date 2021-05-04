@@ -10,7 +10,7 @@ from .models import Account, Course, Section
 class LoginView(View):
     def get(self, request):
         if "account" in request.session:
-            return redirect("/courses/")
+            return redirect("/")
         
         return render(request, "login.html", {"nav": True})
     
@@ -29,7 +29,7 @@ class LoginView(View):
             a = Account.objects.get(email=email, password=password)
 
             request.session["account"] = a.pk
-            return redirect("/courses/")
+            return redirect("/")
         except Account.DoesNotExist:
             return render(request, "login.html", {"nav": True, "errors": ["Wrong email or password!"]}, status=401)
 
@@ -43,6 +43,20 @@ class LogoutView(View):
 class ListUsersView(View):
     def get(self, request):
         """Render template of all users as a list."""
+
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        return render(request, "users_list.html", {
+            "users": [{"pk": user.pk, "name": user.name} \
+                        for user in users.get(requester)],
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+            "members": [{"pk": member.pk, "name": member.name} \
+                        for course in courses.get(requester) \
+                        for member in course.members.all()],
+        })
 
 class DeleteUserView(View):
     def post(self, request, account: int):
@@ -65,7 +79,7 @@ class ViewUserView(View):
             "supervisor": requester.role == Account.Role.SUPERVISOR,
             **model_to_dict(account),
         })
-    
+
     @check_permissions(check_supervisor=False)
     def post(self, request, requester: Account, account=0):
         if requester.role != Account.Role.SUPERVISOR and account != requester.pk:
@@ -90,7 +104,7 @@ class CreateUserView(View):
     @check_permissions()
     def get(self, request, *args):
         return render(request, "user_create.html", {"roles": Account.Role.choices})
-    
+
     @check_permissions()
     def post(self, request, *args):
         if (errors := users.create(request.POST)):
@@ -111,7 +125,7 @@ class CreateCourseView(View):
     @check_permissions()
     def get(self, request, *args):
         return render(request, "course_create.html")
-    
+
     @check_permissions()
     def post(self, request, *args):
         errors = courses.create(request.POST.get("name", ""))
@@ -128,7 +142,7 @@ class ViewCourseView(View):
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             raise Http404("Course does not exist")
-        
+
         supervisor = requester.role == Account.Role.SUPERVISOR
         
         if not supervisor and course not in courses.get(requester):
@@ -139,14 +153,14 @@ class ViewCourseView(View):
             "sections": course.sections.all(),
             "supervisor": supervisor,
         })
-    
+
     @check_permissions()
     def post(self, request, *args, course=0):
         try:
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             return Http404("Course does not exist")
-        
+
         errors = sections.create(course, request.POST.get("num", ""))
 
         return render(request, "course.html", {
@@ -156,12 +170,11 @@ class ViewCourseView(View):
             "supervisor": True,
         }, status=401 if errors else 200)
 
-class homepageView(View):
+class HomepageView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account):
-        return render(request, "supervisor.html", {
+        return render(request, "homepage.html", {
             "user": requester,
-            "supervisor": requester.role == Account.Role.SUPERVISOR,
         })
 
 class DeleteCourseView(View):
@@ -171,7 +184,7 @@ class DeleteCourseView(View):
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             raise Http404("Course does not exist")
-        
+
         courses.delete(course)
 
         return redirect("/courses/")
@@ -183,7 +196,7 @@ class DeleteSectionView(View):
             section = Section.objects.get(pk=section)
         except Section.DoesNotExist:
             raise Http404("Section does not exist")
-        
+
         sections.delete(section)
 
         return redirect(f"/courses/{section.course.pk}/")
