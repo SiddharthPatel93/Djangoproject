@@ -33,16 +33,6 @@ class Account(models.Model):
     def get_role(self):
         return self.role
 
-    def get_role_string(self):
-        myrole = self.get_role()
-        if myrole == 0:
-            return "Supervisor"
-        if myrole == 1:
-            return "Instructor"
-        else:
-            return "TA"
-
-
     def set_phone(self):
         phone = self.phone
 
