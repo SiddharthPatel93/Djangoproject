@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.forms.models import model_to_dict
 from django.test import Client, TestCase
 
@@ -10,20 +12,22 @@ class AccountTest(TestCase):
     def test_matchName(self):
         name = "Jimothy"
         a = Account(name=name)
-        self.assertEqual(name, a.__str__(), "Account name does not equal entered name")
+        self.assertEqual(name, a.__str__(), "Account name fails to equal entered name")
 
 class CourseTest(TestCase):
     def test_matchName(self):
         name = "CS 361"
         c = Course(name=name)
-        self.assertEqual(name, c.__str__(), "Course name does not equal entered name")
+        self.assertEqual(name, c.__str__(), "Course name fails to equal entered name")
 
 class SectionTest(TestCase):
     def test_matchName(self):
         s = Section(num=902)
-        self.assertEqual("902", s.__str__(), "Section name does not equal entered number")
+        self.assertEqual("902", s.__str__(), "Section name fails to equal entered number")
 
 # Classes
+
+# Permissions
 
 class ClientLoginTest(TestCase):
     def setUp(self):
@@ -40,6 +44,57 @@ class ClientLoginTest(TestCase):
         with self.assertRaises(ValueError):
             permissions.login(self.client, self.nonexistent_user)
         self.assertNotIn("account", self.client.session, "Login functions logs in nonexistent user")
+
+class CreateUserTest(TestCase):
+    def get_user(self, user_details: dict) -> Union[Account, None]:
+        try:
+            return Account.objects.get(email=user_details["email"])
+        except (Account.DoesNotExist, Account.MultipleObjectsReturned):
+            return None
+    
+    def test_missingFields(self):
+        errors = users.create({})
+        self.assertEqual(4, len(errors), "User create function fails to return errors for missing fields")
+    
+    def test_validateEmail(self):
+        user_details = {
+            "name": "user",
+            "role": Account.Role.TA,
+            "email": "bad",
+            "password": "password",
+        }
+        errors = users.create(user_details)
+        self.assertEqual(1, len(errors), "User create function fails to validate format of email")
+        self.assertIsNone(self.get_user(user_details), "User create function creates user with bad email")
+        user_details["email"] = "a@a.com"
+        errors = users.create(user_details)
+        self.assertEqual(1, len(errors), "User create function fails to validate availability of email")
+        self.assertIsNotNone(self.get_user(user_details), "User create function creates user with taken email")
+    
+    def test_createUser(self):
+        user_details = {
+            "name": "name",
+            "role": Account.Role.TA,
+            "email": "c@c.com",
+            "password": "password",
+        }
+        errors = users.create(user_details)
+        self.assertEqual(0, len(errors), "User create function produces errors when ignoring optional fields")
+        account = self.get_user(user_details)
+        self.assertIsNotNone(account, "User create function fails to create user")
+        
+        user_details = {
+            **user_details,
+            "email": "d@d.com",
+            "phone": "phone",
+            "address": "address",
+            "office_hours": "office_hours",
+        }
+        errors = users.create(user_details)
+        account = self.get_user(user_details)
+        data = model_to_dict(account)
+        for field, value in user_details.items():
+            self.assertEqual(value, data[field], f"User create function fails to assign field {field}")
 
 class EditUserTest(TestCase):
     def setUp(self):

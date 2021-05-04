@@ -24,6 +24,53 @@ class LogoutTest(TestCase):
             "Logout does not produce equal redirects for logged-in and logged-out accounts")
         self.assertNotIn("account", self.client.session, "Logout does not erase session account")
 
+class CreateUserTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route = "/users/create/"
+        self.user = Account.objects.create(
+            email="a@a.com",
+            role=Account.Role.TA,
+        )
+        self.supervisor = Account.objects.create(
+            email="b@b.com",
+            role=Account.Role.SUPERVISOR,
+        )
+    
+    def test_permisssions(self):
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing user create page does not redirect to login page when logged out")
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing user create page does not redirect to login page when logged out")
+
+        permissions.login(self.client, self.user)
+        r = self.client.get(self.route)
+        self.assertEqual(403, r.status_code, "GETing user create page does not load with status code 403 when unprivileged user")
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "POSTing user create page does not load with status code 403 when unprivileged user")
+
+        permissions.login(self.client, self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(200, r.status_code, "GETing create page does not load with status code 200 when supervisor")
+        r = self.client.post(self.route)
+        self.assertEqual(401, r.status_code, "POSTing create page does not load with status code 401 when supervisor")
+    
+    def test_errorVisibility(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.route)
+        self.assertEqual(401, r.status_code, "User creation with error does not load with status code 401")
+        self.assertLess(0, len(r.context["errors"]), "User create page does not show errors")
+    
+    def test_createUser(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.route, {
+            "name": "name",
+            "role": Account.Role.SUPERVISOR,
+            "email": "c@c.com",
+            "password": "password",
+        }, follow=True)
+        self.assertEqual([("/users/?user_created=true", 302)], r.redirect_chain, "Successful user creation does not redirect to users page with flag set")
+
 class ViewUserTest(TestCase):
     def setUp(self):
         self.client = Client()
