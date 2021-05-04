@@ -135,19 +135,6 @@ class UsersView(TestCase):
         self.assertEqual(2, len(r.context["users"]), "Users list fails to show only course members")
         self.assertFalse(r.context["supervisor"], "Users list shows management tools")
 
-    def test_listUsers(self):
-        """
-        Check if all users are being populated in the view.
-        Setup function not included since this is the only case with users I can think of.
-
-        You can add users here: http://127.0.0.1:8000/admin/scheduler_app/account/add/
-
-        Check:
-        - Permissions (see lines 99-102 for how to set account manually. check if it fails with nonexistent account #)
-        """
-        return Account.objects.filter(name=Account.name).count()
-
-
 class DeleteView(TestCase):
     def setUp(self):
         """Create test accounts and client."""

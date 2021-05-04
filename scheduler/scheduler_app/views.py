@@ -51,6 +51,9 @@ class ViewUsersView(View):
             "users": [{"pk": user.pk, "name": user.name} \
                         for user in users.get(requester)],
             "supervisor": requester.role == Account.Role.SUPERVISOR,
+            "members": [{"pk": member.pk, "name": member.name} \
+                        for course in courses.get(requester) \
+                        for member in course.members.all()],
         })
 
 class DeleteUserView(View):
