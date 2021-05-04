@@ -129,7 +129,7 @@ class UsersView(TestCase):
         self.assertEqual(3, len(r.context["users"]), "Users list fails to show all users in system")
         self.assertTrue(r.context["supervisor"], "Users list fails to show management tools for supervisor")
 
-    def test_(self):
+    def test_userAccess(self):
         login(self.client, self.ta)
         r = self.client.get(self.route)
         self.assertEqual(2, len(r.context["users"]), "Users list fails to show only course members")
