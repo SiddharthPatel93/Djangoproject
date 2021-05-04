@@ -11,3 +11,6 @@ def create(course: Course, num: str) -> list[str]:
 
 def delete(section: Section):
     section.delete()
+
+def assign(section: Section, course: Course, user):
+    return 1

@@ -511,3 +511,17 @@ class DeleteSectionTest(TestCase):
         r = self.client.post(self.route, follow=True)
         self.assertEqual([(f"/courses/{self.course.pk}/", 302)], r.redirect_chain, f"Deleting valid section with incorrect course while supervisor fails to redirect to course page")
         self.assertNotIn(self.course.pk, [section.pk for section in r.context["sections"]], f"Deleting valid section with incorrect course while supervisor fails to delete section")
+
+class AssignSectionTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.course = Course.objects.create(name="CS 361")
+        self.section = Section.objects.create(course=self.course)
+        self.route_base = "/courses/{}/sections/{}/delete/"
+        self.route = self.route_base.format(self.course.pk, self.section.pk)
+
+    def test_assignOneSection(self):
+        self.assertEqual(True)
+
+    def test_assignTwoSections(self):
+        self.assertEqual(True)
