@@ -44,6 +44,20 @@ class ListUsersView(View):
     def get(self, request):
         """Render template of all users as a list."""
 
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        return render(request, "users_list.html", {
+            "users": [{"pk": user.pk, "name": user.name} \
+                        for user in users.get(requester)],
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+            "members": [{"pk": member.pk, "name": member.name} \
+                        for course in courses.get(requester) \
+                        for member in course.members.all()],
+        })
+
 class DeleteUserView(View):
     def post(self, request, account: int):
         """
