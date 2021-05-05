@@ -1,4 +1,4 @@
-from ..models import Course, Section
+from ..models import Course, Section, Account
 
 def create(course: Course, num: str) -> list[str]:
     if not num:
@@ -12,5 +12,11 @@ def create(course: Course, num: str) -> list[str]:
 def delete(section: Section):
     section.delete()
 
-def assign(section: Section, course: Course, user):
-    return 1
+def assign(section: Section, user: Account):
+    if user or section is None or user.get_role() is not Account.Role.TA:
+        raise ValueError
+    ta = section.ta
+    if ta is not None:
+        return "Ta has already been assigned to this section"
+    section.ta = user
+    return section.ta
