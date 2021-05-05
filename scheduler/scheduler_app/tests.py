@@ -9,169 +9,6 @@ from .models import Account, Course, CourseMembership, Section
 
 # Views
 
-class ListUsersTest(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.route = "/users/"
-        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
-        self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
-        self.ta = Account.objects.create(role=Account.Role.TA)
-        self.test_course = Course.objects.create(name="CS 361")
-        CourseMembership.objects.create(account=self.ta, course=self.test_course)
-        CourseMembership.objects.create(account=self.instructor, course=self.test_course)
-
-    def test_supervisorAccess(self):
-        permissions.login(self.client, self.supervisor)
-        r = self.client.get(self.route)
-        self.assertEqual(3, len(r.context["users"]), "Users list fails to show all users in system")
-        self.assertTrue(r.context["supervisor"], "Users list fails to show management tools for supervisor")
-
-    def test_userAccess(self):
-        permissions.login(self.client, self.ta)
-        r = self.client.get(self.route)
-        self.assertEqual(2, len(r.context["users"]), "Users list fails to show only course members")
-        self.assertFalse(r.context["supervisor"], "Users list shows management tools")
-
-class DeleteUserTest(TestCase):
-    def setUp(self):
-        """Create test accounts and client."""
-    
-    def test_deleteUserUnit(self):
-        """
-        Test users.perform_delete.
-
-        Check:
-        - If account exists
-        """
-    
-    def test_deleteExistentUser(self):
-        """
-        Test if existent user gets deleted right with the view.
-
-        Check:
-        - Permissions
-        - Lack of error message
-        - Redirect
-        - User actually deleted
-        """
-    
-    def test_deleteNonexistentUser(self):
-        """
-        Test if nonexistent user fails to get deleted with the view.
-        Use your discretion with implementing these last two.
-        It is possible I am being anal with all possible cases.
-
-        Check:
-        - Permissions
-        - Error message
-        - Redirect
-        - No extraneous deletion taking place
-        """
-    
-    def test_deleteOwnUser(self):
-        """
-        Test if the user deleting a user can't delete themself with the view.
-
-        Check same qualities as last one.
-        """
-
-class ListCoursesTest(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.route = "/courses/"
-
-        self.accessible_course = Course.objects.create(name="CS 361")
-        self.inaccessible_course = Course.objects.create(name="CS -666")
-        self.user = Account.objects.create(role=Account.Role.TA)
-        CourseMembership.objects.create(account=self.user, course=self.accessible_course)
-        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
-    
-    def test_unitUserAccess(self):
-        user_courses = courses.get(self.user)
-        self.assertEqual([self.accessible_course], user_courses, "Get courses function fails to return correct courses for user")
-    
-    def test_unitSupervisorAccess(self):
-        supervisor_courses = courses.get(self.supervisor)
-        self.assertIn(self.accessible_course, supervisor_courses, "Get courses function fails to include accessible course for supervisor")
-        self.assertIn(self.inaccessible_course, supervisor_courses, "Get courses function does nnot include inaccessible course for supervisor")
-    
-    def test_login(self):
-        r = self.client.get(self.route, follow=True)
-        self.assertEqual([("/login/", 302)], r.redirect_chain, "Courses list fails to redirect to login page when logged out")
-        permissions.login(self.client, self.user)
-        self.assertEqual(200, r.status_code, "Courses list fails to load with status code 200 when logged in")
-    
-    def test_userAccess(self):
-        permissions.login(self.client, self.user)
-        r = self.client.get(self.route)
-        self.assertEqual(1, len(r.context["courses"]), "Courses list fails to include correct courses for user")
-        self.assertFalse(r.context["supervisor"], "Courses list shows management tools for user")
-    
-    def test_supervisorAccess(self):
-        permissions.login(self.client, self.supervisor)
-        r = self.client.get(self.route)
-        self.assertEqual(2, len(r.context["courses"]), "Courses list fails to include correct courses for supervisor")
-        self.assertTrue(r.context["supervisor"], "Courses list fails to show management tools for supervisor")
-
-class CreateCourseTest(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.route = "/courses/create/"
-        
-        self.user = Account.objects.create(role=Account.Role.TA)
-        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
-        self.existing_course = Course.objects.create(name="CS 361")
-    
-    def get_courses(self, name: str) -> int:
-        return Course.objects.filter(name=name).count()
-    
-    def test_unitValidateName(self):
-        bad_name = ""
-        errors = courses.create(bad_name)
-        self.assertEqual(1, len(errors), "Course creation function fails to check for empty name")
-        self.assertEqual(0, self.get_courses(bad_name), "Course creation function creates course with blank name")
-
-        bad_name = "CS 361"
-        errors = courses.create(bad_name)
-        self.assertEqual(1, len(errors), "Course creation function fails to check for duplicate name")
-        self.assertEqual(1, self.get_courses(bad_name), "Course creation function creates course with duplicate name")
-    
-    def test_unitCreatesCourse(self):
-        name = "New Course"
-        errors = courses.create(name)
-        self.assertEqual(0, len(errors), "Course creation function outputs error with valid arguments")
-        self.assertLess(0, Course.objects.filter(name=name).count(), "Course creation function fails to create course")
-    
-    def test_needLogin(self):
-        r = self.client.get(self.route, follow=True)
-        self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing course creation page fails to redirect to login page when logged out")
-        r = self.client.post(self.route, follow=True)
-        self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing course creation page fails to redirect to login page when logged out")
-        
-        permissions.login(self.client, self.user)
-        r = self.client.get(self.route)
-        self.assertEqual(403, r.status_code, "GETing ccourse creation page is not forbidden to unprivileged user")
-        r = self.client.post(self.route)
-        self.assertEqual(403, r.status_code, "POSTing course creation page is not forbidden to unprivileged user")
-        
-        permissions.login(self.client, self.supervisor)
-        r = self.client.get(self.route)
-        self.assertEqual(200, r.status_code, "GETing course creation is not accessible to supervisor")
-        r = self.client.post(self.route)
-        self.assertEqual(401, r.status_code, "POSTing course creation is not accessible to supervisor")
-    
-    def test_errorVisibility(self):
-        permissions.login(self.client, self.supervisor)
-        r = self.client.post(self.route, {"name": ""})
-        self.assertEqual(401, r.status_code, "Creating course with invalid name fails to load with status code 401")
-        self.assertEqual(1, len(r.context["errors"]), "Creating course with invalid name fails to display errors")
-    
-    def test_courseCreation(self):
-        permissions.login(self.client, self.supervisor)
-        r = self.client.post(self.route, {"name": "CS 395"}, follow=True)
-        self.assertEqual([("/courses/?course_created=true", 302)], r.redirect_chain, "Creating course with valid name fails to redirect to courses page")
-        self.assertEqual(2, len(r.context["courses"]), "Creating course with valid name fails to create course")
-
 class ViewCourseTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -233,11 +70,11 @@ class ViewCourseTest(TestCase):
         self.assertEqual(200, r.status_code, "GETing accessible course page fails to load with status code 200 as supervisor")
         self.assertTrue(r.context["supervisor"], "Course page shows management tools for supervisor")
         r = self.client.post(self.accessible_route)
-        self.assertEqual(401, r.status_code, "POSTing accessible course page fails to load with status code 401 as supervisor")
+        self.assertEqual(400, r.status_code, "POSTing accessible course page fails to load with status code 400 as supervisor")
         r = self.client.get(self.inaccessible_route)
         self.assertEqual(200, r.status_code, "GETing inaccessible course page fails to load with status code 200 as supervisor")
         r = self.client.post(self.inaccessible_route)
-        self.assertEqual(401, r.status_code, "POSTing inaccessible course page fails to load with status code 401 as supervisor")
+        self.assertEqual(400, r.status_code, "POSTing inaccessible course page fails to load with status code 400 as supervisor")
     
     def test_loadsCourseData(self):
         permissions.login(self.client, self.supervisor)

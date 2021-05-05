@@ -3,8 +3,8 @@ from typing import Union
 from django.forms.models import model_to_dict
 from django.test import Client, TestCase
 
-from .classes import permissions, users
-from .models import Account, Course, Section
+from .classes import courses, permissions, sections, users
+from .models import Account, Course, CourseMembership, Section
 
 # Model methods
 
@@ -26,6 +26,79 @@ class SectionTest(TestCase):
         self.assertEqual("902", s.__str__(), "Section name fails to equal entered number")
 
 # Classes
+
+# Courses
+
+class ListCoursesTest(TestCase):
+    def setUp(self):
+        self.accessible_course = Course.objects.create(name="CS 361")
+        self.inaccessible_course = Course.objects.create(name="CS -666")
+        self.user = Account.objects.create(role=Account.Role.TA)
+        CourseMembership.objects.create(account=self.user, course=self.accessible_course)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_userAccess(self):
+        user_courses = courses.get(self.user)
+        self.assertEqual([self.accessible_course], user_courses, "Get courses function fails to return correct courses for user")
+    
+    def test_supervisorAccess(self):
+        supervisor_courses = courses.get(self.supervisor)
+        self.assertIn(self.accessible_course, supervisor_courses, "Get courses function fails to include accessible course for supervisor")
+        self.assertIn(self.inaccessible_course, supervisor_courses, "Get courses function does nnot include inaccessible course for supervisor")
+
+class CreateCourseTest(TestCase):
+    def setUp(self):
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+        self.course = Course.objects.create(name="CS 361")
+    
+    def test_blankName(self):
+        blank_name = ""
+        errors = courses.create(blank_name)
+        self.assertEqual(1, len(errors), "Course creation function fails to check for empty name")
+        self.assertEqual(0, courses.count(blank_name), "Course creation function creates course with blank name")
+
+    def test_duplicateName(self):
+        errors = courses.create(self.course.name)
+        self.assertEqual(1, len(errors), "Course creation function fails to check for duplicate name")
+        self.assertEqual(1, courses.count(self.course.name), "Course creation function creates course with duplicate name")
+    
+    def test_createsCourse(self):
+        name = "New Course"
+        errors = courses.create(name)
+        self.assertEqual(0, len(errors), "Course creation function outputs error with valid arguments")
+        self.assertLess(0, Course.objects.filter(name=name).count(), "Course creation function fails to create course")
+
+class ViewCourseTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route = "/courses"
+
+        self.accessible_course = Course.objects.create(name="CS 361")
+        self.accessible_route = f"{self.route}/{self.accessible_course.pk}/"
+        self.section = Section.objects.create(course=self.accessible_course, num="001")
+        self.inaccessible_course = Course.objects.create(name="CS -999")
+        self.inaccessible_route = f"{self.route}/{self.inaccessible_course.pk}/"
+        self.user = Account.objects.create(role=Account.Role.TA)
+        CourseMembership.objects.create(account=self.user, course=self.accessible_course)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_blankNum(self):
+        blank_num = ""
+        errors = sections.create(self.accessible_course, blank_num)
+        self.assertEqual(1, len(errors), "Section creation function fails to produce an error when asked to create a section with a blank number")
+        self.assertEqual(0, sections.count(blank_num), "Section creation function creates a section with a blank number")
+    
+    def test_duplicateNum(self):
+        errors = sections.create(self.accessible_course, self.section.num)
+        self.assertEqual(1, len(errors), "Section creation function fails to produce an error when asked to create a section with a duplicate number")
+        self.assertEqual(1, sections.count(self.section.num), "Section creation function creates a section with a duplicate number")
+    
+    def test_createsSection(self):
+        num = "002"
+        errors = sections.create(self.accessible_course, num)
+        self.assertEqual(0, len(errors), "Section creation function fails to create valid section without errors")
+        self.assertEqual(1, sections.count(num), "Section creation function fails to create valid section")
 
 # Permissions
 
