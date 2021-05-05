@@ -463,13 +463,15 @@ class DeleteSectionTest(TestCase):
         r = self.client.post(self.route_base.format(self.course.pk, 999))
         self.assertEqual(404, r.status_code, "Deleting nonexistent section fails to load with status code 404")
     
-    def test_deletesSection(self):
+    # These tests are separate because running them in the same function deletes the section before the secondd one
+    def test_deletesSectionWithCorrectCourse(self):
         permissions.login(self.client, self.supervisor)
-
-        for name, route in [
-            ("correct", self.route),
-            ("incorrect", self.route_base.format(999, self.section.pk)),
-        ]:
-            r = self.client.post(self.route, follow=True)
-            self.assertEqual([(f"/courses/{self.course.pk}/", 302)], r.redirect_chain, f"Deleting valid section with {name} course while supervisor fails to redirect to course page")
-            self.assertNotIn(self.course.pk, [section.pk for section in r.context["sections"]], f"Deleting valid section with {name} course while supervisor fails to delete section")
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([(f"/courses/{self.course.pk}/", 302)], r.redirect_chain, "Deleting valid section with correct course as supervisor fails to redirect to course page")
+        self.assertNotIn(self.course, r.context["sections"], "Deleting valid section with incorrect course as supervisor fails to delete section")
+    
+    def test_deletesSectionWithIncorrectCourse(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.route_base.format(999, self.section.pk), follow=True)
+        self.assertEqual([(f"/courses/{self.course.pk}/", 302)], r.redirect_chain, "Deleting valid section with correct course as supervisor fails to redirect to course page")
+        self.assertNotIn(self.course, r.context["sections"], "Deleting valid section with incorrect course as supervisor fails to delete section")
