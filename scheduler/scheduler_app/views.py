@@ -3,7 +3,7 @@ from django.http.response import Http404, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.views import View
 
-from .classes import courses, sections, users
+from .classes import courses, permissions, sections, users
 from .classes.permissions import check_permissions
 from .models import Account, Course, Section
 
@@ -15,23 +15,19 @@ class LoginView(View):
         return render(request, "login.html", {"nav": True})
     
     def post(self, request):
-        errors = []
-        
-        if not (email := request.POST.get("email", "")):
-            errors.append("Please enter an email!")
-        if not (password := request.POST.get("password", "")):
-            errors.append("Please enter a password!")
+        errors, invalid_login = permissions.login_with_details(request, request.POST)
 
-        if errors:
-            return render(request, "login.html", {"errors": errors}, status=400)
-
-        try:
-            a = Account.objects.get(email=email, password=password)
-
-            request.session["account"] = a.pk
+        if not errors:
+            request.session["account"] = Account.objects.get(
+                email=request.POST["email"],
+                password=request.POST["password"],
+            ).pk
             return redirect("/")
-        except Account.DoesNotExist:
-            return render(request, "login.html", {"nav": True, "errors": ["Wrong email or password!"]}, status=401)
+        
+        return render(request, "login.html", {
+            "nav": True,
+            "errors": errors,
+        }, status=401 if invalid_login else 400)
 
 class LogoutView(View):
     def post(self, request):
