@@ -3,7 +3,7 @@ from django.http.response import Http404, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.views import View
 
-from .classes import courses, sections, users
+from .classes import courses, permissions, sections, users
 from .classes.permissions import check_permissions
 from .models import Account, Course, Section
 
@@ -15,23 +15,22 @@ class LoginView(View):
         return render(request, "login.html", {"nav": True})
     
     def post(self, request):
-        errors = []
-        
-        if not (email := request.POST.get("email", "")):
-            errors.append("Please enter an email!")
-        if not (password := request.POST.get("password", "")):
-            errors.append("Please enter a password!")
-
-        if errors:
-            return render(request, "login.html", {"errors": errors}, status=400)
-
-        try:
-            a = Account.objects.get(email=email, password=password)
-
-            request.session["account"] = a.pk
+        if "account" in request.session:
             return redirect("/")
-        except Account.DoesNotExist:
-            return render(request, "login.html", {"nav": True, "errors": ["Wrong email or password!"]}, status=401)
+        
+        errors, invalid_login = permissions.login_with_details(request, request.POST)
+
+        if not errors:
+            request.session["account"] = Account.objects.get(
+                email=request.POST["email"],
+                password=request.POST["password"],
+            ).pk
+            return redirect("/")
+        
+        return render(request, "login.html", {
+            "nav": True,
+            "errors": errors,
+        }, status=401 if invalid_login else 400)
 
 class LogoutView(View):
     def post(self, request):
@@ -98,7 +97,7 @@ class ViewUserView(View):
             "own_profile": account.pk == request.session["account"],
             "supervisor": requester.role == Account.Role.SUPERVISOR,
             **model_to_dict(account),
-        }, status=200 if not errors else 401)
+        }, status=400 if errors else 200)
 
 class CreateUserView(View):
     @check_permissions()
@@ -108,7 +107,7 @@ class CreateUserView(View):
     @check_permissions()
     def post(self, request, *args):
         if (errors := users.create(request.POST)):
-            return render(request, "user_create.html", {"errors": errors}, status=401)
+            return render(request, "user_create.html", {"errors": errors}, status=400)
         else:
             return redirect("/users/?user_created=true")
 
@@ -131,7 +130,7 @@ class CreateCourseView(View):
         errors = courses.create(request.POST.get("name", ""))
 
         if errors:
-            return render(request, "course_create.html", {"errors": errors}, status=401)
+            return render(request, "course_create.html", {"errors": errors}, status=400)
         else:
             return redirect("/courses/?course_created=true")
 
@@ -168,7 +167,7 @@ class ViewCourseView(View):
             "sections": course.sections.all(),
             "errors": errors,
             "supervisor": True,
-        }, status=401 if errors else 200)
+        }, status=400 if errors else 200)
 
 class HomepageView(View):
     @check_permissions(check_supervisor=False)
