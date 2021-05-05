@@ -8,7 +8,7 @@ def create(course: Course, num: str) -> list[str]:
 
     if not num:
         errors.append("Please enter the section number!")
-    elif Section.objects.filter(course=course.pk, num=num).exists():
+    elif count(num):
         errors.append("Please enter a number not taken by an existing section in this course!")
     
     if not errors:

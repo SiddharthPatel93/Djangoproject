@@ -67,7 +67,7 @@ class CreateCourseTest(TestCase):
         name = "New Course"
         errors = courses.create(name)
         self.assertEqual(0, len(errors), "Course creation function outputs error with valid arguments")
-        self.assertLess(0, Course.objects.filter(name=name).count(), "Course creation function fails to create course")
+        self.assertLess(0, courses.count(name), "Course creation function fails to create course")
 
 class ViewCourseTest(TestCase):
     def setUp(self):
@@ -106,16 +106,16 @@ class DeleteCourseTest(TestCase):
     
     def test_deletesCourse(self):
         courses.delete(self.course)
-        self.assertEqual(0, Course.objects.filter(name=self.course.name).count(), "Course deletion function fails to delete course")
+        self.assertEqual(0, courses.count(self.course.name), "Course deletion function fails to delete course")
 
 class DeleteSectionTest(TestCase):
     def setUp(self):
         self.course = Course.objects.create(name="CS 361")
-        self.section = Section.objects.create(course=self.course)
+        self.section = Section.objects.create(course=self.course, num="902")
     
     def test_deletesSection(self):
         sections.delete(self.section)
-        self.assertEqual(0, Section.objects.filter(pk=self.section.pk).count(), "Section deletion function fails to delete section")
+        self.assertEqual(0, sections.count(self.section.num), "Section deletion function fails to delete section")
 
 # Permissions
 

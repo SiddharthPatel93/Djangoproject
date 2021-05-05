@@ -14,7 +14,7 @@ def create(name: str) -> list[str]:
 
     if not name:
         errors.append("Please enter the course name!")
-    elif Course.objects.filter(name=name).exists():
+    elif count(name):
         errors.append("Please enter a name not taken by an existing course!")
     
     if not errors:
