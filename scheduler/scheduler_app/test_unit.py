@@ -44,7 +44,7 @@ class ListCoursesTest(TestCase):
     def test_supervisorAccess(self):
         supervisor_courses = courses.get(self.supervisor)
         self.assertIn(self.accessible_course, supervisor_courses, "Get courses function fails to include accessible course for supervisor")
-        self.assertIn(self.inaccessible_course, supervisor_courses, "Get courses function does nnot include inaccessible course for supervisor")
+        self.assertIn(self.inaccessible_course, supervisor_courses, "Get courses function does not include inaccessible course for supervisor")
 
 class CreateCourseTest(TestCase):
     def setUp(self):
@@ -99,6 +99,23 @@ class ViewCourseTest(TestCase):
         errors = sections.create(self.accessible_course, num)
         self.assertEqual(0, len(errors), "Section creation function fails to create valid section without errors")
         self.assertEqual(1, sections.count(num), "Section creation function fails to create valid section")
+
+class DeleteCourseTest(TestCase):
+    def setUp(self):
+        self.course = Course.objects.create(name="CS 361")
+    
+    def test_deletesCourse(self):
+        courses.delete(self.course)
+        self.assertEqual(0, Course.objects.filter(name=self.course.name).count(), "Course deletion function fails to delete course")
+
+class DeleteSectionTest(TestCase):
+    def setUp(self):
+        self.course = Course.objects.create(name="CS 361")
+        self.section = Section.objects.create(course=self.course)
+    
+    def test_deletesSection(self):
+        sections.delete(self.section)
+        self.assertEqual(0, Section.objects.filter(pk=self.section.pk).count(), "Section deletion function fails to delete section")
 
 # Permissions
 
