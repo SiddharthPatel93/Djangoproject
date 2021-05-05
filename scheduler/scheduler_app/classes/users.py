@@ -16,6 +16,11 @@ def create(details: dict) -> list[str]:
         errors.append("Please enter a name!")
     if not (role := details.get("role", "")):
         errors.append("Please enter a role!")
+    else:
+        try:
+            role = Account.Role(int(role))
+        except ValueError:
+            errors.append("Please enter a valid role!")
     if not (email := details.get("email", "")):
         errors.append("Please enter an email!")
     elif Account.objects.filter(email=email).exists():
@@ -31,7 +36,7 @@ def create(details: dict) -> list[str]:
     if not errors:
         Account.objects.create(
             name=name,
-            role=Account.Role(int(role)),
+            role=role,
             email=email,
             password=password,
             phone=details.get("phone", ""),
