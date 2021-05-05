@@ -97,7 +97,7 @@ class ViewUserView(View):
             "own_profile": account.pk == request.session["account"],
             "supervisor": requester.role == Account.Role.SUPERVISOR,
             **model_to_dict(account),
-        }, status=200 if not errors else 401)
+        }, status=400 if errors else 200)
 
 class CreateUserView(View):
     @check_permissions()
@@ -107,7 +107,7 @@ class CreateUserView(View):
     @check_permissions()
     def post(self, request, *args):
         if (errors := users.create(request.POST)):
-            return render(request, "user_create.html", {"errors": errors}, status=401)
+            return render(request, "user_create.html", {"errors": errors}, status=400)
         else:
             return redirect("/users/?user_created=true")
 
@@ -130,7 +130,7 @@ class CreateCourseView(View):
         errors = courses.create(request.POST.get("name", ""))
 
         if errors:
-            return render(request, "course_create.html", {"errors": errors}, status=401)
+            return render(request, "course_create.html", {"errors": errors}, status=400)
         else:
             return redirect("/courses/?course_created=true")
 
@@ -167,7 +167,7 @@ class ViewCourseView(View):
             "sections": course.sections.all(),
             "errors": errors,
             "supervisor": True,
-        }, status=401 if errors else 200)
+        }, status=400 if errors else 200)
 
 class HomepageView(View):
     @check_permissions(check_supervisor=False)
