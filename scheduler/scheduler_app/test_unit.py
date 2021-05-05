@@ -100,19 +100,29 @@ class CreateUserTest(TestCase):
     
     def test_missingFields(self):
         errors = users.create({})
-        self.assertEqual(4, len(errors), "User create function fails to return errors for missing fields")
+        self.assertEqual(4, len(errors), "User creation function fails to return errors for missing fields")
+    
+    def test_malformedRole(self):
+        self.user_details["role"] = "nope"
+        errors = users.create(self.user_details)
+        self.assertEqual(1, len(errors), "User creation function fails to validate format of role")
+    
+    def test_invalidRole(self):
+        self.user_details["role"] = "999"
+        errors = users.create(self.user_details)
+        self.assertEqual(1, len(errors), "User creation function fails to validate contents of role")
     
     def test_validateEmail(self):
         self.user_details["email"] = "bad"
         errors = users.create(self.user_details)
-        self.assertEqual(1, len(errors), "User create function fails to validate format of email")
-        self.assertIsNone(self.get_user(self.user_details), "User create function creates user with bad email")
+        self.assertEqual(1, len(errors), "User creation function fails to validate format of email")
+        self.assertIsNone(self.get_user(self.user_details), "User creation function creates user with bad email")
     
     def test_duplicateEmail(self):
         users.create(self.user_details)
         errors = users.create(self.user_details)
-        self.assertEqual(1, len(errors), "User create function fails to validate availability of email")
-        self.assertIsNotNone(self.get_user(self.user_details), "User create function creates user with taken email")
+        self.assertEqual(1, len(errors), "User creation function fails to validate availability of email")
+        self.assertIsNotNone(self.get_user(self.user_details), "User creation function creates user with taken email")
     
     def test_createUser(self):
         user_details = {
@@ -122,9 +132,9 @@ class CreateUserTest(TestCase):
             "password": "password",
         }
         errors = users.create(user_details)
-        self.assertEqual(0, len(errors), "User create function produces errors when ignoring optional fields")
+        self.assertEqual(0, len(errors), "User creation function produces errors when ignoring optional fields")
         account = self.get_user(user_details)
-        self.assertIsNotNone(account, "User create function fails to create user")
+        self.assertIsNotNone(account, "User creation function fails to create user")
         
         user_details = {
             **user_details,
@@ -137,7 +147,7 @@ class CreateUserTest(TestCase):
         account = self.get_user(user_details)
         data = model_to_dict(account)
         for field, value in user_details.items():
-            self.assertEqual(value, data[field], f"User create function fails to assign field {field}")
+            self.assertEqual(value, data[field], f"User creation function fails to assign field {field}")
 
 class EditUserTest(TestCase):
     def setUp(self):
