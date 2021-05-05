@@ -84,6 +84,14 @@ class DetailsLoginTest(TestCase):
         self.assertFalse(invalid_login, "Details login function says right details are invalid login")
 
 class CreateUserTest(TestCase):
+    def setUp(self):
+        self.user_details = {
+            "name": "user",
+            "role": Account.Role.TA,
+            "email": "a@a.com",
+            "password": "password",
+        }
+    
     def get_user(self, user_details: dict) -> Union[Account, None]:
         try:
             return Account.objects.get(email=user_details["email"])
@@ -95,19 +103,16 @@ class CreateUserTest(TestCase):
         self.assertEqual(4, len(errors), "User create function fails to return errors for missing fields")
     
     def test_validateEmail(self):
-        user_details = {
-            "name": "user",
-            "role": Account.Role.TA,
-            "email": "bad",
-            "password": "password",
-        }
-        errors = users.create(user_details)
+        self.user_details["email"] = "bad"
+        errors = users.create(self.user_details)
         self.assertEqual(1, len(errors), "User create function fails to validate format of email")
-        self.assertIsNone(self.get_user(user_details), "User create function creates user with bad email")
-        user_details["email"] = "a@a.com"
-        errors = users.create(user_details)
+        self.assertIsNone(self.get_user(self.user_details), "User create function creates user with bad email")
+    
+    def test_duplicateEmail(self):
+        users.create(self.user_details)
+        errors = users.create(self.user_details)
         self.assertEqual(1, len(errors), "User create function fails to validate availability of email")
-        self.assertIsNotNone(self.get_user(user_details), "User create function creates user with taken email")
+        self.assertIsNotNone(self.get_user(self.user_details), "User create function creates user with taken email")
     
     def test_createUser(self):
         user_details = {
