@@ -15,6 +15,9 @@ class LoginView(View):
         return render(request, "login.html", {"nav": True})
     
     def post(self, request):
+        if "account" in request.session:
+            return redirect("/")
+        
         errors, invalid_login = permissions.login_with_details(request, request.POST)
 
         if not errors:
