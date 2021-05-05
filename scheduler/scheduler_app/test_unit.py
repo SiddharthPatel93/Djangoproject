@@ -67,7 +67,7 @@ class CreateCourseTest(TestCase):
         name = "New Course"
         errors = courses.create(name)
         self.assertEqual(0, len(errors), "Course creation function outputs error with valid arguments")
-        self.assertLess(0, courses.count(name), "Course creation function fails to create course")
+        self.assertEqual(1, courses.count(name), "Course creation function fails to create course")
 
 class ViewCourseTest(TestCase):
     def setUp(self):
