@@ -1,7 +1,7 @@
 from ..models import Account, Course
 
 def count(name: str) -> int:
-    return Course.objects.filter(name=name).filter()
+    return Course.objects.filter(name=name).count()
 
 def get(requester: Account) -> list[Course]:
     if requester.role == Account.Role.SUPERVISOR:
