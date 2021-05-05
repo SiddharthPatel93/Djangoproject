@@ -25,8 +25,11 @@ class LoginTest(TestCase):
     def test_loggedIn(self):
         permissions.login(self.client, self.account)
         r = self.client.get(self.route, follow=True)
-        self.assertEqual([(self.homepage, 302)], r.redirect_chain, "Loading login page when logged in fails to redirect to homepage")
-        self.assertEqual(self.account.pk, self.client.session["account"], "Loading login page when logged in removes account session")
+        self.assertEqual([(self.homepage, 302)], r.redirect_chain, "GETing login page when logged in fails to redirect to homepage")
+        self.assertEqual(self.account.pk, self.client.session["account"], "GETing login page when logged in removes account session")
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([(self.homepage, 302)], r.redirect_chain, "POSTing login page when logged in fails to redirect to homepage")
+        self.assertEqual(self.account.pk, self.client.session["account"], "POSTing login page when logged in removes account session")
     
     def test_displaysErrors(self):
         r = self.client.post(self.route, {})
