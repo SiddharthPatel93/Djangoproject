@@ -9,66 +9,6 @@ from .models import Account, Course, CourseMembership, Section
 
 # Views
 
-class LoginTest(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.route = "/login/"
-        self.email = "test@example.com"
-        self.password = "test"
-        self.account = Account.objects.create(
-            email=self.email,
-            password=self.password,
-            role=Account.Role.SUPERVISOR,
-        )
-    
-    def test_loadLogin(self):
-        r = self.client.get(self.route, follow=True)
-        self.assertEqual(200, r.status_code, "Login page does not load with status code 200")
-        self.assertEqual([], r.redirect_chain, "Login page redirects to another page")
-        self.assertNotIn("account", self.client.session, "Login page adds account to session")
-        self.assertIsNotNone(r.context, "Login page does not render template")
-        self.assertNotIn("errors", r.context, "Login page includes errors list")
-
-        permissions.login(self.client, self.account)
-        r = self.client.get(self.route, follow=True)
-        self.assertEqual([("/courses/", 302)], r.redirect_chain, "Login page fails to redirect to dashboard when logged in")
-    
-    def test_emptyLogin(self):
-        for data in [{}, {"email": "", "password": ""}]:
-            r = self.client.post(self.route, data, follow=True)
-            self.assertEqual(400, r.status_code, f"Empty login with data {data} fails to load with status code 400")
-            self.assertEqual([], r.redirect_chain, f"Empty login with data {data} redirects to another page")
-            self.assertNotIn("account", self.client.session, f"Empty login with data {data} adds account to session")
-            self.assertIsNotNone(r.context, f"Empty login with data {data} fails to render template")
-            self.assertIn("errors", r.context, f"Empty login with data {data} fails to include errors list")
-            self.assertEqual(2, len(r.context["errors"]), f"Empty login with data {data} fails to produce 2 errors for empty fields")
-
-    def test_successfulLogin(self):
-        r = self.client.post(self.route, {"email": self.email, "password": self.password})
-        self.assertEqual(302, r.status_code, "Successful login fails to load with status code 302")
-        self.assertIn("Location", r.headers, "Successful login fails to redirect")
-        self.assertEqual("/courses/", r.headers["Location"], "Successful login fails to redirect to course dashboard")
-        self.assertIn("account", self.client.session, "Successful login fails to add account to session")
-        self.assertEqual(self.account.pk, self.client.session["account"], "Successful login adds wrong account to session")
-
-    def test_failedLogin(self):
-        previous_error = ""
-
-        for data in [{"email": self.email, "password": "wrong"}, {"email": "does@not.exist", "password": self.password}]:
-            r = self.client.post(self.route, data, follow=True)
-            self.assertEqual(401, r.status_code, f"Failed login with data {data} fails to load with status code 401")
-            self.assertEqual([], r.redirect_chain, f"Failed login with data {data} redirects to another page")
-            self.assertNotIn("account", self.client.session, f"Failed login {data} adds account to session")
-            self.assertIsNotNone(r.context, f"Failed login with data {data} fails to render template")
-            self.assertIn("errors", r.context, f"Failed login with data {data} fails to include errors list")
-            self.assertEqual(1, len(r.context["errors"]), f"Failed login with data {data} fails to produce 1 error for failed login")
-            
-            error = r.context["errors"][0]
-            if previous_error:
-                self.assertEqual(previous_error, error, "Errors for wrong username and wrong password are different")
-            else:
-                previous_error = error
-
 class ListUsersTest(TestCase):
     def setUp(self):
         self.client = Client()

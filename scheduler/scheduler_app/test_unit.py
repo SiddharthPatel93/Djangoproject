@@ -29,21 +29,54 @@ class SectionTest(TestCase):
 
 # Permissions
 
-class ClientLoginTest(TestCase):
+class LoginTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.existent_user = Account.objects.create(role=Account.Role.SUPERVISOR)
         self.nonexistent_user = Account(role=Account.Role.SUPERVISOR)
     
     def test_logsIn(self):
-        self.assertNotIn("account", self.client.session, "Test client has account in session before login")
         permissions.login(self.client, self.existent_user)
-        self.assertEqual(self.existent_user.pk, self.client.session["account"], "Login function fails to login user")
+        self.assertEqual(self.existent_user.pk, self.client.session["account"], "Session login function fails to login user")
     
     def test_nonexistentUser(self):
         with self.assertRaises(ValueError):
             permissions.login(self.client, self.nonexistent_user)
-        self.assertNotIn("account", self.client.session, "Login functions logs in nonexistent user")
+        self.assertNotIn("account", self.client.session, "Session login function logs in nonexistent user")
+
+class DetailsLoginTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.account = Account.objects.create(
+            role=Account.Role.SUPERVISOR,
+            email="email@email.email",
+            password="password",
+        )
+    
+    def test_blankDetails(self):
+        errors = permissions.login_with_details(self.client, {})
+        self.assertEqual(2, len(errors), "Details login function fails to produce errors when given blank details")
+    
+    def get_bad_password_errors(self) -> list[str]:
+        return permissions.login_with_details(self.client, {"email": self.account.email, "password": "wrong"})
+    
+    def test_emailValidation(self):
+        invalid_email = permissions.login_with_details(self.client, {"email": "bad", "password": self.account.password})
+        self.assertEqual(1, len(invalid_email), "Details login function fails to produce error when given invalid email")
+        bad_password = self.get_bad_password_errors()
+        self.assertNotEqual(bad_password, invalid_email, "Details login function produces same error as bad password when given invalid email")
+    
+    def test_wrongDetails(self):
+        bad_email = permissions.login_with_details(self.client, {"email": "wrong@wrong.wrong", "password": self.account.password})
+        self.assertEqual(1, len(bad_email), "Details login function fails to produce error when given wrong details")
+        bad_password = self.get_bad_password_errors()
+        self.assertEqual(bad_email, bad_password, "Details login function fails to produce same error for wrong email and wrong password")
+        self.assertNotIn("account", self.client.session, "Details login function logs in user with wrong password")
+    
+    def test_rightDetails(self):
+        errors = permissions.login_with_details(self.client, model_to_dict(self.account))
+        self.assertEqual(0, len(errors), "Details login function produces error when given right details")
+        self.assertEqual(self.account.pk, self.client.session["account"], "Details login fails to log in user with right details")
 
 class CreateUserTest(TestCase):
     def get_user(self, user_details: dict) -> Union[Account, None]:

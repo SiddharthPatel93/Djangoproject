@@ -5,6 +5,41 @@ from django.test import Client, TestCase
 from .classes import permissions
 from .models import Account
 
+class LoginTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route = "/login/"
+        self.homepage = "/"
+        self.account = Account.objects.create(
+            email="email@email.email",
+            password="password",
+            role=Account.Role.SUPERVISOR,
+        )
+    
+    def test_loggedOut(self):
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual(200, r.status_code, "Login page fails to load with status code 200")
+        self.assertNotIn("account", self.client.session, "Loading login page adds account to session")
+        self.assertNotIn("errors", r.context, "Loading login page includes errors list")
+
+    def test_loggedIn(self):
+        permissions.login(self.client, self.account)
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual([(self.homepage, 302)], r.redirect_chain, "Loading login page when logged in fails to redirect to homepage")
+        self.assertEqual(self.account.pk, self.client.session["account"], "Loading login page when logged in removes account session")
+    
+    def test_displaysErrors(self):
+        r = self.client.post(self.route, {})
+        self.assertEqual(400, r.status_code, "Blank login fails to load with status code 400")
+        self.assertEqual(2, len(r.context["errors"]), "Bad login fails to display errors")
+        r = self.client.post(self.route, {"email": self.account.email, "password": "wrong"})
+        self.assertEqual(401, r.status_code, "Incorrect login fails to load with status code 401")
+
+    def test_successfulLogin(self):
+        r = self.client.post(self.route, model_to_dict(self.account), follow=True)
+        self.assertEqual([(self.homepage, 302)], r.redirect_chain, "Successful login fails to redirect to homepage")
+        self.assertEqual(self.account.pk, self.client.session["account"], "Successful login fails to login to account")
+
 class LogoutTest(TestCase):
     def setUp(self):
         self.client = Client()
