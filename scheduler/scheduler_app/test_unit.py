@@ -108,15 +108,6 @@ class DeleteCourseTest(TestCase):
         courses.delete(self.course)
         self.assertEqual(0, courses.count(self.course.name), "Course deletion function fails to delete course")
 
-class DeleteSectionTest(TestCase):
-    def setUp(self):
-        self.course = Course.objects.create(name="CS 361")
-        self.section = Section.objects.create(course=self.course, num="902")
-    
-    def test_deletesSection(self):
-        sections.delete(self.section)
-        self.assertEqual(0, sections.count(self.section.num), "Section deletion function fails to delete section")
-
 # Permissions
 
 class LoginTest(TestCase):
@@ -172,6 +163,8 @@ class DetailsLoginTest(TestCase):
         self.assertEqual(self.account.pk, self.client.session["account"], "Details login fails to log in user with right details")
         self.assertEqual(0, len(errors), "Details login function produces error when given right details")
         self.assertFalse(invalid_login, "Details login function says right details are invalid login")
+
+# Users
 
 class CreateUserTest(TestCase):
     def setUp(self):
@@ -293,4 +286,14 @@ class EditUserTest(TestCase):
     def test_checksDuplicateEmail(self):
         email_edit = users.edit(self.user, self.user, {"email": self.supervisor.email})
         self.assertEqual(1, len(email_edit), "User edit function fails to block user from changing email to duplicate one")
+
+# Sections
+
+class DeleteSectionTest(TestCase):
+    def setUp(self):
+        self.course = Course.objects.create(name="CS 361")
+        self.section = Section.objects.create(course=self.course, num="902")
     
+    def test_deletesSection(self):
+        sections.delete(self.section)
+        self.assertEqual(0, sections.count(self.section.num), "Section deletion function fails to delete section")
