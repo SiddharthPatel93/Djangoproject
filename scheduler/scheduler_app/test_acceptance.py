@@ -144,10 +144,11 @@ class ViewUserTest(TestCase):
             name="TA",
             role=Account.Role.TA,
             email="ta@ta.ta",
-            password="TA",
-            phone="TA",
-            address="TA",
-            office_hours="TA",
+            password="ta",
+            phone="ta",
+            address="ta",
+            office_hours="ta",
+            skills="ta",
         )
         self.user_route = f"{self.route}/{self.user.pk}/"
         self.supervisor = Account.objects.create(
@@ -158,9 +159,10 @@ class ViewUserTest(TestCase):
             phone="supervisor",
             address="supervisor",
             office_hours="supervisor",
+            skills="supervisor",
         )
         self.supervisor_route = f"{self.route}/{self.supervisor.pk}/"
-        self.fields = ["name", "role", "email", "password", "phone", "address", "office_hours"]
+        self.fields = [field for field in model_to_dict(self.user) if field != "id"]
     
     def test_permissions(self):
         r = self.client.get(self.user_route, follow=True)
@@ -195,7 +197,7 @@ class ViewUserTest(TestCase):
     
     def test_fieldAccessibility(self):
         self.assert_accessibility_case(self.user, self.user_route, "own profile as user", [], ["role"])
-        self.assert_accessibility_case(self.user, self.supervisor_route, "other profile as user", ["password", "phone", "address"], ["name", "role", "email", "office_hours"])
+        self.assert_accessibility_case(self.user, self.supervisor_route, "other profile as user", ["password", "skills", "phone", "address"], ["name", "role", "email", "office_hours"])
         self.assert_accessibility_case(self.supervisor, self.user_route, "other profile as supervisor", [], [])
         self.assert_accessibility_case(self.supervisor, self.supervisor_route, "own profile as supervisor", [], ["role"])
     
