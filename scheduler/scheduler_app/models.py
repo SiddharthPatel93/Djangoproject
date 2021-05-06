@@ -12,10 +12,10 @@ class Account(models.Model):
     role = models.IntegerField(choices=Role.choices)
     email = models.EmailField()
     password = models.CharField(max_length=MAX_LENGTH)
-    phone = models.CharField(max_length=MAX_LENGTH)
-    address = models.CharField(max_length=MAX_LENGTH)
-    office_hours = models.CharField(max_length=MAX_LENGTH)
-
+    phone = models.CharField(max_length=MAX_LENGTH, blank=True, default="")
+    address = models.CharField(max_length=MAX_LENGTH, blank=True, default="")
+    office_hours = models.CharField(max_length=MAX_LENGTH, blank=True, default="")
+    skills = models.CharField(max_length=MAX_LENGTH, blank=True, default="")
 
     def __str__(self):
         return self.name
