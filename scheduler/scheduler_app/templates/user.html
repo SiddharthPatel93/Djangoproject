@@ -8,7 +8,7 @@
         <form method="POST" class="col-sm-4 mx-auto">
             {% csrf_token %}
 
-            <h1>{% if own_profile or supervisor %}Edit{% else %}View{% endif %} {% if own_profile %}Your{% else %}User{% endif %} Profile</h1>
+            <h1>{% if own_profile %}Edit Your Profile{% else %}User: {{ name }}{% endif %}</h1>
     
             <div class="form-group mb-3">
                 <label for="name">Name</label>
