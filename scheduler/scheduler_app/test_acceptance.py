@@ -88,6 +88,20 @@ class ListUsersTest(TestCase):
         self.assertFalse(r.context["supervisor"], "Users list shows management tools")
     """
 
+def assert_field_accessibility(self: TestCase, user: Account, route: str, case: str, hidden: list[str], readonly: list[str]):
+    permissions.login(self.client, user)
+    soup = BeautifulSoup(self.client.get(route).content, "lxml")
+    fields = [field for field in model_to_dict(user) if field != "id"]
+
+    for field in [f for f in fields if f not in hidden]:
+        self.assertIsNotNone(soup.select_one(f"*[name={field}]"), f"Field {field} is not present when viewing {case}")
+    for field in hidden:
+        self.assertIsNone(soup.select_one(f"*[name={field}]"), f"Field {field} is present when viewing {case}")
+    for field in [f for f in fields if f not in readonly]:
+        self.assertIsNone(soup.select_one(f"*[name={field}][readonly], *[name={field}][disabled]"), f"Field {field} is readonly when viewing {case}")
+    for field in readonly:
+        self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly], *[name={field}][disabled]"), f"Field {field} is not readonly when viewing {case}")
+
 class CreateUserTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -109,15 +123,18 @@ class CreateUserTest(TestCase):
 
         permissions.login(self.client, self.user)
         r = self.client.get(self.route)
-        self.assertEqual(403, r.status_code, "GETing user create page fails to load with status code 403 when unprivileged user")
+        self.assertEqual(403, r.status_code, "GETing user create page fails to load with status code 403 as user")
         r = self.client.post(self.route)
-        self.assertEqual(403, r.status_code, "POSTing user create page fails to load with status code 403 when unprivileged user")
+        self.assertEqual(403, r.status_code, "POSTing user create page fails to load with status code 403 as user")
 
         permissions.login(self.client, self.supervisor)
         r = self.client.get(self.route)
-        self.assertEqual(200, r.status_code, "GETing create page fails to load with status code 200 when supervisor")
+        self.assertEqual(200, r.status_code, "GETing create page fails to load with status code 200 as supervisor")
         r = self.client.post(self.route)
-        self.assertEqual(400, r.status_code, "POSTing create page fails to load with status code 400 when supervisor")
+        self.assertEqual(400, r.status_code, "POSTing create page fails to load with status code 400 as supervisor")
+    
+    def test_fieldAccessibility(self):
+        assert_field_accessibility(self, self.supervisor, self.route, "create user page as supervisor", [], [])
     
     def test_errorVisibility(self):
         permissions.login(self.client, self.supervisor)
@@ -162,7 +179,6 @@ class ViewUserTest(TestCase):
             skills="supervisor",
         )
         self.supervisor_route = f"{self.route}/{self.supervisor.pk}/"
-        self.fields = [field for field in model_to_dict(self.user) if field != "id"]
     
     def test_permissions(self):
         r = self.client.get(self.user_route, follow=True)
@@ -182,24 +198,11 @@ class ViewUserTest(TestCase):
         r = self.client.post(self.supervisor_route)
         self.assertEqual(200, r.status_code, "POSTing own user view page as supervisor fails to load with status code 200")
     
-    def assert_accessibility_case(self, user: Account, route: str, case: str, hidden: list[str], readonly: list[str]):
-        permissions.login(self.client, user)
-        soup = BeautifulSoup(self.client.get(route).content, "lxml")
-
-        for field in [f for f in self.fields if f not in hidden]:
-            self.assertIsNotNone(soup.select_one(f"*[name={field}]"), f"Field {field} is not present when viewing {case}")
-        for field in hidden:
-            self.assertIsNone(soup.select_one(f"*[name={field}]"), f"Field {field} is present when viewing {case}")
-        for field in [f for f in self.fields if f not in readonly]:
-            self.assertIsNone(soup.select_one(f"*[name={field}][readonly], *[name={field}][disabled]"), f"Field {field} is readonly when viewing {case}")
-        for field in readonly:
-            self.assertIsNotNone(soup.select_one(f"*[name={field}][readonly], *[name={field}][disabled]"), f"Field {field} is not readonly when viewing {case}")
-    
     def test_fieldAccessibility(self):
-        self.assert_accessibility_case(self.user, self.user_route, "own profile as user", [], ["role"])
-        self.assert_accessibility_case(self.user, self.supervisor_route, "other profile as user", ["password", "skills", "phone", "address"], ["name", "role", "email", "office_hours"])
-        self.assert_accessibility_case(self.supervisor, self.user_route, "other profile as supervisor", [], [])
-        self.assert_accessibility_case(self.supervisor, self.supervisor_route, "own profile as supervisor", [], ["role"])
+        assert_field_accessibility(self, self.user, self.user_route, "own profile as user", [], ["role"])
+        assert_field_accessibility(self, self.user, self.supervisor_route, "other profile as user", ["password", "skills", "phone", "address"], ["name", "role", "email", "office_hours"])
+        assert_field_accessibility(self, self.supervisor, self.user_route, "other profile as supervisor", [], [])
+        assert_field_accessibility(self, self.supervisor, self.supervisor_route, "own profile as supervisor", [], ["role"])
     
     def test_displayErrors(self):
         permissions.login(self.client, self.user)
