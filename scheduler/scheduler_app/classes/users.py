@@ -46,11 +46,17 @@ def create(details: dict) -> list[str]:
     
     return errors
 
-def delete(account: int) -> bool:
+def delete(account: Account) -> bool:
     """
     Attempt to delete a user.
     Return True if successful, False if not.
     """
+    account.delete()
+    if Account.object.filter(name=account.name).exist():
+        False
+    else:
+        True
+
 
 def edit(requester: Account, account: Account, details: dict) -> list[str]:
     errors = []
