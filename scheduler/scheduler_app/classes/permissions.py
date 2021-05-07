@@ -10,19 +10,19 @@ from django.test import Client
 
 from ..models import Account
 
+LOGIN = redirect("/login/")
+
 def check_permissions(check_supervisor=True):
     def wrap_view(func):
         @wraps(func)
         def perform_checks(self, request, *args, **kwargs):
-            login = redirect("/login/")
-
             if "account" not in request.session:
-                return login
+                return LOGIN
             
             try:
                 requester = Account.objects.get(pk=request.session["account"])
             except Account.DoesNotExist:
-                return login
+                return LOGIN
             
             if check_supervisor and requester.role != Account.Role.SUPERVISOR:
                 return HttpResponseForbidden("You are not a supervisor.")
