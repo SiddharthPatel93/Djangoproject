@@ -71,6 +71,7 @@ def edit(requester: Account, account: Account, details: dict) -> list[str]:
             except ValidationError:
                 errors.append("Please enter a valid email!")
     account.password = details.get("password", account.password)
+    account.skills = details.get("skills", account.skills)
     account.phone = details.get("phone", account.phone)
     account.address = details.get("address", account.address)
     account.office_hours = details.get("office_hours", account.office_hours)

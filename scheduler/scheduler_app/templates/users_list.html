@@ -17,7 +17,7 @@
     Hit me up if you need anything.
     You're gonna do great.
 -->
-    <div class="container">
+<div class="container">
     <div class="row">
         <div class="col-sm-4 mx-auto">
             <div class="d-flex justify-content-between align-items-center">
@@ -45,10 +45,14 @@
                             </td>
                             {% if supervisor %}
                                 <td>
-                                    <form method="POST" action="/users/delete/{{ user.pk }}/" style="display: inline;">
-                                        {% csrf_token %}
-                                        <button class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Delete</button>
-                                    </form>
+                                    {% if user.pk != request.session.account %}
+                                        <form method="POST" action="/users/{{ user.pk }}/delete/" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Delete</button>
+                                        </form>
+                                    {% else %}
+                                        <a href="https://64.media.tumblr.com/4aeb6c2b7a20dc04d052f31ae52ac828/tumblr_inline_o034yh1iBE1qda68o_540.png" target="_blank" style="font-family: 'Courier New', Courier, monospace;">* It's you!</a>
+                                    {% endif %}
                                 </td>
                             {% endif %}
                         </tr>
