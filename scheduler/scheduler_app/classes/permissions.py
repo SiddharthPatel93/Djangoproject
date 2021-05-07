@@ -14,10 +14,16 @@ def check_permissions(check_supervisor=True):
     def wrap_view(func):
         @wraps(func)
         def perform_checks(self, request, *args, **kwargs):
+            login = redirect("/login/")
+
             if "account" not in request.session:
-                return redirect("/login/")
-        
-            requester = Account.objects.get(pk=request.session["account"])
+                return login
+            
+            try:
+                requester = Account.objects.get(pk=request.session["account"])
+            except Account.DoesNotExist:
+                return login
+            
             if check_supervisor and requester.role != Account.Role.SUPERVISOR:
                 return HttpResponseForbidden("You are not a supervisor.")
             
