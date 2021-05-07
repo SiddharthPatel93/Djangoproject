@@ -58,11 +58,21 @@ class ListUsersView(View):
         })
 
 class DeleteUserView(View):
-    def post(self, request, account: int):
         """
         Attempt to delete the specified user.
         Redirect to /users/ after, potentially with error.
         """
+
+        @check_permissions()
+        def post(self, *args, user=0):
+            try:
+                user = Account.objects.get(pk=user)
+            except Account.DoesNotExist:
+                raise Http404("User does not exist")
+
+            users.delete(user)
+
+            return redirect("/users/")
 
 class ViewUserView(View):
     @check_permissions(check_supervisor=False)
