@@ -10,12 +10,12 @@ from django.test import Client
 
 from ..models import Account
 
-LOGIN = redirect("/login/")
-
 def check_permissions(check_supervisor=True):
     def wrap_view(func):
         @wraps(func)
         def perform_checks(self, request, *args, **kwargs):
+            LOGIN = redirect("/login/")
+
             if "account" not in request.session:
                 return LOGIN
             
