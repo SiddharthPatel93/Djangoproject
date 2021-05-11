@@ -1,6 +1,7 @@
 from typing import Union
 
 from django.forms.models import model_to_dict
+from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.test import Client, TestCase
 
 from .classes import courses, permissions, sections, users
@@ -109,6 +110,44 @@ class DeleteCourseTest(TestCase):
         self.assertEqual(0, courses.count(self.course.name), "Course deletion function fails to delete course")
 
 # Permissions
+
+class PermissionsCheckerTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    @permissions.check_permissions(check_supervisor=False)
+    def user_view(self, *args):
+        pass
+
+    @permissions.check_permissions()
+    def supervisor_view(self, *args):
+        pass
+    
+    def test_loggedOut(self):
+        r = self.user_view(self.client)
+        self.assertEqual("/login/", r.url, "Requesting check_permissions view while logged out fails to redirect to login page")
+    
+    def test_userAccessible(self):
+        permissions.login(self.client, self.user)
+        r = self.user_view(self.client)
+        self.assertIsNone(r, "Requesting check_permissions view with check_supervisor=False as user fails to load successfully")
+    
+    def test_supervisorAccessible(self):
+        permissions.login(self.client, self.user)
+        r = self.supervisor_view(self.client)
+        self.assertIsInstance(r, HttpResponseForbidden, "Requesting check_permissions view as user fails to load unsuccessfully")
+        
+        permissions.login(self.client, self.supervisor)
+        r = self.supervisor_view(self.client)
+        self.assertIsNone(r, "Requesting check_permissions view as supervisor fails to load successfully")
+    
+    def test_deletedAccount(self):
+        permissions.login(self.client, self.user)
+        self.user.delete()
+        r = self.user_view(self.client)
+        self.assertEqual("/login/", r.url, "Requesting check_permissions view when logged into deleted account fails to redirect to login page")
 
 class LoginTest(TestCase):
     def setUp(self):
