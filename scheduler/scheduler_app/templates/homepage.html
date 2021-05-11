@@ -1,68 +1,37 @@
 {% extends "page.html" %}
 
-{% block title %}{{ course.name }}{% endblock %}
+{% block title %}{{ name }}{% endblock %}
 
 {% block main %}
 <div class="container">
     <div class="row">
         <div class="col-sm-4 mx-auto">
-            <h1>{{ course.name }}</h1>
-            <hr>
+            <h1>{{ user.name }}</h1>
+            <table>
+                <tr>
+                    <th>Role</th>
+                    <td> {{ user.get_role_display }}</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td> {{ user.get_email }}</td>
+                </tr>
+                <tr>
+                    <th>Phone</th>
+                    <td> {{ user.get_phone }}</td>
+                </tr>
+                <tr>
+                    <th>Office Hours</th>
+                    <td> {{ user.get_office_hours }}</td>
+                </tr>
+                <tr>
+                    <th>Address</th>
+                    <td> {{ user.get_address }}</td>
+                </tr>
 
-            <h3>Create Section</h3>
-            <form method="POST">
-                {% csrf_token %}
-
-                <div class="form-group mb-3">
-                    <label for="num">Number</label>
-                    <input type="text" class="form-control" name="num" placeholder="Enter number" required>
-                </div>
-
-                {% if errors %}
-                    <ul>
-                        {% for error in errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-
-                <button class="btn btn-primary" type="submit">Create</button>
-            </form>
-
-            <hr>
-
-            <h3>Sections</h3>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th scope="col">Number</th>
-                        {% if supervisor %}
-                            <th scope="col">Actions</th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for section in sections %}
-                        <tr>
-                            <td>{{ section.num }}</td>
-                            {% if supervisor %}
-                                <td>
-                                    <form method="POST" action="/sections/delete/{{ course.pk }}/" style="display: inline;">
-                                        {% csrf_token %}
-                                        <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-                                    </form>
-                                </td>
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
-
-                    {% if not sections %}
-                        <tr>
-                            <td colspan="{{ supervisor|yesno:"2,1" }}">No sections to list!</td>
-                        </tr>
-                    {% endif %}
-                </tbody>
             </table>
+
+
         </div>
     </div>
 </div>
