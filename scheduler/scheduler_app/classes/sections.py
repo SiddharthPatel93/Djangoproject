@@ -1,4 +1,4 @@
-from ..models import Course, Section
+from ..models import Course, Section, Account
 
 def count(num: str) -> int:
     return Section.objects.filter(num=num).count()

@@ -339,3 +339,52 @@ class DeleteSectionTest(TestCase):
     def test_deletesSection(self):
         sections.delete(self.section)
         self.assertEqual(0, sections.count(self.section.num), "Section deletion function fails to delete section")
+
+class AssignSectionTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.course = Course.objects.create(name="CS 361")
+        self.course.save()
+        self.section = Section.objects.create(course=self.course, num=902)
+        self.section.save()
+        self.route_base = "/courses/{}/sections/{}/delete/"
+        self.route = self.route_base.format(self.course.pk, self.section.pk)
+        self.ta = Account.objects.create(name="ta",
+                                         role=Account.Role.TA,
+                                         )
+        self.ta.save()
+
+    def test_notCourseMember(self):
+        self.assertEqual(True)
+
+    def test_assignOneSection(self):
+        sections.assign(self.section, self.ta)
+        self.assertEqual(self.section.ta, self.ta)
+
+    def test_assignTwoSections(self):
+        sectiontwo = Section.objects.create(course=self.course, num=23)
+        sectiontwo.save()
+        sections.assign(self.section, self.ta)
+        sections.assign(sectiontwo, self.ta)
+        self.assertEqual(sectiontwo.ta, self.ta)
+
+    def test_alreadyAssigned(self):
+        sections.assign(self.section, self.ta)
+        ta2 = Account.objects.create(name="new ta", role=Account.Role.TA)
+        ta2.save()
+        sections.assign(self.section, ta2)
+        self.assertNotEqual(self.section.ta, ta2, msg="Trying to assign 2 TA's to 1 Section")
+
+    def test_invalidUserAssigned(self):
+        with self.assertRaises(ValueError):
+            inst = Account.objects.create(name="instructor", role=Account.Role.INSTRUCTOR)
+            sections.assign(self.section, inst)
+
+    def test_noUserAssigned(self):
+        with self.assertRaises(ValueError):
+            sections.assign(self.section, None)
+
+    def test_noSectionGiven(self):
+        with self.assertRaises(ValueError):
+            sections.assign(None, self.ta)
+
