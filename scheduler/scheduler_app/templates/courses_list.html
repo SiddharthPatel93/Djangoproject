@@ -4,6 +4,17 @@
 {% block title %}Courses{% endblock %}
 
 {% block main %}
+<style>
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+.dropdown:hover .dropdown-content {display: block;}
+</style>
 <div class="container">
     <div class="row">
         <div class="col-sm-4 mx-auto">
@@ -38,11 +49,25 @@
                                 <td>
                                     <form method="POST" action="/courses/{{ course.pk }}/delete/" style="display: inline;">
                                         {% csrf_token %}
-                                        <button class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Delete</button>
+                                        <button class="btn btn-danger btn-md" onclick="javascript:confirmDelete(this);">Delete</button>
                                     </form>
                                     <form method="POST" action="/courses/{{ course.pk }}/create_section/" style="display: inline;">
                                         {% csrf_token %}
-                                        <button class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Assign Ta</button>
+                                        <div class="dropdown">
+                                            <button class="dropdown btn-success btn-sm">Assign Instructor</button>
+                                            <div class="dropdown-content"onclick="javascript:confirmDelete(this)";>
+                                                {% for instrucor in Account %}
+                                                <a href="">user</a>
+                                                {% endfor %}
+                                        </div>
+                                            <button class="dropdown btn-success btn-sm">Assign TA</button>
+                                            <div class="dropdown-content"onclick="javascript:confirmDelete(this);">
+                                                {% for users in course.name %}
+                                                <a href="#">user</a>
+                                                {% endfor %}
+                                        </div>
+                                        </div>
+
                                     </form>
                                 </td>
                             {% endif %}

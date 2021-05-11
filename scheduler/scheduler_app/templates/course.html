@@ -4,6 +4,17 @@
 {% block title %}{{ course.name }}{% endblock %}
 
 {% block main %}
+<style>
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+.dropdown:hover .dropdown-content {display: block;}
+</style>
 <div class="container">
     <div class="row">
         <div class="col-sm-4 mx-auto">
@@ -60,6 +71,14 @@
                                         {% csrf_token %}
                                         <button class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Delete</button>
                                     </form>
+                                        <div class="dropdown">
+                                            <button class="dropdown btn-success btn-sm">Assign TA</button>
+                                            <div class="dropdown-content"onclick="javascript:confirmDelete(this);">
+                                                {% for users in TAs %}
+                                                <a href="#">users.name</a>
+                                                {% endfor %}
+                                        </div>
+                                        </div>
                                 </td>
                             {% endif %}
                         </tr>

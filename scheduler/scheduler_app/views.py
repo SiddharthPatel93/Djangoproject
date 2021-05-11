@@ -212,7 +212,11 @@ class SectionAssignmentView(View):
         if courses not in courses.get(requester):
             return HttpResponseForbidden("No courses available")
 
-        return render(request, "section_assignment.html")
+        return render(request, "course.html", {
+            "instructors": [{"pk": user.pk, "name": user.name} \
+                        for user in users.get(requester)],
+            "TAs": users.get(Account.Role.TA)
+        })
 
     def post(self, request):
         if "account" not in request.session:
@@ -231,7 +235,10 @@ class SectionAssignmentView(View):
         if errors:
             return render(request, "section_assignment.html", {"errors": errors}, status=401)
         else:
-            return redirect("/section_assignment/")
+            return render(request, "course.html", {
+                "instructors": Account.objects.filter(Account.Role.INSTRUCTOR),
+                "TAs": users.get(Account.Role.TA)
+            })
 
 class CourseAssignmentView(View):
     def get(self, request):
