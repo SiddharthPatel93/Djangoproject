@@ -34,11 +34,13 @@ def check_valid(section: Section, user: Account) -> list[str]:
         errors.append("Enter a valid user\n")
     if section is None:
         errors.append("Enter a section\n")
-    if user.get_role() is not Account.Role.TA:
+    if user is not None and user.get_role() is not Account.Role.TA:
         errors.append("User is not a TA!\n")
+    if len(errors) != 0:
+        return errors
     course = section.course
     try:
-        ta1 = course.members.get(user)
+        ta1 = course.members.get(courses__coursemembership__account=user)
     except:
         errors.append("ta not assigned to this course\n")
         return errors

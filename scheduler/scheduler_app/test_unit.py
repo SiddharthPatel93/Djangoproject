@@ -349,13 +349,20 @@ class AssignSectionTest(TestCase):
         self.section.save()
         self.route_base = "/courses/{}/sections/{}/delete/"
         self.route = self.route_base.format(self.course.pk, self.section.pk)
-        self.ta = Account.objects.create(name="ta",
-                                         role=Account.Role.TA,
-                                         )
+        self.ta = Account.objects.create(name="ta", role=Account.Role.TA)
         self.ta.save()
+        self.TAcourse = CourseMembership.objects.create(account=self.ta, course=self.course)
+        self.TAcourse.save()
 
-    def test_notCourseMember(self):
-        self.assertEqual(True)
+    def test_isCourseMember(self):
+        course = self.section.course
+        self.assertEqual(self.ta, course.members.get(courses__coursemembership__account=self.ta))
+
+    def test_isnotcourseMember(self):
+        ta2 = Account.objects.create(name="ta2",role=Account.Role.TA)
+        course = self.section.course
+        self.assertNotEqual(ta2, course.members.get(courses__coursemembership__account=self.ta))
+
 
     def test_assignOneSection(self):
         sections.assign(self.section, self.ta)
@@ -376,15 +383,15 @@ class AssignSectionTest(TestCase):
         self.assertNotEqual(self.section.ta, ta2, msg="Trying to assign 2 TA's to 1 Section")
 
     def test_invalidUserAssigned(self):
-        with self.assertRaises(ValueError):
-            inst = Account.objects.create(name="instructor", role=Account.Role.INSTRUCTOR)
-            sections.assign(self.section, inst)
+        inst = Account.objects.create(name="instructor", role=Account.Role.INSTRUCTOR)
+        self.assertEqual(["User is not a TA!\n"],sections.assign(self.section, inst))
+
 
     def test_noUserAssigned(self):
-        with self.assertRaises(ValueError):
-            sections.assign(self.section, None)
+        with self.assertRaises(TypeError, msg="No User argument given"):
+            sections.assign(self.section)
 
     def test_noSectionGiven(self):
-        with self.assertRaises(ValueError):
-            sections.assign(None, self.ta)
+        with self.assertRaises(TypeError, msg="No section argument given"):
+            sections.assign(self.ta)
 
