@@ -525,7 +525,8 @@ class AssignSectionTest(TestCase):
                                          role=Account.Role.TA,
                                          )
         self.ta.save()
-    def test_notcoursemember(self):
+
+    def test_notCourseMember(self):
         self.assertEqual(True)
 
     def test_assignOneSection(self):

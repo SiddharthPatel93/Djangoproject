@@ -40,6 +40,10 @@
                                         {% csrf_token %}
                                         <button class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Delete</button>
                                     </form>
+                                    <form method="POST" action="/courses/{{ course.pk }}/create_section/" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Assign Ta</button>
+                                    </form>
                                 </td>
                             {% endif %}
                         </tr>
