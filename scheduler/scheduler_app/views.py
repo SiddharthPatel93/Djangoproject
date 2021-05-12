@@ -107,7 +107,10 @@ class CreateUserView(View):
     @check_permissions()
     def post(self, request, *args):
         if (errors := users.create(request.POST)):
-            return render(request, "user_create.html", {"errors": errors}, status=400)
+            return render(request, "user_create.html", {
+                "errors": errors,
+                "roles": Account.Role.choices,
+            }, status=400)
         else:
             return redirect("/users/?user_created=true")
 
