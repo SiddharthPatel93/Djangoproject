@@ -254,16 +254,12 @@ class DeleteUserTest(TestCase):
         self.route = self.route_base.format(self.ta.pk)
     
     def test_deleteExistentUser(self):
-        """
-        Test if existent user gets deleted right with the view.
-
-        Check:
-        - Permissions
-        - Lack of error message
-        - Redirect
-        - User actually deleted
-        """
-
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/users/", 302)], r.redirect_chain,
+                         "Deleting user as supervisor fails to redirect to users list")
+        self.assertNotIn(self.ta.pk, [user["pk"] for user in r.context["users"]],
+                         "Deleting user as supervisor fails to delete user")
 
     def test_deleteNeedsSupervisor(self):
         permissions.login(self.client, self.instructor)
