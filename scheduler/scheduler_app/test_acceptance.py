@@ -246,14 +246,12 @@ class ViewUserTest(TestCase):
 class DeleteUserTest(TestCase):
     def setUp(self):
         """Create test accounts and client."""
-    
-    def test_deleteUserUnit(self):
-        """
-        Test users.perform_delete.
-
-        Check:
-        - If account exists
-        """
+        self.client = Client()
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+        self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
+        self.ta = Account.objects.create(role=Account.Role.TA)
+        self.route_base = "/users/{}/delete/"
+        self.route = self.route_base.format(self.ta.pk)
     
     def test_deleteExistentUser(self):
         """
@@ -265,26 +263,17 @@ class DeleteUserTest(TestCase):
         - Redirect
         - User actually deleted
         """
+
+
+    def test_deleteNeedsSupervisor(self):
+        permissions.login(self.client, self.instructor)
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "Deleting user as an instructor fails to load with status code 403")
     
     def test_deleteNonexistentUser(self):
-        """
-        Test if nonexistent user fails to get deleted with the view.
-        Use your discretion with implementing these last two.
-        It is possible I am being anal with all possible cases.
-
-        Check:
-        - Permissions
-        - Error message
-        - Redirect
-        - No extraneous deletion taking place
-        """
-    
-    def test_deleteOwnUser(self):
-        """
-        Test if the user deleting a user can't delete themself with the view.
-
-        Check same qualities as last one.
-        """
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.route_base.format(999), follow=True)
+        self.assertEqual(404, r.status_code, "Deleting nonexistent user fails to load with status code 404")
 
 class ListCoursesTest(TestCase):
     def setUp(self):
