@@ -3,11 +3,12 @@ from django.core.validators import validate_email
 
 from ..models import Account
 
+def count(name: str) -> int:
+    return Account.objects.filter(name=name).count()
 
 def get(requester: Account) -> list[Account]:
 
     return list(Account.objects.all())
-    return list(requester.users.all())
 
 def create(details: dict) -> list[str]:
     errors = []
@@ -46,11 +47,8 @@ def create(details: dict) -> list[str]:
     
     return errors
 
-def delete(account: int) -> bool:
-    """
-    Attempt to delete a user.
-    Return True if successful, False if not.
-    """
+def delete(account: Account):
+    account.delete()
 
 def edit(requester: Account, account: Account, details: dict) -> list[str]:
     errors = []

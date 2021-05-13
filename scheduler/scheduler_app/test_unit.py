@@ -329,6 +329,14 @@ class EditUserTest(TestCase):
         email_edit = users.edit(self.user, self.user, {"email": self.supervisor.email})
         self.assertEqual(1, len(email_edit), "User edit function fails to block user from changing email to duplicate one")
 
+class DeleteUserTest(TestCase):
+    def setUp(self):
+        self.user = Account.objects.create(name="TA", role=Account.Role.TA)
+    def test_deleteUser(self):
+        self.assertEqual(1, users.count(self.user.name))
+        users.delete(self.user)
+        self.assertEqual(0, users.count(self.user.name), "User deletion function fails to delete user")
+
 # Sections
 
 class DeleteSectionTest(TestCase):
