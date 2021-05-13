@@ -136,11 +136,18 @@ class CreateUserTest(TestCase):
     def test_fieldAccessibility(self):
         assert_field_accessibility(self, self.supervisor, self.route, "create user page as supervisor", [], [])
     
+    def test_rolesList(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.get(self.route)
+        self.assertIn("roles", r.context, "GETing user creation page fails to include roles list")
+        r = self.client.post(self.route)
+        self.assertIn("roles", r.context, "POSTing user creation page fails to include roles list")
+    
     def test_errorVisibility(self):
         permissions.login(self.client, self.supervisor)
         r = self.client.post(self.route)
         self.assertEqual(400, r.status_code, "User creation with error fails to load with status code 400")
-        self.assertLess(0, len(r.context["errors"]), "User create page fails to show errors")
+        self.assertLess(0, len(r.context["errors"]), "User creation page fails to show errors")
     
     def test_createUser(self):
         permissions.login(self.client, self.supervisor)
@@ -203,6 +210,13 @@ class ViewUserTest(TestCase):
         assert_field_accessibility(self, self.user, self.supervisor_route, "other profile as user", ["password", "skills", "phone", "address"], ["name", "role", "email", "office_hours"])
         assert_field_accessibility(self, self.supervisor, self.user_route, "other profile as supervisor", [], [])
         assert_field_accessibility(self, self.supervisor, self.supervisor_route, "own profile as supervisor", [], ["role"])
+    
+    def test_rolesList(self):
+        permissions.login(self.client, self.user)
+        r = self.client.get(self.user_route)
+        self.assertIn("roles", r.context, "GETing user view page fails to include roles list")
+        r = self.client.post(self.user_route)
+        self.assertIn("roles", r.context, "POSTing user view page fails to include roles list")
     
     def test_displayErrors(self):
         permissions.login(self.client, self.user)
