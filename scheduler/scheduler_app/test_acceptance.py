@@ -501,6 +501,7 @@ class EditCourseTest(TestCase):
         name = "CS 666"
         r = self.client.post(self.route, {"name": name}, follow=True)
         self.assertEqual([("/courses/", 302)], r.redirect_chain, "Performing valid course name edit fails to redirect to courses list")
+        del self.course.name
         self.assertEqual(name, self.course.name, "Performing valid course name edit fails to change course name")
 
 class DeleteSectionTest(TestCase):
