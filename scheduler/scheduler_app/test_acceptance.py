@@ -483,6 +483,11 @@ class EditCourseTest(TestCase):
     def test_fieldAccessibility(self):
         assert_field_accessibility(self, self.supervisor, self.route, self.course, "course edit page", [], [])
     
+    def test_fieldsFilledIn(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(self.course, r.context["course"], "Course edit page fails to include course in context")
+    
     def test_errorVisibility(self):
         permissions.login(self.client, self.supervisor)
         r = self.client.post(self.route)
