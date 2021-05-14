@@ -7,6 +7,13 @@ from .classes import courses, permissions, sections, users
 from .classes.permissions import check_permissions
 from .models import Account, Course, Section
 
+class HomepageView(View):
+    @check_permissions(check_supervisor=False)
+    def get(self, request, requester: Account):
+        return render(request, "homepage.html", {
+            "user": requester,
+        })
+
 class LoginView(View):
     def get(self, request):
         if "account" in request.session:
@@ -181,12 +188,12 @@ class ViewCourseView(View):
             "supervisor": True,
         }, status=400 if errors else 200)
 
-class HomepageView(View):
-    @check_permissions(check_supervisor=False)
-    def get(self, request, requester: Account):
-        return render(request, "homepage.html", {
-            "user": requester,
-        })
+class EditCourseView(View):
+    def get(self, course=0):
+        pass
+
+    def post(self, course=0):
+        pass
 
 class DeleteCourseView(View):
     @check_permissions()
