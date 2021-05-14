@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from django.db.models import Model
 from django.forms.models import model_to_dict
 from django.test import Client, TestCase
 
@@ -88,10 +89,10 @@ class ListUsersTest(TestCase):
         self.assertFalse(r.context["supervisor"], "Users list shows management tools")
     """
 
-def assert_field_accessibility(self: TestCase, user: Account, route: str, case: str, hidden: list[str], readonly: list[str]):
+def assert_field_accessibility(self: TestCase, user: Account, route: str, model: Model, case: str, hidden: list[str], readonly: list[str]):
     permissions.login(self.client, user)
     soup = BeautifulSoup(self.client.get(route).content, "lxml")
-    fields = [field for field in model_to_dict(user) if field != "id"]
+    fields = [field for field in model_to_dict(model) if field not in ["id", "members"]]
 
     for field in [f for f in fields if f not in hidden]:
         self.assertIsNotNone(soup.select_one(f"*[name={field}]"), f"Field {field} is not present when viewing {case}")
@@ -134,7 +135,7 @@ class CreateUserTest(TestCase):
         self.assertEqual(400, r.status_code, "POSTing create page fails to load with status code 400 as supervisor")
     
     def test_fieldAccessibility(self):
-        assert_field_accessibility(self, self.supervisor, self.route, "create user page as supervisor", [], [])
+        assert_field_accessibility(self, self.supervisor, self.route, self.supervisor, "create user page as supervisor", [], [])
     
     def test_rolesList(self):
         permissions.login(self.client, self.supervisor)
@@ -206,10 +207,10 @@ class ViewUserTest(TestCase):
         self.assertEqual(200, r.status_code, "POSTing own user view page as supervisor fails to load with status code 200")
     
     def test_fieldAccessibility(self):
-        assert_field_accessibility(self, self.user, self.user_route, "own profile as user", [], ["role"])
-        assert_field_accessibility(self, self.user, self.supervisor_route, "other profile as user", ["password", "skills", "phone", "address"], ["name", "role", "email", "office_hours"])
-        assert_field_accessibility(self, self.supervisor, self.user_route, "other profile as supervisor", [], [])
-        assert_field_accessibility(self, self.supervisor, self.supervisor_route, "own profile as supervisor", [], ["role"])
+        assert_field_accessibility(self, self.user, self.user_route, self.user, "own profile as user", [], ["role"])
+        assert_field_accessibility(self, self.user, self.supervisor_route, self.user, "other profile as user", ["password", "skills", "phone", "address"], ["name", "role", "email", "office_hours"])
+        assert_field_accessibility(self, self.supervisor, self.user_route, self.supervisor, "other profile as supervisor", [], [])
+        assert_field_accessibility(self, self.supervisor, self.supervisor_route, self.supervisor, "own profile as supervisor", [], ["role"])
     
     def test_rolesList(self):
         permissions.login(self.client, self.user)
@@ -445,6 +446,54 @@ class DeleteCourseTest(TestCase):
         r = self.client.post(self.route, follow=True)
         self.assertEqual([("/courses/", 302)], r.redirect_chain, "Deleting course as supervisor fails to redirect to courses list")
         self.assertNotIn(self.course.pk, [course["pk"] for course in r.context["courses"]], "Deleting course as supervisor fails to delete course")
+
+class EditCourseTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route_base = "/courses/{}/edit/"
+        self.course = Course.objects.create(name="CS 361")
+        self.route = self.route_base.format(self.course.pk)
+
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_needsSupervisor(self):
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing course edit page while logged out fails to redirect to login page")
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing course edit page while logged out fails to redirect to login page")
+
+        permissions.login(self.client, self.user)
+        r = self.client.get(self.route)
+        self.assertEqual(403, r.status_code, "GETing course edit page as user fails to load with status code 403")
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "POSTing course edit page as user fails to load with status code 403")
+
+        permissions.login(self.client, self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(200, r.status_code, "GETing course edit page as supervisor fails to load with status code 200")
+        r = self.client.post(self.route)
+        self.assertEqual(400, r.status_code, "POSTing course edit page as supervisor fails to load with status code 400")
+    
+    def test_courseExists(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.get(self.route_base.format(666))
+        self.assertEqual(404, r.status_code, "Nonexistent course edit page fails to load with status code 404")
+    
+    def test_fieldAccessibility(self):
+        assert_field_accessibility(self, self.supervisor, self.route, self.course, "course edit page", [], [])
+    
+    def test_errorVisibility(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.route)
+        self.assertEqual(1, len(r.context["errors"]), "Course edit page fails to display errors")
+    
+    def test_editsCourse(self):
+        permissions.login(self.client, self.supervisor)
+        name = "CS 666"
+        r = self.client.post(self.route, {"name": name}, follow=True)
+        self.assertEqual([("/courses/", 302)], "Performing valid course name edit fails to redirect to courses list")
+        self.assertEqual(name, self.course.name, "Performing valid course name edit fails to change course name")
 
 class DeleteSectionTest(TestCase):
     def setUp(self):
