@@ -24,3 +24,6 @@ def create(name: str) -> list[str]:
 
 def delete(course: Course):
     course.delete()
+
+def edit(course: Course, details: dict[str, str]) -> list[str]:
+    pass

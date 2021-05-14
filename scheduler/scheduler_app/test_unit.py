@@ -1,7 +1,7 @@
-from typing import Union
+from typing import Any, Union
 
 from django.forms.models import model_to_dict
-from django.http.response import HttpResponseForbidden, HttpResponseRedirect
+from django.http.response import HttpResponseForbidden
 from django.test import Client, TestCase
 
 from .classes import courses, permissions, sections, users
@@ -214,7 +214,7 @@ class CreateUserTest(TestCase):
             "password": "password",
         }
     
-    def get_user(self, user_details: dict) -> Union[Account, None]:
+    def get_user(self, user_details: dict[str, Any]) -> Union[Account, None]:
         try:
             return Account.objects.get(email=user_details["email"])
         except (Account.DoesNotExist, Account.MultipleObjectsReturned):
