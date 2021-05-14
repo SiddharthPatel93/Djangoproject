@@ -109,6 +109,22 @@ class DeleteCourseTest(TestCase):
         courses.delete(self.course)
         self.assertEqual(0, courses.count(self.course.name), "Course deletion function fails to delete course")
 
+class EditCourseTest(TestCase):
+    def setUp(self):
+        self.name = "CS 395"
+        self.course = Course.objects.create(name=self.name)
+    
+    def test_emptyName(self):
+        errors = courses.edit(self.course, {})
+        self.assertEqual(1, len(errors), "Course edit function allows blank name for course")
+        self.assertEqual(self.name, self.course.name, "course edit function changes course name to blank")
+    
+    def test_editsCourse(self):
+        name = "CS 520"
+        errors = courses.edit(self.course, {"name": name})
+        self.assertEqual(0, len(errors), "Course edit function produces errors for valid name edit")
+        self.assertEqual(name, self.course.name, "Course edit function fails to perform valid name edit")
+
 # Permissions
 
 class PermissionsCheckerTest(TestCase):
