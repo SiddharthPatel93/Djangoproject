@@ -1,6 +1,6 @@
 {% extends "page.html" %}
 
-{% block title %}Edit {% if own_profile %}Your{% else %}User{% endif %} Profile{% endblock %}
+{% block title %}{% if not own_profile and not supervisor %}View{% else %}Edit{% endif %} {% if own_profile %}Your Profile{% else %}User: {{ name }}{% endif %}{% endblock %}
 
 {% block main %}
 <div class="container">
