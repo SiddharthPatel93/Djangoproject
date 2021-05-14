@@ -477,8 +477,11 @@ class EditCourseTest(TestCase):
     
     def test_courseExists(self):
         permissions.login(self.client, self.supervisor)
-        r = self.client.get(self.route_base.format(666))
-        self.assertEqual(404, r.status_code, "Nonexistent course edit page fails to load with status code 404")
+        route = self.route_base.format(666)
+        r = self.client.get(route)
+        self.assertEqual(404, r.status_code, "GETing nonexistent course edit page fails to load with status code 404")
+        r = self.client.post(route)
+        self.assertEqual(404, r.status_code, "POSTing nonexistent course edit page fails to load with status code 404")
     
     def test_fieldAccessibility(self):
         assert_field_accessibility(self, self.supervisor, self.route, self.course, "course edit page", [], [])
