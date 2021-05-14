@@ -213,7 +213,7 @@ class EditCourseView(View):
                 "errors": errors,
             }, status=400)
         else:
-            return redirect("/courses/")
+            return redirect(f"/courses/{course.pk}/")
 
 class DeleteCourseView(View):
     @check_permissions()
