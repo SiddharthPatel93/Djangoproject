@@ -189,11 +189,31 @@ class ViewCourseView(View):
         }, status=400 if errors else 200)
 
 class EditCourseView(View):
-    def get(self, course=0):
-        pass
+    @check_permissions()
+    def get(self, request, *args, course=0):
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+        
+        return render(request, "course_edit.html", {"course": course})
+    
+    @check_permissions()
+    def post(self, request, *args, course=0):
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+        
+        errors = courses.edit(course, request.POST)
 
-    def post(self, course=0):
-        pass
+        if errors:
+            return render(request, "course_edit.html", {
+                "course": course,
+                "errors": errors,
+            }, status=400)
+        else:
+            return redirect("/courses/")
 
 class DeleteCourseView(View):
     @check_permissions()
