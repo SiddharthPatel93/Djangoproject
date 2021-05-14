@@ -113,11 +113,17 @@ class EditCourseTest(TestCase):
     def setUp(self):
         self.name = "CS 395"
         self.course = Course.objects.create(name=self.name)
+        self.other_course = Course.objects.create(name="Yeah")
     
     def test_emptyName(self):
         errors = courses.edit(self.course, {})
         self.assertEqual(1, len(errors), "Course edit function allows blank name for course")
-        self.assertEqual(self.name, self.course.name, "course edit function changes course name to blank")
+        self.assertEqual(self.name, self.course.name, "Course edit function changes course name to blank")
+    
+    def test_duplicateName(self):
+        errors = courses.edit(self.course, {"name": self.other_course.name})
+        self.assertEqual(1, len(errors), "Course edit function allows duplicate name for course")
+        self.assertEqual(self.name, self.course.name, "Course edit function duplicates course name")
     
     def test_editsCourse(self):
         name = "CS 520"
