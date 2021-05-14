@@ -36,4 +36,6 @@ urlpatterns = [
     path('courses/<int:course>/', views.ViewCourseView.as_view()),
     path('courses/<int:course>/delete/', views.DeleteCourseView.as_view()),
     path('courses/<int:course>/sections/<int:section>/delete/', views.DeleteSectionView.as_view()),
+    path('courses/<int:course>/assign/', views.AssignToCourseview.as_view()),
+    path('courses/<int:course>/assign/instructor/', views.AssignInstructorview.as_view()),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

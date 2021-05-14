@@ -1,4 +1,4 @@
-from ..models import Course, Section, Account
+from ..models import Course, Section, Account, CourseMembership
 
 def count(num: str) -> int:
     return Section.objects.filter(num=num).count()
@@ -26,6 +26,29 @@ def assign(section: Section, user: Account) -> list[str]:
         section.ta = user
     else:
         return errors
+
+def assign_course(course:Course, user:Account) -> list[str]:
+    errors = []
+    if user is None:
+        errors.append("Enter a valid user\n")
+    if course is None:
+        errors.append("Enter a course\n")
+    if user is not None and user.get_role() is not Account.Role.TA:
+        errors.append("User is not a TA!\n")
+    if len(errors) != 0:
+        return errors
+
+    ta1 = course.members.get(courses__coursemembership__account=user)
+    if ta1 is not None:
+        errors.append("TA has already been assigned to this course\n")
+        return errors
+    try:
+        membership = CourseMembership.objects.create(account=user, course=course)
+        membership.save()
+    except:
+        errors.append("an error occured forming membership")
+    return errors
+
 
 
 def check_valid(section: Section, user: Account) -> list[str]:

@@ -1,4 +1,4 @@
-from ..models import Account, Course
+from ..models import Account, Course, CourseMembership
 
 def count(name: str) -> int:
     return Course.objects.filter(name=name).count()
@@ -24,3 +24,20 @@ def create(name: str) -> list[str]:
 
 def delete(course: Course):
     course.delete()
+
+def assigninstructor(course:Course, user:Account)->list[str]:
+    errors = []
+    if not course:
+        errors.append("Please chose a course")
+    if not user:
+        errors.append("Please enter an instructor")
+    old_instructor = course.members.filter(courses__coursemembership__account=Account.Role.INSTRUCTOR)
+    if old_instructor is not None:
+        errors.append("Instructor already assigned to this Course")
+    if user.get_role() is not Account.Role.INSTRUCTOR:
+        errors.append("User is NOT an instructor")
+    if not errors:
+        new_assignment = CourseMembership.objects.create(account=user, course=course)
+        new_assignment.save()
+    return errors
+

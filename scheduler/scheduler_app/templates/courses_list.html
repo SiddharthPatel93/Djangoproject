@@ -49,26 +49,12 @@
                                 <td>
                                     <form method="POST" action="/courses/{{ course.pk }}/delete/" style="display: inline;">
                                         {% csrf_token %}
-                                        <button class="btn btn-danger btn-md" onclick="javascript:confirmDelete(this);">Delete</button>
+                                        <button class="btn btn-danger btn-md" onclick="confirmDelete(this);">Delete</button>
                                     </form>
-                                    <form method="POST" action="/courses/{{ course.pk }}/create_section/" style="display: inline;">
-                                        {% csrf_token %}
-                                        <div class="dropdown">
-                                            <button class="dropdown btn-success btn-sm">Assign Instructor</button>
-                                            <div class="dropdown-content"onclick="javascript:confirmDelete(this)";>
-                                                {% for instrucor in Account %}
-                                                <a href="">user</a>
-                                                {% endfor %}
-                                        </div>
-                                            <button class="dropdown btn-success btn-sm">Assign TA</button>
-                                            <div class="dropdown-content"onclick="javascript:confirmDelete(this);">
-                                                {% for users in course.name %}
-                                                <a href="#">user</a>
-                                                {% endfor %}
-                                        </div>
-                                        </div>
 
-                                    </form>
+
+                                            <a class=" btn-success btn-sm" href="/courses/{{ course.pk }}/assign/">Assign User</a>
+
                                 </td>
                             {% endif %}
                         </tr>

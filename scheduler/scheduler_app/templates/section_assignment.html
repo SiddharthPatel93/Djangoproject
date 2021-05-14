@@ -1,10 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "page.html" %}
 
-</body>
-</html>
+{% block title %}Assign to Course{% endblock %}
+
+{% block main %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/courses/">Courses</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create Course</li>
+                </ol>
+            </nav>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <h1>Assign to Course</h1>
+
+                <div class="form-group mb-3">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" name="name" placeholder="Enter name" required>
+                </div>
+
+                {% if errors %}
+                    <ul>
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <button class="btn btn-primary mb-3" type="submit">Create</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
