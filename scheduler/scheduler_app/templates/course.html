@@ -1,7 +1,7 @@
 {% extends "page.html" %}
 {% load static %}
 
-{% block title %}{{ course.name }}{% endblock %}
+{% block title %}Course: {{ course.name }}{% endblock %}
 
 {% block main %}
 <div class="container">
@@ -14,7 +14,10 @@
                 </ol>
             </nav>
 
-            <h1>Course: {{ course.name }}</h1>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>Course: {{ course.name }}</h1>
+                <a class="btn btn-success" href="/courses/{{ course.pk }}/edit/">Edit</a>
+            </div>
             <hr>
 
             {% if supervisor %}

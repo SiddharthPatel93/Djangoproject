@@ -10,7 +10,7 @@ def get(requester: Account) -> list[Account]:
 
     return list(Account.objects.all())
 
-def create(details: dict) -> list[str]:
+def create(details: dict[str, str]) -> list[str]:
     errors = []
 
     if not (name := details.get("name", "")):
@@ -50,7 +50,7 @@ def create(details: dict) -> list[str]:
 def delete(account: Account):
     account.delete()
 
-def edit(requester: Account, account: Account, details: dict) -> list[str]:
+def edit(requester: Account, account: Account, details: dict[str, str]) -> list[str]:
     errors = []
 
     account.name = details.get("name", account.name)

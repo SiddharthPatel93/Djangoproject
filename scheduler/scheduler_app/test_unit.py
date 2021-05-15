@@ -1,7 +1,7 @@
-from typing import Union
+from typing import Any, Union
 
 from django.forms.models import model_to_dict
-from django.http.response import HttpResponseForbidden, HttpResponseRedirect
+from django.http.response import HttpResponseForbidden
 from django.test import Client, TestCase
 
 from .classes import courses, permissions, sections, users
@@ -109,6 +109,28 @@ class DeleteCourseTest(TestCase):
         courses.delete(self.course)
         self.assertEqual(0, courses.count(self.course.name), "Course deletion function fails to delete course")
 
+class EditCourseTest(TestCase):
+    def setUp(self):
+        self.name = "CS 395"
+        self.course = Course.objects.create(name=self.name)
+        self.other_course = Course.objects.create(name="Yeah")
+    
+    def test_emptyName(self):
+        errors = courses.edit(self.course, {})
+        self.assertEqual(1, len(errors), "Course edit function allows blank name for course")
+        self.assertEqual(self.name, self.course.name, "Course edit function changes course name to blank")
+    
+    def test_duplicateName(self):
+        errors = courses.edit(self.course, {"name": self.other_course.name})
+        self.assertEqual(1, len(errors), "Course edit function allows duplicate name for course")
+        self.assertEqual(self.name, self.course.name, "Course edit function duplicates course name")
+    
+    def test_editsCourse(self):
+        name = "CS 520"
+        errors = courses.edit(self.course, {"name": name})
+        self.assertEqual(0, len(errors), "Course edit function produces errors for valid name edit")
+        self.assertEqual(name, self.course.name, "Course edit function fails to perform valid name edit")
+
 # Permissions
 
 class PermissionsCheckerTest(TestCase):
@@ -214,7 +236,7 @@ class CreateUserTest(TestCase):
             "password": "password",
         }
     
-    def get_user(self, user_details: dict) -> Union[Account, None]:
+    def get_user(self, user_details: dict[str, Any]) -> Union[Account, None]:
         try:
             return Account.objects.get(email=user_details["email"])
         except (Account.DoesNotExist, Account.MultipleObjectsReturned):

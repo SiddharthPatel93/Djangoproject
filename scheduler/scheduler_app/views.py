@@ -7,6 +7,13 @@ from .classes import courses, permissions, sections, users
 from .classes.permissions import check_permissions
 from .models import Account, Course, Section
 
+class HomepageView(View):
+    @check_permissions(check_supervisor=False)
+    def get(self, request, requester: Account):
+        return render(request, "homepage.html", {
+            "user": requester,
+        })
+
 class LoginView(View):
     def get(self, request):
         if "account" in request.session:
@@ -181,12 +188,32 @@ class ViewCourseView(View):
             "supervisor": True,
         }, status=400 if errors else 200)
 
-class HomepageView(View):
-    @check_permissions(check_supervisor=False)
-    def get(self, request, requester: Account):
-        return render(request, "homepage.html", {
-            "user": requester,
-        })
+class EditCourseView(View):
+    @check_permissions()
+    def get(self, request, *args, course=0):
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+        
+        return render(request, "course_edit.html", {"course": course})
+    
+    @check_permissions()
+    def post(self, request, *args, course=0):
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+        
+        errors = courses.edit(course, request.POST)
+
+        if errors:
+            return render(request, "course_edit.html", {
+                "course": course,
+                "errors": errors,
+            }, status=400)
+        else:
+            return redirect(f"/courses/{course.pk}/")
 
 class DeleteCourseView(View):
     @check_permissions()

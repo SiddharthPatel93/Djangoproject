@@ -24,3 +24,18 @@ def create(name: str) -> list[str]:
 
 def delete(course: Course):
     course.delete()
+
+def edit(course: Course, details: dict[str, str]) -> list[str]:
+    errors = []
+
+    if not (name := details.get("name", "")):
+        errors.append("Please enter a name!")
+    elif count(name):
+        errors.append("Please enter a name not taken by an existing course!")
+    else:
+        course.name = name
+    
+    if not errors:
+        course.save()
+    
+    return errors
