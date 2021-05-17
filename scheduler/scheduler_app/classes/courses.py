@@ -1,4 +1,4 @@
-from ..models import Account, Course
+from ..models import Account, Course, CourseMembership
 
 def count(name: str) -> int:
     return Course.objects.filter(name=name).count()
@@ -28,18 +28,31 @@ def delete(course: Course):
 def assigninstructor(course:Course, user:Account)->list[str]:
     errors = []
     if not course:
-        errors.append("Please chose a course")
+        errors.append("Please choose a course")
     if not user:
         errors.append("Please enter an instructor")
-    old_instructor = course.members.filter(courses__coursemembership__account=Account.Role.INSTRUCTOR)
-    if old_instructor is not None:
-        errors.append("Instructor already assigned to this Course")
-    if user.get_role() is not Account.Role.INSTRUCTOR:
-        errors.append("User is NOT an instructor")
-    if not errors:
-        new_assignment = CourseMembership.objects.create(account=user, course=course)
-        new_assignment.save()
-    return errors
+    if user.get_role() is 1:
+        old_instructor = list(course.members.filter(courses__coursemembership__account=Account.Role.INSTRUCTOR))
+        if len(old_instructor) is not 0:
+            errors.append(" An instructor has already been assigned to this Course")
+
+        else:
+            new_assignment = CourseMembership.objects.create(account=user, course=course)
+            new_assignment.save()
+        return errors
+    elif user.get_role() is 2:
+        try:
+            alreadyassigned = course.members.get(courses__coursemembership__account=user)
+            errors.append("this TA has already been assigned to this course")
+            return errors
+        except:
+            newTA = CourseMembership.objects.create(account=user, course=course)
+            newTA.save()
+        return errors
+    else:
+        errors.append("User is a supervisor")
+        return errors
+
 
 
 
