@@ -30,8 +30,10 @@ def assigninstructor(course:Course, user:Account)->list[str]:
     if not course:
         errors.append("Please choose a course")
     if not user:
-        errors.append("Please enter an instructor")
-    if user.get_role() is 1:
+        errors.append("Please enter a user")
+    if len(errors) > 0:
+        return errors
+    if user.get_role() == 1:
         old_instructor = list(course.members.filter(courses__coursemembership__account=Account.Role.INSTRUCTOR))
         if len(old_instructor) is not 0:
             errors.append(" An instructor has already been assigned to this Course")
@@ -39,8 +41,9 @@ def assigninstructor(course:Course, user:Account)->list[str]:
         else:
             new_assignment = CourseMembership.objects.create(account=user, course=course)
             new_assignment.save()
+            errors.append("Successfully added INSTRUCTOR to course")
         return errors
-    elif user.get_role() is 2:
+    elif user.get_role() == 2:
         try:
             alreadyassigned = course.members.get(courses__coursemembership__account=user)
             errors.append("this TA has already been assigned to this course")
@@ -48,6 +51,7 @@ def assigninstructor(course:Course, user:Account)->list[str]:
         except:
             newTA = CourseMembership.objects.create(account=user, course=course)
             newTA.save()
+            errors.append("Successfully added TA to course")
         return errors
     else:
         errors.append("User is a supervisor")

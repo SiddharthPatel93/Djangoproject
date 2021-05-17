@@ -425,3 +425,45 @@ class AssignSectionTest(TestCase):
         with self.assertRaises(TypeError, msg="No section argument given"):
             sections.assign(self.ta)
 
+class AssignInstructorTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.course = Course.objects.create(name="CS 361")
+        self.course.save()
+        self.section = Section.objects.create(course=self.course, num=902)
+        self.section.save()
+        self.route_base = "/courses/{}/sections/{}/delete/"
+        self.route = self.route_base.format(self.course.pk, self.section.pk)
+        self.ta = Account.objects.create(name="ta", role=Account.Role.TA)
+        self.ta.save()
+        self.TAcourse = CourseMembership.objects.create(account=self.ta, course=self.course)
+        self.TAcourse.save()
+        self.inst = Account.objects.create(name="inst", role=Account.Role.INSTRUCTOR)
+        self.inst.save()
+
+    def test_assignInstructor(self):
+        self.assertEqual(courses.assigninstructor(self.course, self.inst), ["Successfully added INSTRUCTOR to course"])
+
+    def test_assignTA(self):
+        self.assertEqual(courses.assigninstructor(self.course, self.ta), ["Successfully added TA to course"])
+
+    def test_assignSecondInstructor(self):
+        courses.assigninstructor(self.course, self.inst)
+        self.inst2 = Account.objects.create(name="inst2", role=Account.Role.INSTRUCTOR)
+        self.assertEqual(courses.assigninstructor(self.course, self.inst2), [" An instructor has already been assigned to this Course"])
+
+    def test_assignSecondTA(self):
+        courses.assigninstructor(self.course, self.ta)
+        self.ta2 = Account.objects.create(name="ta2", role=Account.Role.TA)
+        self.assertEqual(courses.assigninstructor(self.course, self.ta2), ["this TA has already been assigned to this course"])
+
+    def test_noCourse(self):
+        self.assertEqual(courses.assigninstructor(None, self.inst), ["Please choose a course"])
+
+    def test_noUser(self):
+        self.assertEqual(courses.assigninstructor(self.course, None), ["Please enter a user"])
+
+    def test_invalidUser(self):
+        self.Supervisor = Account.objects.create(name="Supervisor", role=Account.Role.SUPERVISOR)
+        self.Supervisor.save()
+        self.assertEqual(courses.assigninstructor(self.course, self.Supervisor), ["User is a supervisor"])
