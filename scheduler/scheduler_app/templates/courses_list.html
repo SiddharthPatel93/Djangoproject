@@ -4,17 +4,6 @@
 {% block title %}Courses{% endblock %}
 
 {% block main %}
-<style>
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #f1f1f1;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
-}
-.dropdown:hover .dropdown-content {display: block;}
-</style>
 <div class="container">
     <div class="row">
         <div class="col-sm-4 mx-auto">
@@ -47,6 +36,7 @@
                             </td>
                             {% if supervisor %}
                                 <td>
+                                    <a class="btn btn-success btn-sm" href="/courses/{{ course.pk }}/edit/">Edit</a>
                                     <form method="POST" action="/courses/{{ course.pk }}/delete/" style="display: inline;">
                                         {% csrf_token %}
                                         <button class="btn btn-danger btn-md" onclick="confirmDelete(this);">Delete</button>

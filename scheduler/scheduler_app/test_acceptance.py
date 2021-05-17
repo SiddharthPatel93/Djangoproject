@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from django.db.models import Model
 from django.forms.models import model_to_dict
 from django.test import Client, TestCase
 
@@ -88,10 +89,10 @@ class ListUsersTest(TestCase):
         self.assertFalse(r.context["supervisor"], "Users list shows management tools")
     """
 
-def assert_field_accessibility(self: TestCase, user: Account, route: str, case: str, hidden: list[str], readonly: list[str]):
+def assert_field_accessibility(self: TestCase, user: Account, route: str, model: Model, case: str, hidden: list[str], readonly: list[str]):
     permissions.login(self.client, user)
     soup = BeautifulSoup(self.client.get(route).content, "lxml")
-    fields = [field for field in model_to_dict(user) if field != "id"]
+    fields = [field for field in model_to_dict(model) if field not in ["id", "members"]]
 
     for field in [f for f in fields if f not in hidden]:
         self.assertIsNotNone(soup.select_one(f"*[name={field}]"), f"Field {field} is not present when viewing {case}")
@@ -134,13 +135,20 @@ class CreateUserTest(TestCase):
         self.assertEqual(400, r.status_code, "POSTing create page fails to load with status code 400 as supervisor")
     
     def test_fieldAccessibility(self):
-        assert_field_accessibility(self, self.supervisor, self.route, "create user page as supervisor", [], [])
+        assert_field_accessibility(self, self.supervisor, self.route, self.supervisor, "create user page as supervisor", [], [])
+    
+    def test_rolesList(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.get(self.route)
+        self.assertIn("roles", r.context, "GETing user creation page fails to include roles list")
+        r = self.client.post(self.route)
+        self.assertIn("roles", r.context, "POSTing user creation page fails to include roles list")
     
     def test_errorVisibility(self):
         permissions.login(self.client, self.supervisor)
         r = self.client.post(self.route)
         self.assertEqual(400, r.status_code, "User creation with error fails to load with status code 400")
-        self.assertLess(0, len(r.context["errors"]), "User create page fails to show errors")
+        self.assertLess(0, len(r.context["errors"]), "User creation page fails to show errors")
     
     def test_createUser(self):
         permissions.login(self.client, self.supervisor)
@@ -199,10 +207,17 @@ class ViewUserTest(TestCase):
         self.assertEqual(200, r.status_code, "POSTing own user view page as supervisor fails to load with status code 200")
     
     def test_fieldAccessibility(self):
-        assert_field_accessibility(self, self.user, self.user_route, "own profile as user", [], ["role"])
-        assert_field_accessibility(self, self.user, self.supervisor_route, "other profile as user", ["password", "skills", "phone", "address"], ["name", "role", "email", "office_hours"])
-        assert_field_accessibility(self, self.supervisor, self.user_route, "other profile as supervisor", [], [])
-        assert_field_accessibility(self, self.supervisor, self.supervisor_route, "own profile as supervisor", [], ["role"])
+        assert_field_accessibility(self, self.user, self.user_route, self.user, "own profile as user", [], ["role"])
+        assert_field_accessibility(self, self.user, self.supervisor_route, self.user, "other profile as user", ["password", "skills", "phone", "address"], ["name", "role", "email", "office_hours"])
+        assert_field_accessibility(self, self.supervisor, self.user_route, self.supervisor, "other profile as supervisor", [], [])
+        assert_field_accessibility(self, self.supervisor, self.supervisor_route, self.supervisor, "own profile as supervisor", [], ["role"])
+    
+    def test_rolesList(self):
+        permissions.login(self.client, self.user)
+        r = self.client.get(self.user_route)
+        self.assertIn("roles", r.context, "GETing user view page fails to include roles list")
+        r = self.client.post(self.user_route)
+        self.assertIn("roles", r.context, "POSTing user view page fails to include roles list")
     
     def test_displayErrors(self):
         permissions.login(self.client, self.user)
@@ -246,45 +261,30 @@ class ViewUserTest(TestCase):
 class DeleteUserTest(TestCase):
     def setUp(self):
         """Create test accounts and client."""
-    
-    def test_deleteUserUnit(self):
-        """
-        Test users.perform_delete.
-
-        Check:
-        - If account exists
-        """
+        self.client = Client()
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+        self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
+        self.ta = Account.objects.create(role=Account.Role.TA)
+        self.route_base = "/users/{}/delete/"
+        self.route = self.route_base.format(self.ta.pk)
     
     def test_deleteExistentUser(self):
-        """
-        Test if existent user gets deleted right with the view.
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/users/", 302)], r.redirect_chain,
+                         "Deleting user as supervisor fails to redirect to users list")
+        self.assertNotIn(self.ta.pk, [user["pk"] for user in r.context["users"]],
+                         "Deleting user as supervisor fails to delete user")
 
-        Check:
-        - Permissions
-        - Lack of error message
-        - Redirect
-        - User actually deleted
-        """
+    def test_deleteNeedsSupervisor(self):
+        permissions.login(self.client, self.instructor)
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "Deleting user as an instructor fails to load with status code 403")
     
     def test_deleteNonexistentUser(self):
-        """
-        Test if nonexistent user fails to get deleted with the view.
-        Use your discretion with implementing these last two.
-        It is possible I am being anal with all possible cases.
-
-        Check:
-        - Permissions
-        - Error message
-        - Redirect
-        - No extraneous deletion taking place
-        """
-    
-    def test_deleteOwnUser(self):
-        """
-        Test if the user deleting a user can't delete themself with the view.
-
-        Check same qualities as last one.
-        """
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.route_base.format(999), follow=True)
+        self.assertEqual(404, r.status_code, "Deleting nonexistent user fails to load with status code 404")
 
 class ListCoursesTest(TestCase):
     def setUp(self):
@@ -446,6 +446,63 @@ class DeleteCourseTest(TestCase):
         r = self.client.post(self.route, follow=True)
         self.assertEqual([("/courses/", 302)], r.redirect_chain, "Deleting course as supervisor fails to redirect to courses list")
         self.assertNotIn(self.course.pk, [course["pk"] for course in r.context["courses"]], "Deleting course as supervisor fails to delete course")
+
+class EditCourseTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.route_base = "/courses/{}/edit/"
+        self.course = Course.objects.create(name="CS 361")
+        self.route = self.route_base.format(self.course.pk)
+
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_needsSupervisor(self):
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing course edit page while logged out fails to redirect to login page")
+        r = self.client.post(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "POSTing course edit page while logged out fails to redirect to login page")
+
+        permissions.login(self.client, self.user)
+        r = self.client.get(self.route)
+        self.assertEqual(403, r.status_code, "GETing course edit page as user fails to load with status code 403")
+        r = self.client.post(self.route)
+        self.assertEqual(403, r.status_code, "POSTing course edit page as user fails to load with status code 403")
+
+        permissions.login(self.client, self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(200, r.status_code, "GETing course edit page as supervisor fails to load with status code 200")
+        r = self.client.post(self.route)
+        self.assertEqual(400, r.status_code, "POSTing course edit page as supervisor fails to load with status code 400")
+    
+    def test_courseExists(self):
+        permissions.login(self.client, self.supervisor)
+        route = self.route_base.format(666)
+        r = self.client.get(route)
+        self.assertEqual(404, r.status_code, "GETing nonexistent course edit page fails to load with status code 404")
+        r = self.client.post(route)
+        self.assertEqual(404, r.status_code, "POSTing nonexistent course edit page fails to load with status code 404")
+    
+    def test_fieldAccessibility(self):
+        assert_field_accessibility(self, self.supervisor, self.route, self.course, "course edit page", [], [])
+    
+    def test_fieldsFilledIn(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.get(self.route)
+        self.assertEqual(self.course, r.context["course"], "Course edit page fails to include course in context")
+    
+    def test_errorVisibility(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.route)
+        self.assertEqual(1, len(r.context["errors"]), "Course edit page fails to display errors")
+    
+    def test_editsCourse(self):
+        permissions.login(self.client, self.supervisor)
+        name = "CS 666"
+        r = self.client.post(self.route, {"name": name}, follow=True)
+        self.assertEqual([(f"/courses/{self.course.pk}/", 302)], r.redirect_chain, "Performing valid course name edit fails to redirect to courses list")
+        del self.course.name
+        self.assertEqual(name, self.course.name, "Performing valid course name edit fails to change course name")
 
 class DeleteSectionTest(TestCase):
     def setUp(self):

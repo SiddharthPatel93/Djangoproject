@@ -1,4 +1,4 @@
-from ..models import Account, Course, CourseMembership
+from ..models import Account, Course
 
 def count(name: str) -> int:
     return Course.objects.filter(name=name).count()
@@ -41,3 +41,19 @@ def assigninstructor(course:Course, user:Account)->list[str]:
         new_assignment.save()
     return errors
 
+
+
+def edit(course: Course, details: dict[str, str]) -> list[str]:
+    errors = []
+
+    if not (name := details.get("name", "")):
+        errors.append("Please enter a name!")
+    elif count(name):
+        errors.append("Please enter a name not taken by an existing course!")
+    else:
+        course.name = name
+
+    if not errors:
+        course.save()
+
+    return errors

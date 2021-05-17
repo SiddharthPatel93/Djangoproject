@@ -1,11 +1,11 @@
 {% extends "page.html" %}
 
-{% block title %}Edit {% if own_profile %}Your{% else %}User{% endif %} Profile{% endblock %}
+{% block title %}{% if not own_profile and not supervisor %}View{% else %}Edit{% endif %} {% if own_profile %}Your Profile{% else %}User: {{ name }}{% endif %}{% endblock %}
 
 {% block main %}
 <div class="container">
     <div class="row">
-        <div class="col-sm-4 mx-auto">
+        <div class="col-8 col-md-6 col-lg-4 mx-auto">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/users/">Users</a></li>
@@ -76,7 +76,7 @@
                 {% endif %}
                     
                 {% if own_profile or supervisor %}
-                    <button type="submit" class="btn btn-primary mb-3">Submit</button>
+                    <button type="submit" class="btn btn-primary mb-3">Edit</button>
                 {% endif %}
             </form>
         </div>
