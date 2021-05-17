@@ -1,0 +1,43 @@
+{% extends "page.html" %}
+
+{% block title %}Assign to Course{% endblock %}
+
+{% block main %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/courses/">Courses</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Assign</li>
+                </ol>
+            </nav>
+            <h1>{{ course.name }}</h1>
+            <form method="POST">
+                {% csrf_token %}
+
+                <h1>Assign to Course</h1>
+
+                <div class="form-group mb-3">
+                    <label for = "instructors">choose an instructor</label>
+                    <select name = "instructors" id="instructors">
+                        {% for instructor in instructors %}
+                            <option value="{{ instructor.pk }}">{{ instructor.name }}{{  instructor.role }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {% if errors %}
+                    <ul>
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <button class="btn btn-primary mb-3" type="submit">submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

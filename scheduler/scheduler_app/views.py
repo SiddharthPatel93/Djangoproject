@@ -348,22 +348,23 @@ class AssignToCourseview(View):
                     for TA in Account.objects.filter(role=Account.Role.TA)],
     })
 
-class AssignInstructorview(View):
+class AssignCourseView(View):
     @check_permissions()
     def post(self, request, requester: Account, course=0):
         try:
             course = Course.objects.get(pk=course)
-            instructor_key = request.POST.get('instructor')
-            instructor = Account.objects.get(pk=instructor_key)
-            errors = courses.assigninstructor(course, instructor)
-            return render(request,"user_course_assignment.html",{
-                    "errors":errors,
-                    "course": course,
-                    "supervisor": requester.role == Account.Role.SUPERVISOR,
-                    "instructors": [{"pk": instructor.pk, "name": instructor.name} \
-                                    for instructor in Account.objects.filter(role=Account.Role.INSTRUCTOR)],
-                    "TAs": [{"pk": TA.pk, "name": TA.name} \
-                            for TA in Account.objects.filter(role=Account.Role.TA)],
-                })
         except Course.DoesNotExist:
             raise Http404("Course does not exist")
+
+        user_key = request.POST.get('user')
+        instructor = Account.objects.get(pk=user_key)
+        errors = courses.assigninstructor(course, instructor)
+        return render(request,"user_course_assignment.html",{
+            "errors": errors,
+            "course": course,
+            "instructors": [{"pk": instructor.pk, "name": instructor.name, "role": instructor.get_role_display()} \
+                                for instructor in Account.objects.filter(role=Account.Role.INSTRUCTOR)],
+            "TAs": [{"pk": TA.pk, "name": TA.name} \
+                        for TA in Account.objects.filter(role=Account.Role.TA)],
+
+        })
