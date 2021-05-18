@@ -11,8 +11,13 @@ from .models import Account, Course, Section
 class HomepageView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account):
+
         return render(request, "homepage.html", {
             "user": requester,
+            "sections": [{"pk": section.pk, "course": section.course, "num":section.num,"ta":section.ta} \
+                      for section in Section.objects.all()],
+            "instructor": requester.role == Account.Role.INSTRUCTOR,
+            "ta": requester.role == Account.Role.TA,
         })
 
 
