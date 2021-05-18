@@ -1,5 +1,5 @@
 from django.forms.models import model_to_dict
-from django.http.response import Http404, HttpResponseForbidden
+from django.http.response import Http404, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.views import View
 
@@ -335,9 +335,35 @@ class AssignToSectionView(View):
         })
 
 class UnassignFromCourseView(View):
-    def post(self, request, course=0, account=0):
-        pass
+    @check_permissions()
+    def post(self, *args, course=0, account=0):
+        try:
+            course = Course.objects.get(id=course)
+            account = Account.objects.get(id=account)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist!")
+        except Account.DoesNotExist:
+            raise Http404("Account does not exist!")
+        
+        courses.unassign(course, account)
+
+        return redirect(f"/courses/{course.id}/")
 
 class UnassignFromSectionView(View):
-    def post(self, request, section=0):
-        pass
+    @check_permissions(check_supervisor=False)
+    def post(self, request, requester: Account, course=0, section=0):
+        if requester.role == Account.Role.TA:
+            return HttpResponseForbidden("You do not have permission to perform this action.")
+        
+        try:
+            course = Course.objects.get(id=course)
+            section = Section.objects.get(id=section)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist!")
+        except Section.DoesNotExist:
+            raise Http404("Section does not exist!")
+        
+        if sections.unassign(section):
+            return redirect(f"/courses/{course.id}/")
+        else:
+            return HttpResponseBadRequest("Section is unassigned!")
