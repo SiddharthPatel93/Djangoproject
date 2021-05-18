@@ -22,6 +22,7 @@ def check_permissions(check_supervisor=True):
             try:
                 requester = Account.objects.get(pk=request.session["account"])
             except Account.DoesNotExist:
+                del request.session["account"]
                 return LOGIN
             
             if check_supervisor and requester.role != Account.Role.SUPERVISOR:
