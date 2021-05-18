@@ -296,9 +296,9 @@ class AssignToSectionView(View):
             course = Course.objects.get(pk=course)
             section = Section.objects.get(pk=section)
         except Course.DoesNotExist:
-            raise Http404("Course does not exist!")
+            raise Http404("Course does not exist")
         except Section.DoesNotExist:
-            raise Http404("Section does not exist!")
+            raise Http404("Section does not exist")
 
         return render(request, "section_assignment.html", {
             "course": course,
@@ -314,14 +314,16 @@ class AssignToSectionView(View):
             return HttpResponseForbidden("You do not have permission to perform this action.")
         
         try:
+            course = Course.objects.get(pk=course)
             section = Section.objects.get(pk=section)
-        except section.DoesNotExist:
-            raise Http404("section does not exist")
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+        except Section.DoesNotExist:
+            raise Http404("Section does not exist")
 
-        course = Course.objects.get(pk=course)
-        user_key = request.POST.get('user', "0")
+        user_key = request.POST.get("user", "0")
         user = Account.objects.get(pk=user_key)
-        errors = sections.assign_section(section, user)
+        errors = sections.assign(section, user)
 
         return render(request, "section_assignment.html", {
             "errors": errors,
