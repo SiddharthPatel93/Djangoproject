@@ -25,38 +25,29 @@ def create(name: str) -> list[str]:
 def delete(course: Course):
     course.delete()
 
-def assign(course:Course, user:Account)->list[str]:
+def assign(course: Course, user: Account) -> list[str]:
     errors = []
+
     if not course:
         errors.append("Please choose a course")
     if not user:
         errors.append("Please enter a user")
-    if len(errors) > 0:
+    
+    if errors:
         return errors
-    if user.get_role() == 1:
-        coursemembers = course.members.all()
-        old_instructor = list(coursemembers.filter(role=Account.Role.INSTRUCTOR))
-        if len(old_instructor) is not 0:
-            errors.append("An instructor has already been assigned to this Course")
-        else:
-            new_assignment = CourseMembership.objects.create(account=user, course=course)
-            errors.append(f"Successfully added Instructor {user.name} to course")
-        return errors
-    elif user.get_role() == 2:
-        alreadyassigned = course.members.all()
-        alreadyassigned2= list(alreadyassigned.filter(email=user.get_email()))
-        if len(alreadyassigned2) is not 0:
-            errors.append(f"TA {user.name} has already been assigned to this course")
-
-        else:
-            newTA = CourseMembership.objects.create(account=user, course=course)
-            errors.append(f"Successfully added {user.name} to course")
+    
+    if (role := user.get_role()) == Account.Role.SUPERVISOR:
+        errors.append("User is a supervisor!")
+    elif role == Account.Role.INSTRUCTOR \
+            and (instructor := course.members.filter(role=Account.Role.INSTRUCTOR).first()):
+        errors.append(f"Instructor {instructor.name} has already been assigned to this course!")
+    elif course.members.filter(email=user.get_email()):
+        errors.append(f"User {user.name} has already been assigned to this course!")
     else:
-        errors.append("User is a supervisor")
+        CourseMembership.objects.create(account=user, course=course)
+        errors.append(f"Successfully added user {user.name} to course!")
+    
     return errors
-
-
-
 
 def edit(course: Course, details: dict[str, str]) -> list[str]:
     errors = []
