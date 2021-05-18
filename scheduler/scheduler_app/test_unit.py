@@ -434,10 +434,9 @@ class AssignInstructorTest(TestCase):
         self.route = self.route_base.format(self.course.pk, self.section.pk)
         self.ta = Account.objects.create(name="ta", role=Account.Role.TA)
         self.ta.save()
-        self.TAcourse = CourseMembership.objects.create(account=self.ta, course=self.course)
-        self.TAcourse.save()
         self.inst = Account.objects.create(name="inst", role=Account.Role.INSTRUCTOR)
         self.inst.save()
+
 
     def test_assignInstructor(self):
         self.assertEqual(courses.assigninstructor(self.course, self.inst), ["Successfully added INSTRUCTOR to course"])

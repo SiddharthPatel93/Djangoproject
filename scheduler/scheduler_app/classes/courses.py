@@ -34,7 +34,8 @@ def assigninstructor(course:Course, user:Account)->list[str]:
     if len(errors) > 0:
         return errors
     if user.get_role() == 1:
-        old_instructor = list(course.members.filter(courses__coursemembership__account=Account.Role.INSTRUCTOR))
+        coursemembers = course.members.all()
+        old_instructor = list(coursemembers.filter(role=Account.Role.INSTRUCTOR))
         if len(old_instructor) is not 0:
             errors.append(" An instructor has already been assigned to this Course")
 
