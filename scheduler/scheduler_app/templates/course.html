@@ -82,7 +82,7 @@
                             {% if supervisor or instructor %}
                                 <td>
                                     {% if section.ta %}
-                                        <form class="dangerous" method="POST" action="sections/{{ section.pk }}/unassign/{{ section.ta.pk }}/">
+                                        <form class="dangerous" method="POST" action="sections/{{ section.pk }}/unassign/">
                                             {% csrf_token %}
                                             <button type="button" class="btn btn-danger btn-sm" onclick="confirmAction(this, 'unassign the TA from this section');">Unassign TA</button>
                                         </form>
