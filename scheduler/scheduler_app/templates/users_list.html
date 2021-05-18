@@ -64,8 +64,28 @@
                             <td colspan="{{ supervisor|yesno:"2,1" }}">No users to list!</td>
                         </tr>
                     {% endif %}
-                </tbody>
-            </table>
+
+                    {% if not supervisor %}
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <th scope="col">Name</th>
+                                {% if supervisor %}
+                                    <th scope="col">Actions</th>
+                                {% endif %}
+                            </thead>
+                            <tbody>
+                                {% for member in members %}
+                                    <tr>
+                                        <td>
+                                            <a href="/users/{{ member.pk }}/">
+                                                {{ member.name }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
         </div>
     </div>
 </div>
