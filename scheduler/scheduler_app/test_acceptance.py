@@ -558,8 +558,8 @@ class UnassignFromCourseTest(TestCase):
         self.memberful_course = Course.objects.create()
         self.ta = Account.objects.create(role=Account.Role.TA)
         self.memberful_course.members.add(self.ta)
-        self.memberless_route = f"/courses/{self.memberful_course.id}/unassign/{self.ta.id}/"
-        self.memberful_route = f"/courses/{self.memberless_course.id}/unassign/{self.ta.id}/"
+        self.memberless_route = f"/courses/{self.memberless_course.id}/unassign/{self.ta.id}/"
+        self.memberful_route = f"/courses/{self.memberful_course.id}/unassign/{self.ta.id}/"
         self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
         self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
     
@@ -568,11 +568,11 @@ class UnassignFromCourseTest(TestCase):
         self.assertEqual([("/login/", 302)], r.redirect_chain, "Course unassignment page fails to redirect to login when logged out")
         
         permissions.login(self.client, self.ta)
-        r = self.client.post(self.memberless_course)
+        r = self.client.post(self.memberless_route)
         self.assertEqual(403, r.status_code, "Course unassignment page fails to load with status code 403 as TA")
 
         permissions.login(self.client, self.instructor)
-        r = self.client.post(self.memberless_course)
+        r = self.client.post(self.memberless_route)
         self.assertEqual(403, r.status_code, "Course unassignment page fails to load with status code 403 as instructor")
     
     def test_nonexistentCourse(self):
@@ -586,13 +586,15 @@ class UnassignFromCourseTest(TestCase):
         self.assertEqual(404, r.status_code, "Course unassignment page fails to load with status code 404 for nonexistent user")
 
     def test_memberlessCourse(self):
+        permissions.login(self.client, self.supervisor)
         r = self.client.post(self.memberless_route, follow=True)
-        self.assertEqual([(f"/courses/{self.memberless_course.pk}/", 302)], r.redirect_chain, "Course unassignment page fails to redirect to course page for memberless course")
+        self.assertEqual([(f"/courses/{self.memberless_course.id}/", 302)], r.redirect_chain, "Course unassignment page fails to redirect to course page for memberless course")
         self.assertEqual(1, self.memberful_course.members.count(), "Course unassignment page removes unrelated course membership for memberless course")
     
     def test_memberfulCourse(self):
+        permissions.login(self.client, self.supervisor)
         r = self.client.post(self.memberful_route, follow=True)
-        self.assertEqual([(f"/courses/{self.memberless_course.pk}/", 302)], "Course unassignment page fails to redirect to course page for memberful course")
+        self.assertEqual([(f"/courses/{self.memberful_course.id}/", 302)], r.redirect_chain, "Course unassignment page fails to redirect to course page for memberful course")
         self.assertEqual(0, self.memberful_course.members.count(), "Course unassignment page fails to remove course membership for memberful course")
 
 class UnassignFromSectionTest(TestCase):
