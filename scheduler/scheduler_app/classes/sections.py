@@ -30,22 +30,19 @@ def assign(section: Section, user: Account) -> list[str]:
 def assign_section(section:Section, user:Account) -> list[str]:
     errors = []
     if user is None:
-        errors.append("Enter a valid user\n")
+        errors.append("Enter a valid user")
     if section is None:
-        errors.append("Enter a section\n")
+        errors.append("Enter a section")
     if user is not None:
         if user.get_role() == 0:
-            errors.append("User is a supervisor, not a TA!\n")
+            errors.append("User is a supervisor, not a TA!")
         if user.get_role() == 1:
-            errors.append("User is an instructor, not a TA!\n")
+            errors.append("User is an instructor, not a TA!")
     if len(errors) != 0:
         return errors
-
     if section.ta is None:
-        section.ta = user
-        section.ta.save()
-        errors.append("sucessfully added TA")
-        return errors
+        section.ta= user
+        errors.append("successfully added TA")
     else:
         errors.append("could not assign TA to section")
     return errors

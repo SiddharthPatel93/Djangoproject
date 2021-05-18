@@ -395,35 +395,35 @@ class AssignSectionTest(TestCase):
 
 
     def test_assignOneSection(self):
-        sections.assign(self.section, self.ta)
+        sections.assign_section(self.section, self.ta)
         self.assertEqual(self.section.ta, self.ta)
 
     def test_assignTwoSections(self):
         sectiontwo = Section.objects.create(course=self.course, num=23)
         sectiontwo.save()
-        sections.assign(self.section, self.ta)
-        sections.assign(sectiontwo, self.ta)
+        sections.assign_section(self.section, self.ta)
+        sections.assign_section(sectiontwo, self.ta)
         self.assertEqual(sectiontwo.ta, self.ta)
 
     def test_alreadyAssigned(self):
-        sections.assign(self.section, self.ta)
+        sections.assign_section(self.section, self.ta)
         ta2 = Account.objects.create(name="new ta", role=Account.Role.TA)
         ta2.save()
-        sections.assign(self.section, ta2)
+        sections.assign_section(self.section, ta2)
         self.assertNotEqual(self.section.ta, ta2, msg="Trying to assign 2 TA's to 1 Section")
 
     def test_invalidUserAssigned(self):
         inst = Account.objects.create(name="instructor", role=Account.Role.INSTRUCTOR)
-        self.assertEqual(["User is not a TA!\n"],sections.assign(self.section, inst))
+        self.assertEqual(["User is an instructor, not a TA!"],sections.assign_section(self.section, inst))
 
 
     def test_noUserAssigned(self):
         with self.assertRaises(TypeError, msg="No User argument given"):
-            sections.assign(self.section)
+            sections.assign_section(self.section)
 
     def test_noSectionGiven(self):
         with self.assertRaises(TypeError, msg="No section argument given"):
-            sections.assign(self.ta)
+            sections.assign_section(self.ta)
 
 class AssignInstructorTest(TestCase):
     def setUp(self):
