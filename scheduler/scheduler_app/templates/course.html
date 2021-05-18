@@ -79,7 +79,7 @@
                             </td>
                             {% if supervisor or instructor %}
                                 <td>
-                                    <a class="btn btn-primary btn-sm" href="/courses/{{ course.pk }}/{{ section.pk }}/assign/">Assign User</a>
+                                    <a class="btn btn-primary btn-sm" href="sections/{{ section.pk }}/assign/">Assign User</a>
                                 {% if supervisor %}
                                     <form method="POST" action="sections/{{ section.pk }}/delete/" style="display: inline;">
                                         {% csrf_token %}
