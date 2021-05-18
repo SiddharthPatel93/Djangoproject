@@ -49,6 +49,7 @@
                 <thead>
                     <tr>
                         <th scope="col">Number</th>
+                        <th scope="col">Name</th>
                         {% if supervisor %}
                             <th scope="col">Actions</th>
                         {% endif %}
@@ -58,6 +59,7 @@
                     {% for section in sections %}
                         <tr>
                             <td>{{ section.num }}</td>
+                            <td></td>
                             {% if supervisor %}
                                 <td>
                                     <form method="POST" action="sections/{{ section.pk }}/delete/" style="display: inline;">
@@ -67,13 +69,21 @@
                                 </td>
                             {% endif %}
                         </tr>
-                    {% endfor %}
 
-                    {% if not sections %}
+                        {% for member in section.members %}
+                            <tr>
+                                <td></td>
+                                <td><a href="/users/{{ member.pk }}/">{{ member.name }}</a></td>
+                                {% if supervisor %}
+                                    <td></td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    {% empty %}
                         <tr>
                             <td colspan="{{ supervisor|yesno:"2,1" }}">No sections to list!</td>
                         </tr>
-                    {% endif %}
+                    {% endfor %}
                 </tbody>
             </table>
 
