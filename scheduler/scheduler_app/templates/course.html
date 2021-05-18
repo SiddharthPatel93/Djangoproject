@@ -60,7 +60,7 @@
                 <thead>
                     <tr>
                         <th scope="col">Number</th>
-                        <th scope="col">Name</th>
+                        <th scope="col">TA</th>
                         {% if supervisor or instructor %}
                             <th scope="col">Actions</th>
                         {% endif %}
@@ -70,7 +70,13 @@
                     {% for section in sections %}
                         <tr>
                             <td>{{ section.num }}</td>
-                            <td></td>
+                            <td>
+                                {% if section.ta %}
+                                    <a href="/users/{{ section.ta.pk }}/">{{ section.ta.name }}</a>
+                                {% else %}
+                                    No TA yet!
+                                {% endif %}
+                            </td>
                             {% if supervisor or instructor %}
                                 <td>
                                     <a class="btn btn-primary btn-sm" href="/courses/{{ course.pk }}/{{ section.pk }}/assign/">Assign User</a>
@@ -82,17 +88,7 @@
                                     {% endif %}
                                 </td>
                             {% endif %}
-                        </tr>
-
-                        {% for member in section.members %}
-                            <tr>
-                                <td></td>
-                                <td><a href="/users/{{ member.pk }}/">{{ member.name }}</a></td>
-                                {% if supervisor %}
-                                    <td></td>
-                                {% endif %}
-                            </tr>
-                        {% endfor %}
+                        </tr>   
                     {% empty %}
                         <tr>
                             <td colspan="{{ supervisor|yesno:"2,1" }}">No sections to list!</td>
