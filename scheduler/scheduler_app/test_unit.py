@@ -101,7 +101,7 @@ class ViewCourseTest(TestCase):
         self.assertEqual(0, len(errors), "Section creation function fails to create valid section without errors")
         self.assertEqual(1, sections.count(num), "Section creation function fails to create valid section")
 
-class AssignToCourse(TestCase):
+class AssignToCourseTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.course = Course.objects.create(name="CS 361")
