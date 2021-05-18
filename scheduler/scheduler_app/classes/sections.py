@@ -27,26 +27,27 @@ def assign(section: Section, user: Account) -> list[str]:
     else:
         return errors
 
-def assign_course(course:Course, user:Account) -> list[str]:
+def assign_section(section:Section, user:Account) -> list[str]:
     errors = []
     if user is None:
         errors.append("Enter a valid user\n")
-    if course is None:
-        errors.append("Enter a course\n")
-    if user is not None and user.get_role() is not Account.Role.TA:
-        errors.append("User is not a TA!\n")
+    if section is None:
+        errors.append("Enter a section\n")
+    if user is not None:
+        if user.get_role() == 0:
+            errors.append("User is a supervisor, not a TA!\n")
+        if user.get_role() == 1:
+            errors.append("User is an instructor, not a TA!\n")
     if len(errors) != 0:
         return errors
 
-    ta1 = course.members.get(courses__coursemembership__account=user)
-    if ta1 is not None:
-        errors.append("TA has already been assigned to this course\n")
+    if section.ta is None:
+        section.ta = user
+        section.ta.save()
+        errors.append("sucessfully added TA")
         return errors
-    try:
-        membership = CourseMembership.objects.create(account=user, course=course)
-        membership.save()
-    except:
-        errors.append("an error occured forming membership")
+    else:
+        errors.append("could not assign TA to section")
     return errors
 
 

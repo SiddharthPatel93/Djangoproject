@@ -16,10 +16,10 @@
             <form method="POST">
                 {% csrf_token %}
 
-                <h1>Assign to Course</h1>
+                <h1>Assign to Section</h1>
 
                 <div class="form-group mb-3">
-                    <label for = "users">assign user to course</label>
+                    <label for = "users">assign user to section</label>
                     <select name = "user" id="user">
                         {% for user in users %}
                             <option value="{{ user.pk }}">{{ user.name }} - {{  user.role }}</option>
