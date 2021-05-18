@@ -292,7 +292,6 @@ class AssignToSectionView(View):
         try:
             course = Course.objects.get(pk=course)
             section = Section.objects.get(pk=section)
-            tas = course.members.filter(role=Account.Role.TA)
         except Course.DoesNotExist:
             raise Http404("Course does not exist!")
         except Section.DoesNotExist:
@@ -302,14 +301,13 @@ class AssignToSectionView(View):
             "course": course,
             "section": section,
             "instructor": requester.role == Account.Role.INSTRUCTOR,
-            "users": tas,
+            "users": course.members.filter(role=Account.Role.TA),
         })
 
     @check_permissions(check_supervisor=False)
     def post(self, request, requester: Account, course=0, section=0):
         try:
             section = Section.objects.get(pk=section)
-
         except section.DoesNotExist:
             raise Http404("section does not exist")
 
@@ -317,8 +315,7 @@ class AssignToSectionView(View):
         user_key = request.POST.get('user', "0")
         user = Account.objects.get(pk=user_key)
         errors = sections.assign_section(section, user)
-        course_members = course.members.all()
-        ta_members = list(course_members.filter(role=Account.Role.TA))
+        ta_members = course.members.filter(role=Account.Role.TA)
 
         return render(request, "section_assignment.html", {
             "errors": errors,
