@@ -46,4 +46,9 @@ def assign(section: Section, user: Account) -> list[str]:
     return errors
 
 def unassign(section: Section) -> bool:
-    pass
+    if section.ta:
+        section.ta = None
+        section.save()
+        return True
+    else:
+        return False

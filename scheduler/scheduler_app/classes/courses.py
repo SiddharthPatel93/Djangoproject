@@ -50,7 +50,7 @@ def assign(course: Course, user: Account) -> list[str]:
     return errors
 
 def unassign(course: Course, account: Account):
-    pass
+    course.members.remove(account)
 
 def edit(course: Course, details: dict[str, str]) -> list[str]:
     errors = []
