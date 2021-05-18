@@ -341,7 +341,7 @@ class CourseAssignmentView(View):
             return redirect("/course_assignment/")
 
 
-class AssignToCourseview(View):
+class AssignToCourseView(View):
     @check_permissions()
     def get(self, request, requester: Account, course=0):
         try:
