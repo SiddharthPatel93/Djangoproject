@@ -59,7 +59,7 @@
                 <thead>
                     <tr>
                         <th scope="col">Number</th>
-                        {% if supervisor %}
+                        {% if supervisor or instructor %}
                             <th scope="col">Actions</th>
                         {% endif %}
                     </tr>
@@ -68,19 +68,17 @@
                     {% for section in sections %}
                         <tr>
                             <td>{{ section.num }}</td>
-                            {% if supervisor %}
+                            {% if supervisor or instructor %}
                                 <td>
+                                {% if supervisor %}
                                     <form method="POST" action="sections/{{ section.pk }}/delete/" style="display: inline;">
                                         {% csrf_token %}
                                         <button class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
                                     </form>
+                                    {% endif %}
                                         <div class="dropdown">
-                                            <button class="dropdown btn-success btn-sm">Assign TA</button>
-                                            <div class="dropdown-content"onclick="javascript:confirmDelete(this);">
-                                                {% for users in TAs %}
-                                                <a href="#">{{users.name}}</a>
-                                                {% endfor %}
-                                        </div>
+
+                                            <a class=" btn-success btn-sm" href="/courses/{{ course.pk }}/{{ section.pk }}/assign/">Assign User</a>
                                         </div>
                                 </td>
                             {% endif %}

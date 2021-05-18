@@ -174,6 +174,7 @@ class ViewCourseView(View):
             raise Http404("Course does not exist")
 
         supervisor = requester.role == Account.Role.SUPERVISOR
+        instructor = requester.role == Account.Role.INSTRUCTOR
 
         if not supervisor and course not in courses.get(requester):
             return HttpResponseForbidden("You do not have access to this course.")
@@ -183,6 +184,7 @@ class ViewCourseView(View):
             "course": course,
             "sections": course.sections.all(),
             "supervisor": supervisor,
+            "instructor": instructor,
         })
 
     @check_permissions()
@@ -336,6 +338,39 @@ class AssignToCourseview(View):
     def get(self, request, requester: Account, course=0):
         try:
             course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+
+        return render(request, "user_course_assignment.html", {
+            "course": course,
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
+                            for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
+    })
+
+    @check_permissions()
+    def post(self, request, requester: Account, course=0):
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+
+        user_key = request.POST.get('user', "0")
+        user = Account.objects.get(pk=user_key)
+        errors = courses.assigninstructor(course, user)
+        return render(request, "user_course_assignment.html", {
+            "errors": errors,
+            "course": course,
+            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
+                      for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
+
+        })
+
+class AssignToSectionView(View):
+    @check_permissions()
+    def get(self, request, requester: Account, course=0, section=0):
+        try:
+            section = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             raise Http404("Course does not exist")
 

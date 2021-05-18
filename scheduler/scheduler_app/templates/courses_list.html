@@ -35,7 +35,9 @@
                                 </a>
                             </td>
                             {% if supervisor %}
+
                                 <td>
+
                                     <a class="btn btn-success btn-sm" href="/courses/{{ course.pk }}/edit/">Edit</a>
                                     <form method="POST" action="/courses/{{ course.pk }}/delete/" style="display: inline;">
                                         {% csrf_token %}
