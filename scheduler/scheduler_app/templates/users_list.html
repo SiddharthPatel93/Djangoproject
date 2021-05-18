@@ -58,14 +58,14 @@
                             {% endif %}
                         </tr>
                     {% endfor %}
+
+                    {% if not users %}
+                        <tr>
+                            <td colspan="{{ supervisor|yesno:"2,1" }}">No users to list!</td>
+                        </tr>
+                    {% endif %}
                 </tbody>
             </table>
-
-            {% if not users %}
-                <tr>
-                    <td colspan="{{ supervisor|yesno:"2,1" }}">No users to list!</td>
-                </tr>
-            {% endif %}
 
             {% if not supervisor %}
                 <table class="table table-striped align-middle">
@@ -74,9 +74,6 @@
                     </div>
                     <thead>
                         <th scope="col">Name</th>
-                            {% if supervisor %}
-                                <th scope="col">Actions</th>
-                            {% endif %}
                     </thead>
                     <tbody>
                         {% for member in members %}
@@ -88,6 +85,12 @@
                                 </td>
                             </tr>
                         {% endfor %}
+
+                        {% if not members %}
+                            <tr>
+                                <td>No members to list!</td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             {% endif %}
