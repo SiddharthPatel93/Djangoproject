@@ -112,34 +112,34 @@ class AssignToCourse(TestCase):
         self.inst = Account.objects.create(name="inst", role=Account.Role.INSTRUCTOR)
 
     def test_assignInstructor(self):
-        self.assertEqual(courses.assign(self.course, self.inst), ["Successfully added Instructor inst to course"], msg="could not assign instructor")
+        self.assertEqual(1, len(courses.assign(self.course, self.inst)), msg="could not assign instructor")
 
     def test_assignTA(self):
-        self.assertEqual(courses.assign(self.course, self.ta), ["Successfully added ta to course"], msg="could not assign TA")
+        self.assertEqual(1, len(courses.assign(self.course, self.ta)), msg="could not assign TA")
 
     def test_assignSecondInstructor(self):
         courses.assign(self.course, self.inst)
         self.inst2 = Account.objects.create(name="inst2", role=Account.Role.INSTRUCTOR)
-        self.assertEqual(courses.assign(self.course, self.inst2), ["An instructor has already been assigned to this Course"],msg="assigned a instructor when it should not have")
+        self.assertEqual(1, len(courses.assign(self.course, self.inst2)), msg="assigned a instructor when it should not have")
 
     def test_assignSecondTA(self):
         courses.assign(self.course, self.ta)
-        self.ta2 = Account.objects.create(name="ta2", email="123@email.com",role=Account.Role.TA)
-        self.assertEqual(courses.assign(self.course, self.ta2), ["Successfully added ta2 to course"], msg="did not add TA2 ")
+        ta2 = Account.objects.create(name="ta2", email="123@email.com", role=Account.Role.TA)
+        self.assertEqual(1, len(courses.assign(self.course, ta2)), msg="did not add TA2")
 
     def test_assign_same_TA(self):
         courses.assign(self.course, self.ta)
-        self.assertEqual(courses.assign(self.course, self.ta), ["TA ta has already been assigned to this course"],msg="assigned same TA to course when it should not have")
+        self.assertEqual(1, len(courses.assign(self.course, self.ta)), msg="assigned same TA to course when it should not have")
 
     def test_noCourse(self):
-        self.assertEqual(courses.assign(None, self.inst), ["Please choose a course"], msg="somehow assigned a ta to no course")
+        self.assertEqual(1, len(courses.assign(None, self.inst)), msg="somehow assigned a ta to no course")
 
     def test_noUser(self):
-        self.assertEqual(courses.assign(self.course, None), ["Please enter a user"], msg="no user to assign")
+        self.assertEqual(1, len(courses.assign(self.course, None)), msg="no user to assign")
 
     def test_invalidUser(self):
-        self.Supervisor = Account.objects.create(name="Supervisor", role=Account.Role.SUPERVISOR)
-        self.assertEqual(courses.assign(self.course, self.Supervisor), ["User is a supervisor"], msg="user is not a TA or instructor and cannot be assigned")
+        supervisor = Account.objects.create(name="Supervisor", role=Account.Role.SUPERVISOR)
+        self.assertEqual(1, len(courses.assign(self.course, supervisor)), msg="user is not a TA or instructor and cannot be assigned")
 
 class EditCourseTest(TestCase):
     def setUp(self):
