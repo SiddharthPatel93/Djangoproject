@@ -297,41 +297,6 @@ class SectionAssignmentView(View):
             })
 
 
-class CourseAssignmentView(View):
-    def get(self, request):
-        if "account" not in request.session:
-            return redirect("/login/")
-
-        requester = Account.objects.get(pk=request.session["account"])
-
-        if requester.role is not Account.Role.SUPERVISOR:
-            return HttpResponseForbidden("You do not have access to this feature")
-
-        if courses not in courses.get(requester):
-            return HttpResponseForbidden("No courses available")
-
-        return render(request, "user_course_assignment.html")
-
-    def post(self, request):
-        if "account" not in request.session:
-            return redirect("/login/")
-
-        requester = Account.objects.get(pk=request.session["account"])
-
-        if requester.role is not Account.Role.SUPERVISOR:
-            return HttpResponseForbidden("You do not have access to this feature")
-
-        if courses not in courses.get(requester):
-            return HttpResponseForbidden("No courses available")
-
-        errors = courses.assign(courses.Course, courses.num, request.POST.get("name", ""))
-
-        if errors:
-            return render(request, "user_course_assignment.html", {"errors": errors}, status=401)
-        else:
-            return redirect("/course_assignment/")
-
-
 class AssignToCourseView(View):
     @check_permissions()
     def get(self, request, requester: Account, course=0):
