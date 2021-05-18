@@ -67,3 +67,9 @@ def edit(course: Course, details: dict[str, str]) -> list[str]:
         course.save()
 
     return errors
+
+def edit_membership(course: Course, account: Account, grader: bool = False, sections: int = 1):
+    membership = CourseMembership.objects.get(course=course, account=account)
+    membership.grader = grader
+    membership.sections = sections
+    membership.save()

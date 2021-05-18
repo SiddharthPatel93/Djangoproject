@@ -376,3 +376,39 @@ class UnassignFromSectionView(View):
             return redirect(f"/courses/{course.id}/")
         else:
             return HttpResponseBadRequest("Section is unassigned!")
+
+class EditMembershipView(View):
+    @check_permissions()
+    def get(self, request, requester: Account, course=0, account=0):
+        try:
+            course = Course.objects.get(id=course)
+            account = Account.objects.get(id=account)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist!")
+        except Account.DoesNotExist:
+            raise Http404("User does not exist!")
+        
+        return render(request, "course_membership.html", {
+            "user": account,
+            "course": course,
+            "membership": CourseMembership.objects.get(course=course, account=account),
+        })
+    
+    @check_permissions()
+    def post(self, request, requester: Account, course=0, account=0):
+        try:
+            course = Course.objects.get(id=course)
+            account = Account.objects.get(id=account)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist!")
+        except Account.DoesNotExist:
+            raise Http404("User does not exist!")
+        
+        courses.edit_membership(
+            course,
+            account,
+            "grader" in request.POST,
+            int(request.POST.get("sections", "1")),
+        )
+
+        return redirect(f"/courses/{course.id}/")
