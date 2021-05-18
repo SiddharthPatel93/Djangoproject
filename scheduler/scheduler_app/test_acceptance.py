@@ -403,11 +403,11 @@ class ViewCourseTest(TestCase):
         self.assertEqual(200, r.status_code, "GETing accessible course page fails to load with status code 200 as supervisor")
         self.assertTrue(r.context["supervisor"], "Course page shows management tools for supervisor")
         r = self.client.post(self.accessible_route)
-        self.assertEqual(404, r.status_code, "POSTing accessible course page fails to load with status code 404 as supervisor")
+        self.assertEqual(400, r.status_code, "POSTing accessible course page fails to load with status code 400 as supervisor")
         r = self.client.get(self.inaccessible_route)
         self.assertEqual(200, r.status_code, "GETing inaccessible course page fails to load with status code 200 as supervisor")
         r = self.client.post(self.inaccessible_route)
-        self.assertEqual(404, r.status_code, "POSTing inaccessible course page fails to load with status code 404 as supervisor")
+        self.assertEqual(400, r.status_code, "POSTing inaccessible course page fails to load with status code 400 as supervisor")
     
     def test_loadsCourseData(self):
         permissions.login(self.client, self.supervisor)
