@@ -263,7 +263,7 @@ class AssignToCourseView(View):
         except Course.DoesNotExist:
             raise Http404("Course does not exist")
 
-        return render(request, "user_course_assignment.html", {
+        return render(request, "course_assignment.html", {
             "course": course,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
                       for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
@@ -276,15 +276,13 @@ class AssignToCourseView(View):
         except Course.DoesNotExist:
             raise Http404("Course does not exist")
 
-        user_key = request.POST.get('user', "0")
-        user = Account.objects.get(pk=user_key)
+        user = Account.objects.get(pk=request.POST.get("user", "0"))
         errors = courses.assign(course, user)
-        return render(request, "user_course_assignment.html", {
+        return render(request, "course_assignment.html", {
             "errors": errors,
             "course": course,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
                       for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
-
         })
 
 
@@ -329,5 +327,4 @@ class AssignToSectionView(View):
             "instructor": requester.role == Account.Role.INSTRUCTOR,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
                       for user in ta_members],
-
         })
