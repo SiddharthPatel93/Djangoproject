@@ -113,8 +113,8 @@
                     <tr>
                         <th scope="row">Instructor</th>
                         <td colspan="3">
-                            {% if instructor %}
-                                <a href="/users/{{ instructor.pk }}/">{{ instructor.name }}</a>
+                            {% if course_instructor %}
+                                <a href="/users/{{ course_instructor.pk }}/">{{ course_instructor.name }}</a>
                             {% else %}
                                 No instructor for course!
                             {% endif %}
@@ -124,7 +124,7 @@
                     {% for ta in tas %}
                         <tr>
                             {% if forloop.first %}
-                                <th scope="row" rowspan="{{ tas|length }}">TA</th>
+                                <th scope="rowgroup" rowspan="{{ tas|length }}">TA</th>
                             {% endif %}
                             <td><a href="/users/{{ ta.account.pk }}/">{{ ta.account.name }}</a></td>
                             <td style="text-align: center;">{% if ta.grader %}✅{% else %}❌{% endif %}</td>
