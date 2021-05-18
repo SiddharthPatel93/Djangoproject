@@ -483,8 +483,8 @@ class UnassignFromSectionTest(TestCase):
     def test_assignedSection(self):
         result = sections.unassign(self.assigned_section)
         self.assertTrue(result, "Section unassignment function fails to return true when given assigned section")
-        del self.assigned_section["ta"]
-        self.assertIsNone(self.assigned_section["ta"], "Section unassignment fails to unassign section when given assigned section")
+        del self.assigned_section.ta
+        self.assertIsNone(self.assigned_section.ta, "Section unassignment fails to unassign section when given assigned section")
 
 class DeleteSectionTest(TestCase):
     def setUp(self):
