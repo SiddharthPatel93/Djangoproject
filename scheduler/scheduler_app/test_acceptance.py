@@ -80,7 +80,7 @@ class ListUsersTest(TestCase):
 
         permissions.login(self.client, self.ta)
         r = self.client.get(self.route)
-        self.assertEqual(200, r.redirect_chain, "GETing users list while logged in fails to load with status code 200")
+        self.assertEqual(200, r.status_code, "GETing users list while logged in fails to load with status code 200")
 
     def test_supervisorAccess(self):
         permissions.login(self.client, self.supervisor)
@@ -372,6 +372,8 @@ class ViewCourseTest(TestCase):
         self.inaccessible_route = f"{self.route}/{self.inaccessible_course.pk}/"
         self.user = Account.objects.create(role=Account.Role.TA)
         CourseMembership.objects.create(account=self.user, course=self.accessible_course)
+        self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
+        CourseMembership.objects.create(account=self.instructor, course=self.accessible_course)
         self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
     
     def test_nonexistentCourse(self):
@@ -401,17 +403,19 @@ class ViewCourseTest(TestCase):
         self.assertEqual(200, r.status_code, "GETing accessible course page fails to load with status code 200 as supervisor")
         self.assertTrue(r.context["supervisor"], "Course page shows management tools for supervisor")
         r = self.client.post(self.accessible_route)
-        self.assertEqual(400, r.status_code, "POSTing accessible course page fails to load with status code 400 as supervisor")
+        self.assertEqual(404, r.status_code, "POSTing accessible course page fails to load with status code 404 as supervisor")
         r = self.client.get(self.inaccessible_route)
         self.assertEqual(200, r.status_code, "GETing inaccessible course page fails to load with status code 200 as supervisor")
         r = self.client.post(self.inaccessible_route)
-        self.assertEqual(400, r.status_code, "POSTing inaccessible course page fails to load with status code 400 as supervisor")
+        self.assertEqual(404, r.status_code, "POSTing inaccessible course page fails to load with status code 404 as supervisor")
     
     def test_loadsCourseData(self):
         permissions.login(self.client, self.supervisor)
         r = self.client.get(self.accessible_route)
         self.assertEqual(self.accessible_course, r.context["course"], "Course page fails to load course info")
         self.assertEqual(1, r.context["sections"].count(), "Course page fails to load course sections")
+        self.assertEqual(self.instructor, r.context["instructor"], "Course page fails to load instructor")
+        self.assertEqual(1, r.context["tas"].count(), "Course page fails to load TAs")
 
     def test_errorVisibility(self):
         permissions.login(self.client, self.supervisor)
