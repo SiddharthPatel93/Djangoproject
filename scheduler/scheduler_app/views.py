@@ -262,12 +262,13 @@ class AssignToCourseView(View):
         try:
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
-            raise Http404("Course does not exist")
+            raise Http404("Course does not exist!")
 
         return render(request, "course_assignment.html", {
             "course": course,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                      for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
+                        for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)
+                        if user not in course.members.all()],
         })
 
     @check_permissions()
@@ -275,8 +276,8 @@ class AssignToCourseView(View):
         try:
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
-            raise Http404("Course does not exist")
-
+            raise Http404("Course does not exist!")
+        
         user = Account.objects.get(pk=request.POST.get("user", "0"))
         errors = courses.assign(course, user, "grader" in request.POST, int(request.POST["sections"]))
 
@@ -284,7 +285,8 @@ class AssignToCourseView(View):
             "errors": errors,
             "course": course,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                      for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
+                        for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)
+                        if user not in course.members.all()],
         })
 
 
