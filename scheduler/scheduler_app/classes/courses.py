@@ -45,11 +45,12 @@ def assigninstructor(course:Course, user:Account)->list[str]:
             errors.append("Successfully added INSTRUCTOR to course")
         return errors
     elif user.get_role() == 2:
-        try:
-            alreadyassigned = course.members.get(courses__coursemembership__account=user)
+        alreadyassigned = course.members.all()
+        alreadyassigned2= list(alreadyassigned.filter(email=user.get_email()))
+        if len(alreadyassigned2) is not 0:
             errors.append("this TA has already been assigned to this course")
             return errors
-        except:
+        else:
             newTA = CourseMembership.objects.create(account=user, course=course)
             newTA.save()
             errors.append("Successfully added TA to course")

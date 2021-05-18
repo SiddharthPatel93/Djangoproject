@@ -432,7 +432,7 @@ class AssignInstructorTest(TestCase):
         self.section = Section.objects.create(course=self.course, num=902)
         self.route_base = "/courses/{}/sections/{}/delete/"
         self.route = self.route_base.format(self.course.pk, self.section.pk)
-        self.ta = Account.objects.create(name="ta", role=Account.Role.TA)
+        self.ta = Account.objects.create(name="ta",email="122@email.com", role=Account.Role.TA)
         self.ta.save()
         self.inst = Account.objects.create(name="inst", role=Account.Role.INSTRUCTOR)
         self.inst.save()
@@ -451,7 +451,7 @@ class AssignInstructorTest(TestCase):
 
     def test_assignSecondTA(self):
         courses.assigninstructor(self.course, self.ta)
-        self.ta2 = Account.objects.create(name="ta2", role=Account.Role.TA)
+        self.ta2 = Account.objects.create(name="ta2", email="123@email.com",role=Account.Role.TA)
         self.assertEqual(courses.assigninstructor(self.course, self.ta2), ["Successfully added TA to course"])
 
     def test_assign_same_TA(self):
