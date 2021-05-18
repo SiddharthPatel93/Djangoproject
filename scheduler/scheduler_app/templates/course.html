@@ -161,6 +161,7 @@
                             {% if supervisor %}
                                 <td>
                                     <form class="dangerous" method="POST" action="unassign/{{ ta.account.pk }}/">
+                                        {% csrf_token %}
                                         <button type="button" class="btn btn-danger btn-sm" onclick="confirmAction(this, 'unassign this TA from the course');">Unassign TA</button>
                                     </form>
                                 </td>
