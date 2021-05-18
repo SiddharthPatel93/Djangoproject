@@ -20,13 +20,6 @@ def delete(section: Section):
     section.delete()
 
 
-def assign(section: Section, user: Account) -> list[str]:
-    errors = check_valid(section, user)
-    if len(errors) == 0:
-        section.ta = user
-    else:
-        return errors
-
 def assign_section(section:Section, user:Account) -> list[str]:
     errors = []
     if user is None:
@@ -50,24 +43,4 @@ def assign_section(section:Section, user:Account) -> list[str]:
 
 
 
-def check_valid(section: Section, user: Account) -> list[str]:
-    errors = []
-    if user is None:
-        errors.append("Enter a valid user\n")
-    if section is None:
-        errors.append("Enter a section\n")
-    if user is not None and user.get_role() is not Account.Role.TA:
-        errors.append("User is not a TA!\n")
-    if len(errors) != 0:
-        return errors
-    course = section.course
-    try:
-        ta1 = course.members.get(courses__coursemembership__account=user)
-    except:
-        errors.append("ta not assigned to this course\n")
-        return errors
-    ta = section.ta
-    if ta is not None:
-        errors.append("TA has already been assigned to this section\n")
-        return errors
-    return errors
+
