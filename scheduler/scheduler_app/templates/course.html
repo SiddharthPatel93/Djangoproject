@@ -40,11 +40,12 @@
 
                     <button class="btn btn-primary" type="submit">Create</button>
                 </form>
+
                 <hr>
             {% endif %}
 
             <h3>Sections</h3>
-            <table class="table table-striped">
+            <table class="table table-striped align-middle">
                 <thead>
                     <tr>
                         <th scope="col">Number</th>
@@ -73,6 +74,43 @@
                             <td colspan="{{ supervisor|yesno:"2,1" }}">No sections to list!</td>
                         </tr>
                     {% endif %}
+                </tbody>
+            </table>
+
+            <hr>
+
+            <h3>Members</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Role</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Grader</th>
+                        <th scope="col">Sections</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">Instructor</th>
+                        <td colspan="3">
+                            {% if instructor %}
+                                <a href="/users/{{ instructor.pk }}/">{{ instructor.name }}</a>
+                            {% else %}
+                                No instructor for course!
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% for ta in tas %}
+                        <tr>
+                            {% if forloop.first %}
+                                <th scope="row" rowspan="{{ tas|length }}">TA</th>
+                            {% endif %}
+                            <td><a href="/users/{{ ta.account.pk }}/">{{ ta.account.name }}</a></td>
+                            <td style="text-align: center;">{% if ta.grader %}✅{% else %}❌{% endif %}</td>
+                            <td>{{ ta.sections }}</td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

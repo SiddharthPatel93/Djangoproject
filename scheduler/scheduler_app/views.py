@@ -5,7 +5,7 @@ from django.views import View
 
 from .classes import courses, permissions, sections, users
 from .classes.permissions import check_permissions
-from .models import Account, Course, Section
+from .models import Account, Course, CourseMembership, Section
 
 class HomepageView(View):
     @check_permissions(check_supervisor=False)
@@ -171,7 +171,7 @@ class ViewCourseView(View):
             "supervisor": supervisor,
             "sections": course.sections.all(),
             "instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
-            "tas": course.members.filter(role=Account.Role.TA),
+            "tas": CourseMembership.objects.filter(account__role=Account.Role.TA),
         })
 
     @check_permissions()
