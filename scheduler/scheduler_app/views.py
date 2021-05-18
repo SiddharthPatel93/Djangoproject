@@ -374,6 +374,7 @@ class AssignToCourseView(View):
 
         })
 
+
 class AssignToSectionView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account, course=0, section=0):
