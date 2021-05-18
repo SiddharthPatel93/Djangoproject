@@ -1,5 +1,4 @@
 {% extends "page.html" %}
-{% load static %}
 
 {% block title %}Courses{% endblock %}
 
@@ -35,13 +34,12 @@
                                 </a>
                             </td>
                             {% if supervisor %}
-
                                 <td>
                                     <a class="btn btn-primary btn-sm" href="/courses/{{ course.pk }}/assign/">Assign User</a>
                                     <a class="btn btn-success btn-sm" href="/courses/{{ course.pk }}/edit/">Edit</a>
-                                    <form method="POST" action="/courses/{{ course.pk }}/delete/" style="display: inline;">
+                                    <form class="dangerous" method="POST" action="/courses/{{ course.pk }}/delete/">
                                         {% csrf_token %}
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmAction(this, 'delete this course');">Delete</button>
                                     </form>
 
                                 </td>
@@ -57,8 +55,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script src="{% static "scripts/actions.js" %}"></script>
 {% endblock %}

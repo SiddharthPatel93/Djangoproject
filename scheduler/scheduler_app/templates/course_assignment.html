@@ -16,13 +16,24 @@
             <h1>Assign to Course: {{ course.name }}</h1>
             <form method="POST">
                 {% csrf_token %}
+
                 <div class="form-group mb-3">
-                    <label for = "user">User</label>
-                    <select class="form-select" name = "user" id="user">
+                    <label for="user">User</label>
+                    <select class="form-select" name="user" id="user">
                         {% for user in users %}
                             <option value="{{ user.pk }}">{{ user.name }} - {{  user.role }}</option>
                         {% endfor %}
                     </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <input class="form-check-input" type="checkbox" name="grader" id="grader" value="">
+                    <label class="form-check-label" for="grader">Grader</label>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="sections">Sections</label>
+                    <input type="number" class="form-control" name="sections" id="sections" value="1">
                 </div>
 
                 {% if errors %}
@@ -33,7 +44,8 @@
                     </ul>
                 {% endif %}
 
-                <button class="btn btn-primary mb-3" type="submit">Assign</button>
+                <button class="btn btn-primary mb-3">Assign</button>
+                <a class="btn btn-secondary mb-3" href="/courses/{{ course.id }}/">Back</a>
             </form>
         </div>
     </div>

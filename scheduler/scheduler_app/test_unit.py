@@ -140,6 +140,22 @@ class AssignToCourseTest(TestCase):
     def test_invalidUser(self):
         supervisor = Account.objects.create(name="Supervisor", role=Account.Role.SUPERVISOR)
         self.assertEqual(1, len(courses.assign(self.course, supervisor)), msg="user is not a TA or instructor and cannot be assigned")
+      
+
+class UnassignFromCourseTest(TestCase):
+    def setUp(self):
+        self.memberless_course = Course.objects.create()
+        self.memberful_course = Course.objects.create()
+        self.user = Account.objects.create(role=Account.Role.TA)
+        self.memberful_course.members.add(self.user)
+    
+    def test_memberlessCourse(self):
+        courses.unassign(self.memberless_course, self.user)
+        self.assertEqual(1, self.memberful_course.members.count(), "Course unassignment function removes unrelated course membership when given user not in course")
+    
+    def test_memberfulCourse(self):
+        courses.unassign(self.memberful_course, self.user)
+        self.assertEqual(0, self.memberful_course.members.count(), "Course unassignment function fails to remove course membership whhen given user in course")
 
 class EditCourseTest(TestCase):
     def setUp(self):
@@ -401,15 +417,6 @@ class DeleteUserTest(TestCase):
 
 # Sections
 
-class DeleteSectionTest(TestCase):
-    def setUp(self):
-        self.course = Course.objects.create(name="CS 361")
-        self.section = Section.objects.create(course=self.course, num="902")
-    
-    def test_deletesSection(self):
-        sections.delete(self.section)
-        self.assertEqual(0, sections.count(self.section.num), "Section deletion function fails to delete section")
-
 class AssignToSectionTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -434,31 +441,57 @@ class AssignToSectionTest(TestCase):
         self.assertNotEqual(ta2, course.members.get(courses__coursemembership__account=self.ta))
 
     def test_assignOneSection(self):
-        sections.assign_section(self.section, self.ta)
+        sections.assign(self.section, self.ta)
         self.assertEqual(self.section.ta, self.ta)
 
     def test_assignTwoSections(self):
         sectiontwo = Section.objects.create(course=self.course, num=23)
         sectiontwo.save()
-        sections.assign_section(self.section, self.ta)
-        sections.assign_section(sectiontwo, self.ta)
+        sections.assign(self.section, self.ta)
+        sections.assign(sectiontwo, self.ta)
         self.assertEqual(sectiontwo.ta, self.ta)
 
     def test_alreadyAssigned(self):
-        sections.assign_section(self.section, self.ta)
+        sections.assign(self.section, self.ta)
         ta2 = Account.objects.create(name="new ta", role=Account.Role.TA)
         ta2.save()
-        sections.assign_section(self.section, ta2)
+        sections.assign(self.section, ta2)
         self.assertNotEqual(self.section.ta, ta2, msg="Trying to assign 2 TA's to 1 Section")
 
     def test_invalidUserAssigned(self):
         inst = Account.objects.create(name="instructor", role=Account.Role.INSTRUCTOR)
-        self.assertEqual(["User is an instructor, not a TA!"],sections.assign_section(self.section, inst))
+        self.assertEqual(["User is an instructor, not a TA!"], sections.assign(self.section, inst), msg="Instructor assigned to section")
 
     def test_noUserAssigned(self):
         with self.assertRaises(TypeError, msg="No User argument given"):
-            sections.assign_section(self.section)
+            sections.assign(self.section)
 
     def test_noSectionGiven(self):
         with self.assertRaises(TypeError, msg="No section argument given"):
-            sections.assign_section(self.ta)
+            sections.assign(self.ta)
+
+class UnassignFromSectionTest(TestCase):
+    def setUp(self):
+        self.course = Course.objects.create()
+        self.unassigned_section = Section.objects.create(course=self.course)
+        self.ta = Account.objects.create(role=Account.Role.TA)
+        self.assigned_section = Section.objects.create(course=self.course, ta=self.ta)
+    
+    def test_unassignedSection(self):
+        result = sections.unassign(self.unassigned_section)
+        self.assertFalse(result, "Section unassignment function fails to return false when given unassigned section")
+    
+    def test_assignedSection(self):
+        result = sections.unassign(self.assigned_section)
+        self.assertTrue(result, "Section unassignment function fails to return true when given assigned section")
+        self.assigned_section.refresh_from_db(fields=["ta"])
+        self.assertIsNone(self.assigned_section.ta, "Section unassignment fails to unassign section when given assigned section")
+
+class DeleteSectionTest(TestCase):
+    def setUp(self):
+        self.course = Course.objects.create(name="CS 361")
+        self.section = Section.objects.create(course=self.course, num="902")
+    
+    def test_deletesSection(self):
+        sections.delete(self.section)
+        self.assertEqual(0, sections.count(self.section.num), "Section deletion function fails to delete section")

@@ -278,9 +278,9 @@ class DeleteUserTest(TestCase):
         permissions.login(self.client, self.supervisor)
         r = self.client.post(self.route, follow=True)
         self.assertEqual([("/users/", 302)], r.redirect_chain,
-                         "Deleting user as supervisor fails to redirect to users list")
-        self.assertNotIn(self.ta.pk, [user["pk"] for user in r.context["users"]],
-                         "Deleting user as supervisor fails to delete user")
+                            "Deleting user as supervisor fails to redirect to users list")
+        self.assertNotIn(self.ta, r.context["users"],
+                            "Deleting user as supervisor fails to delete user")
 
     def test_deleteNeedsSupervisor(self):
         permissions.login(self.client, self.instructor)
@@ -414,7 +414,7 @@ class ViewCourseTest(TestCase):
         r = self.client.get(self.accessible_route)
         self.assertEqual(self.accessible_course, r.context["course"], "Course page fails to load course info")
         self.assertEqual(1, r.context["sections"].count(), "Course page fails to load course sections")
-        self.assertEqual(self.instructor, r.context["instructor"], "Course page fails to load instructor")
+        self.assertEqual(self.instructor, r.context["course_instructor"], "Course page fails to load instructor")
         self.assertEqual(1, r.context["tas"].count(), "Course page fails to load TAs")
 
     def test_errorVisibility(self):
@@ -550,3 +550,93 @@ class DeleteSectionTest(TestCase):
         r = self.client.post(self.route_base.format(999, self.section.pk), follow=True)
         self.assertEqual([(f"/courses/{self.course.pk}/", 302)], r.redirect_chain, "Deleting valid section with correct course as supervisor fails to redirect to course page")
         self.assertNotIn(self.course, r.context["sections"], "Deleting valid section with incorrect course as supervisor fails to delete section")
+
+class UnassignFromCourseTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.memberless_course = Course.objects.create()
+        self.memberful_course = Course.objects.create()
+        self.ta = Account.objects.create(role=Account.Role.TA)
+        self.memberful_course.members.add(self.ta)
+        self.memberless_route = f"/courses/{self.memberless_course.id}/unassign/{self.ta.id}/"
+        self.memberful_route = f"/courses/{self.memberful_course.id}/unassign/{self.ta.id}/"
+        self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_permissions(self):
+        r = self.client.post(self.memberless_route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Course unassignment page fails to redirect to login when logged out")
+        
+        permissions.login(self.client, self.ta)
+        r = self.client.post(self.memberless_route)
+        self.assertEqual(403, r.status_code, "Course unassignment page fails to load with status code 403 as TA")
+
+        permissions.login(self.client, self.instructor)
+        r = self.client.post(self.memberless_route)
+        self.assertEqual(403, r.status_code, "Course unassignment page fails to load with status code 403 as instructor")
+    
+    def test_nonexistentCourse(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(f"/courses/999/unassign/{self.ta.id}/")
+        self.assertEqual(404, r.status_code, "Course unassignment page fails to load with status code 404 for nonexistent course")
+    
+    def test_nonexistentUser(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(f"/courses/{self.memberless_course.id}/unassign/999/")
+        self.assertEqual(404, r.status_code, "Course unassignment page fails to load with status code 404 for nonexistent user")
+
+    def test_memberlessCourse(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.memberless_route, follow=True)
+        self.assertEqual([(f"/courses/{self.memberless_course.id}/", 302)], r.redirect_chain, "Course unassignment page fails to redirect to course page for memberless course")
+        self.assertEqual(1, self.memberful_course.members.count(), "Course unassignment page removes unrelated course membership for memberless course")
+    
+    def test_memberfulCourse(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.memberful_route, follow=True)
+        self.assertEqual([(f"/courses/{self.memberful_course.id}/", 302)], r.redirect_chain, "Course unassignment page fails to redirect to course page for memberful course")
+        self.assertEqual(0, self.memberful_course.members.count(), "Course unassignment page fails to remove course membership for memberful course")
+
+class UnassignFromSectionTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.course = Course.objects.create()
+        self.route_base = f"/courses/{self.course.id}"
+        self.unassigned_section = Section.objects.create(course=self.course)
+        self.unassigned_route = f"{self.route_base}/sections/{self.unassigned_section.id}/unassign/"
+        self.ta = Account.objects.create(role=Account.Role.TA)
+        self.assigned_section = Section.objects.create(course=self.course, ta=self.ta)
+        self.assigned_route = f"{self.route_base}/sections/{self.assigned_section.id}/unassign/"
+        self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
+        self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
+    
+    def test_permissions(self):
+        r = self.client.post(self.unassigned_route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "Section unassignment page fails to redirect to login when logged out")
+
+        permissions.login(self.client, self.ta)
+        r = self.client.post(self.unassigned_route)
+        self.assertEqual(403, r.status_code, "Section unassignment page fails to load with status code 403 as TA")
+    
+    # These methods also test ability of instructor & supervisor to perform action
+    def test_nonexistentCourse(self):
+        permissions.login(self.client, self.instructor)
+        r = self.client.post(f"/courses/999/section/{self.unassigned_section.id}/unassign/")
+        self.assertEqual(404, r.status_code, "Section unassignment page fails to load with status code 404 for nonexistent course")
+    
+    def test_nonexistentSection(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(f"/courses/{self.course.id}/section/999/unassign/")
+        self.assertEqual(404, r.status_code, "Section unassignment page fails to load with status code 404 for nonexistent section")
+    
+    def test_unassignedSection(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.unassigned_route)
+        self.assertEqual(400, r.status_code, "Section unassignment page fails to load with status code 400 for unassigned section")
+    
+    def test_assignedSection(self):
+        permissions.login(self.client, self.supervisor)
+        r = self.client.post(self.assigned_route, follow=True)
+        self.assertEqual([(f"/courses/{self.course.id}/", 302)], r.redirect_chain, "Section unassignment page fails to redirect to course page for assigned section")
+        self.assigned_section.refresh_from_db(fields=["ta"])
+        self.assertIsNone(self.assigned_section.ta, "Section unassignment page fails to unassign section for assigned section")

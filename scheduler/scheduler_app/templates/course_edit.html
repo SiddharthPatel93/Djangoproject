@@ -25,7 +25,13 @@
                     <input type="text" class="form-control" name="name" placeholder="Enter nane" required value="{{ course.name }}">
                 </div>
 
-                <button type="submit" class="btn btn-primary mb-3">Edit</button>
+                <div class="form-group mb-3">
+                    <label for="description">Description</label>
+                    <textarea class="form-control" name="description" placeholder="Description">{{ course.description }}</textarea>
+                </div>
+
+                <button class="btn btn-success mb-3">Edit</button>
+                <a class="btn btn-secondary mb-3" href="/courses/{{ course.id }}/">Back</a>
             </form>
         </div>
     </div>

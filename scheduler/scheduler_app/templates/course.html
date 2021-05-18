@@ -1,5 +1,4 @@
 {% extends "page.html" %}
-{% load static %}
 
 {% block title %}Course: {{ course.name }}{% endblock %}
 
@@ -17,7 +16,7 @@
 </style>
 <div class="container">
     <div class="row">
-        <div class="col-8 col-md-6 col-lg-4 mx-auto">
+        <div class="col-10 col-md-8 col-lg-6 mx-auto">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/courses/">Courses</a></li>
@@ -27,8 +26,16 @@
 
             <div class="d-flex justify-content-between align-items-center">
                 <h1>Course: {{ course.name }}</h1>
-                <a class="btn btn-success" href="/courses/{{ course.pk }}/edit/">Edit</a>
+                <div>
+                    <a class="btn btn-primary" href="/courses/{{ course.pk }}/assign/">Assign User</a>
+                    <a class="btn btn-success" href="/courses/{{ course.pk }}/edit/">Edit</a>
+                </div>
             </div>
+
+            {% if course.description %}
+                <p><strong>Description:</strong> {{ course.description }}</p>
+            {% endif %}
+            
             <hr>
 
             {% if supervisor %}
@@ -79,11 +86,18 @@
                             </td>
                             {% if supervisor or instructor %}
                                 <td>
-                                    <a class="btn btn-primary btn-sm" href="sections/{{ section.pk }}/assign/">Assign User</a>
-                                    {% if supervisor %}
-                                        <form method="POST" action="sections/{{ section.pk }}/delete/" style="display: inline;">
+                                    {% if section.ta %}
+                                        <form class="dangerous" method="POST" action="sections/{{ section.pk }}/unassign/">
                                             {% csrf_token %}
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmAction(this, 'unassign the TA from this section');">Unassign TA</button>
+                                        </form>
+                                    {% else %}
+                                        <a class="btn btn-primary btn-sm" href="sections/{{ section.pk }}/assign/">Assign TA</a>
+                                    {% endif %}
+                                    {% if supervisor %}
+                                        <form class="dangerous" method="POST" action="sections/{{ section.pk }}/delete/">
+                                            {% csrf_token %}
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmAction(this, 'delete this section');">Delete</button>
                                         </form>
                                     {% endif %}
                                 </td>
@@ -107,7 +121,9 @@
                         <th scope="col">Name</th>
                         <th scope="col">Grader</th>
                         <th scope="col">Sections</th>
-                    </tr>
+                        {% if supervisor %}
+                            <th scope="col">Actions</th>
+                        {% endif %}
                 </thead>
                 <tbody>
                     <tr>
@@ -119,6 +135,18 @@
                                 No instructor for course!
                             {% endif %}
                         </td>
+                        {% if supervisor %}
+                            <td>
+                                {% if course_instructor %}
+                                    <form class="dangerous" method="POST" action="unassign/{{ course_instructor.pk }}/">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmAction(this, 'unassign this instructor from the course');">Unassign Instructor</button>
+                                    </form>
+                                {% else %}
+                                    <a class="btn btn-primary btn-sm" href="assign/">Assign Instructor</a>
+                                {% endif %}
+                            </td>
+                        {% endif %}
                     </tr>
 
                     {% for ta in tas %}
@@ -129,6 +157,14 @@
                             <td><a href="/users/{{ ta.account.pk }}/">{{ ta.account.name }}</a></td>
                             <td style="text-align: center;">{% if ta.grader %}✅{% else %}❌{% endif %}</td>
                             <td>{{ ta.sections }}</td>
+                            {% if supervisor %}
+                                <td>
+                                    <form class="dangerous" method="POST" action="unassign/{{ ta.account.pk }}/">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmAction(this, 'unassign this TA from the course');">Unassign TA</button>
+                                    </form>
+                                </td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -136,8 +172,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script src="{% static "scripts/actions.js" %}"></script>
 {% endblock %}

@@ -35,8 +35,10 @@ urlpatterns = [
     path('courses/create/', views.CreateCourseView.as_view()),
     path('courses/<int:course>/', views.ViewCourseView.as_view()),
     path('courses/<int:course>/assign/', views.AssignToCourseView.as_view()),
+    path('courses/<int:course>/unassign/<int:account>/', views.UnassignFromCourseView.as_view()),
     path('courses/<int:course>/edit/', views.EditCourseView.as_view()),
     path('courses/<int:course>/delete/', views.DeleteCourseView.as_view()),
     path('courses/<int:course>/sections/<int:section>/assign/', views.AssignToSectionView.as_view()),
+    path('courses/<int:course>/sections/<int:section>/unassign/', views.UnassignFromSectionView.as_view()),
     path('courses/<int:course>/sections/<int:section>/delete/', views.DeleteSectionView.as_view()),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

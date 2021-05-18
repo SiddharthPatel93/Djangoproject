@@ -20,27 +20,35 @@ def delete(section: Section):
     section.delete()
 
 
-def assign_section(section:Section, user:Account) -> list[str]:
+def assign(section: Section, user: Account) -> list[str]:
     errors = []
+
     if user is None:
         errors.append("Enter a valid user")
+    else:
+        if (role := user.get_role()) == Account.Role.SUPERVISOR:
+            errors.append("User is a supervisor, not a TA!")
+        elif role == Account.Role.INSTRUCTOR:
+            errors.append("User is an instructor, not a TA!")
     if section is None:
         errors.append("Enter a section")
-    if user is not None:
-        if user.get_role() == 0:
-            errors.append("User is a supervisor, not a TA!")
-        if user.get_role() == 1:
-            errors.append("User is an instructor, not a TA!")
-    if len(errors) != 0:
+    
+    if errors:
         return errors
+    
     if section.ta is None:
-        section.ta=user
+        section.ta = user
         section.save()
         errors.append(f"Successfully added TA {user.name}")
     else:
         errors.append(f"{section.ta} already assigned to this section")
+    
     return errors
 
-
-
-
+def unassign(section: Section) -> bool:
+    if section.ta:
+        section.ta = None
+        section.save()
+        return True
+    else:
+        return False

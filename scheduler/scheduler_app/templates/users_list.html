@@ -1,5 +1,4 @@
 {% extends "page.html" %}
-{% load static %}
 
 {% block title %}Users{% endblock %}
 
@@ -73,9 +72,9 @@
                             {% if supervisor %}
                                 <td>
                                     {% if user.pk != request.session.account %}
-                                        <form method="POST" action="/users/{{ user.pk }}/delete/" style="display: inline;">
+                                        <form class="dangerous" method="POST" action="/users/{{ user.pk }}/delete/">
                                             {% csrf_token %}
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="javascript:confirmDelete(this);">Delete</button>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmAction(this, 'delete this user');">Delete</button>
                                         </form>
                                     {% else %}
                                         <a href="https://64.media.tumblr.com/4aeb6c2b7a20dc04d052f31ae52ac828/tumblr_inline_o034yh1iBE1qda68o_540.png" target="_blank" style="font-family: 'Courier New', Courier, monospace;">* It's you!</a>
@@ -93,8 +92,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script src="{% static "scripts/actions.js" %}"></script>
 {% endblock %}

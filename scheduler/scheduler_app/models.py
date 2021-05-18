@@ -52,6 +52,7 @@ class Account(models.Model):
 
 class Course(models.Model):
     name = models.CharField(max_length=MAX_LENGTH)
+    description = models.CharField(max_length=MAX_LENGTH, default="")
     # String through parameter is necessary due to mutual dependency of classes
     members = models.ManyToManyField(Account, through="CourseMembership", related_name="courses")
 
