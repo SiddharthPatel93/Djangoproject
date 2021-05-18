@@ -32,6 +32,12 @@ def assign(section: Section, user: Account) -> list[str]:
             errors.append("User is an instructor, not a TA!")
     if section is None:
         errors.append("Enter a section")
+    else:
+        try:
+            if user.sections.count() >= CourseMembership.objects.get(course=section.course, account=user).sections:
+                errors.append("User is assigned to too many sections!")
+        except CourseMembership.DoesNotExist:
+            pass
     
     if errors:
         return errors

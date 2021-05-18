@@ -309,7 +309,8 @@ class AssignToSectionView(View):
             "section": section,
             "instructor": requester.role == Account.Role.INSTRUCTOR,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                      for user in course.members.filter(role=Account.Role.TA)],
+                        for user in course.members.filter(role=Account.Role.TA)
+                        if user.sections.count() < CourseMembership.objects.get(course=course, account=user).sections],
         })
 
     @check_permissions(check_supervisor=False)
@@ -336,7 +337,8 @@ class AssignToSectionView(View):
                 "section": section,
                 "instructor": requester.role == Account.Role.INSTRUCTOR,
                 "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                        for user in course.members.filter(role=Account.Role.TA)],
+                    for user in course.members.filter(role=Account.Role.TA)
+                    if user.sections.count() < CourseMembership.objects.get(course=course, account=user).sections],
             })
         else:
             return redirect(f"/courses/{course.id}/")

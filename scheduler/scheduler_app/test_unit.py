@@ -427,9 +427,7 @@ class AssignToSectionTest(TestCase):
         self.route_base = "/courses/{}/sections/{}/delete/"
         self.route = self.route_base.format(self.course.pk, self.section.pk)
         self.ta = Account.objects.create(name="ta", role=Account.Role.TA)
-        self.ta.save()
-        self.TAcourse = CourseMembership.objects.create(account=self.ta, course=self.course)
-        self.TAcourse.save()
+        self.TAcourse = CourseMembership.objects.create(account=self.ta, course=self.course, sections=2)
 
     def test_isCourseMember(self):
         course = self.section.course
@@ -446,7 +444,6 @@ class AssignToSectionTest(TestCase):
 
     def test_assignTwoSections(self):
         sectiontwo = Section.objects.create(course=self.course, num=23)
-        sectiontwo.save()
         sections.assign(self.section, self.ta)
         sections.assign(sectiontwo, self.ta)
         self.assertEqual(sectiontwo.ta, self.ta)
@@ -454,7 +451,6 @@ class AssignToSectionTest(TestCase):
     def test_alreadyAssigned(self):
         sections.assign(self.section, self.ta)
         ta2 = Account.objects.create(name="new ta", role=Account.Role.TA)
-        ta2.save()
         sections.assign(self.section, ta2)
         self.assertNotEqual(self.section.ta, ta2, msg="Trying to assign 2 TA's to 1 Section")
 
