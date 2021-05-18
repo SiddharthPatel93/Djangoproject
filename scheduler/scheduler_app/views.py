@@ -333,3 +333,11 @@ class AssignToSectionView(View):
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
                       for user in course.members.filter(role=Account.Role.TA)],
         })
+
+class UnassignFromCourseView(View):
+    def post(self, request, course=0, account=0):
+        pass
+
+class UnassignFromSectionView(View):
+    def post(self, request, section=0):
+        pass

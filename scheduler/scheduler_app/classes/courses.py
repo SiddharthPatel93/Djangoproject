@@ -49,6 +49,9 @@ def assign(course: Course, user: Account) -> list[str]:
     
     return errors
 
+def unassign(course: Course, account: Account) -> bool:
+    pass
+
 def edit(course: Course, details: dict[str, str]) -> list[str]:
     errors = []
 

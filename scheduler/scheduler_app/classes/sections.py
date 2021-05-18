@@ -45,6 +45,5 @@ def assign(section: Section, user: Account) -> list[str]:
     
     return errors
 
-
-
-
+def unassign(section: Section) -> bool:
+    pass
