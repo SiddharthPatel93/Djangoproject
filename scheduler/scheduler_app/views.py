@@ -413,5 +413,6 @@ class AssignToSectionView(View):
             "instructor": requester.role == Account.Role.INSTRUCTOR,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
                       for user in ta_members],
+            "sectionta": section.ta,
 
         })

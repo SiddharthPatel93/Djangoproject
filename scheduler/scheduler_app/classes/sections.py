@@ -41,7 +41,8 @@ def assign_section(section:Section, user:Account) -> list[str]:
     if len(errors) != 0:
         return errors
     if section.ta is None:
-        Section.ta = user
+        section.ta=user
+        section.save()
         errors.append("successfully added TA")
     else:
         errors.append("could not assign TA to section")
