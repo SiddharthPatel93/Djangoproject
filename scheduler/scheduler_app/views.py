@@ -183,7 +183,6 @@ class ViewCourseView(View):
             return HttpResponseForbidden("You do not have access to this course.")
 
         return render(request, "course.html", {
-            "TAs": course.members.filter(courses__coursemembership__account=Account.Role.TA),
             "course": course,
             "supervisor": supervisor,
             "instructor": instructor,
