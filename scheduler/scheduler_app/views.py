@@ -194,9 +194,10 @@ class ViewCourseView(View):
         return render(request, "course.html", {
             "course": course,
             "supervisor": True,
+            "instructor": False,
             "sections": course.sections.all(),
             "errors": errors,
-            "instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
+            "course_instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
             "tas": course.members.filter(role=Account.Role.TA),
         }, status=400 if errors else 200)
 
