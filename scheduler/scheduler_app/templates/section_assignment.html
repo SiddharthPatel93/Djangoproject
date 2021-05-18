@@ -38,7 +38,7 @@
                     </ul>
                 {% endif %}
 
-                <button class="btn btn-primary mb-3">Assign</button>
+                <button class="btn btn-primary mb-3"{% if not users %} disabled{% endif %}>Assign</button>
                 <a class="btn btn-secondary mb-3" href="/courses/{{ course.id }}/">Back</a>
             </form>
         </div>

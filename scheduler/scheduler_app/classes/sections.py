@@ -39,7 +39,6 @@ def assign(section: Section, user: Account) -> list[str]:
     if section.ta is None:
         section.ta = user
         section.save()
-        errors.append(f"Successfully added TA {user.name}")
     else:
         errors.append(f"{section.ta} already assigned to this section")
     
