@@ -19,8 +19,12 @@
                 <h1>Assign to Course</h1>
 
                 <div class="form-group mb-3">
-                    <label for="name">Name</label>
-                    <input type="text" class="form-control" name="name" placeholder="Enter name" required>
+                    <label for = "users">assign user to course</label>
+                    <select name = "user" id="user">
+                        {% for user in users %}
+                            <option value="{{ user.pk }}">{{ user.name }} - {{  user.role }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 {% if errors %}
@@ -31,7 +35,7 @@
                     </ul>
                 {% endif %}
 
-                <button class="btn btn-primary mb-3" type="submit">Create</button>
+                <button class="btn btn-primary mb-3" type="submit">submit</button>
             </form>
         </div>
     </div>

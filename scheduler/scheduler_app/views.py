@@ -7,6 +7,7 @@ from .classes import courses, permissions, sections, users
 from .classes.permissions import check_permissions
 from .models import Account, Course, Section
 
+
 class HomepageView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account):
@@ -14,17 +15,18 @@ class HomepageView(View):
             "user": requester,
         })
 
+
 class LoginView(View):
     def get(self, request):
         if "account" in request.session:
             return redirect("/")
-        
+
         return render(request, "login.html", {"nav": True})
-    
+
     def post(self, request):
         if "account" in request.session:
             return redirect("/")
-        
+
         errors, invalid_login = permissions.login_with_details(request, request.POST)
 
         if not errors:
@@ -73,6 +75,7 @@ class DeleteUserView(View):
         Attempt to delete the specified user.
         Redirect to /users/ after, potentially with error.
         """
+
         @check_permissions()
         def post(self, *args, account=0):
             try:
@@ -144,11 +147,12 @@ class ListCoursesView(View):
             "courses": [{"pk": course.pk, "name": course.name} \
                         for course in courses.get(requester)],
             "supervisor": requester.role == Account.Role.SUPERVISOR,
-            "instructors": [{"pk": instructor.pk, "name": instructor.name}\
-                        for instructor in Account.objects.filter(role=Account.Role.INSTRUCTOR)],
-            "TAs": [{"pk": TA.pk, "name": TA.name}\
-                        for TA in Account.objects.filter(role=Account.Role.TA)],
+            "instructors": [{"pk": instructor.pk, "name": instructor.name} \
+                            for instructor in Account.objects.filter(role=Account.Role.INSTRUCTOR)],
+            "TAs": [{"pk": TA.pk, "name": TA.name} \
+                    for TA in Account.objects.filter(role=Account.Role.TA)],
         })
+
 
 class CreateCourseView(View):
     @check_permissions()
@@ -202,6 +206,7 @@ class ViewCourseView(View):
             "errors": errors,
             "supervisor": True,
         }, status=400 if errors else 200)
+
 
 class EditCourseView(View):
     @check_permissions()
@@ -333,6 +338,7 @@ class CourseAssignmentView(View):
         else:
             return redirect("/course_assignment/")
 
+
 class AssignToCourseview(View):
     @check_permissions()
     def get(self, request, requester: Account, course=0):
@@ -345,8 +351,8 @@ class AssignToCourseview(View):
             "course": course,
             "supervisor": requester.role == Account.Role.SUPERVISOR,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                            for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
-    })
+                      for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
+        })
 
     @check_permissions()
     def post(self, request, requester: Account, course=0):
@@ -366,27 +372,32 @@ class AssignToCourseview(View):
 
         })
 
+
 class AssignToSectionView(View):
-    @check_permissions()
+    @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account, course=0, section=0):
         try:
-            section = Course.objects.get(pk=course)
-        except Course.DoesNotExist:
-            raise Http404("Course does not exist")
+            course = Course.objects.get(pk=course)
+            section = Section.objects.get(pk=section)
+            course_members = course.members.all()
+            ta_members = list(course_members.filter(role=Account.Role.TA))
+        except section.DoesNotExist:
+            raise Http404("section does not exist")
 
-        return render(request, "user_course_assignment.html", {
+        return render(request, "section_assignment.html", {
             "course": course,
-            "supervisor": requester.role == Account.Role.SUPERVISOR,
+            "section": section,
+            "instructor": requester.role == Account.Role.INSTRUCTOR,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                            for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
-    })
+                      for user in ta_members],
+        })
 
     @check_permissions()
-    def post(self, request, requester: Account, course=0):
+    def post(self, request, requester: Account, course=0, section=0):
         try:
-            course = Course.objects.get(pk=course)
-        except Course.DoesNotExist:
-            raise Http404("Course does not exist")
+            section = section.objects.get(pk=course)
+        except section.DoesNotExist:
+            raise Http404("section does not exist")
 
         user_key = request.POST.get('user', "0")
         user = Account.objects.get(pk=user_key)
