@@ -33,7 +33,7 @@
             <br>
 
             {% if instructor or ta %}
-                <table class="table table-striped" width="300">
+                <table class="table table-striped">
                     <thead>
                         <tr>
                             <th scope="col">Course</th>
@@ -44,9 +44,21 @@
                     <tbody>
                         {% for section in sections %}
                             <tr>
-                                <td width="40%">{{ section.course }}</td>
-                                <td width="30%">{{ section.num }}</td>
-                                <td width="30%">{{ section.ta }}</td>
+                                <td>
+                                    <a href="/courses/{{ section.course.pk }}/">
+                                        {{ section.course.name }}
+                                    </a>
+                                </td>
+                                <td>{{ section.num }}</td>
+                                <td>
+                                    {% if section.ta %}
+                                        <a href="/users/{{ section.ta.pk }}">
+                                            {{ section.ta.name }}
+                                        </a>
+                                    {% else %}
+                                        None
+                                    {% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
