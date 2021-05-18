@@ -36,6 +36,7 @@ urlpatterns = [
     path('courses/<int:course>/', views.ViewCourseView.as_view()),
     path('courses/<int:course>/assign/', views.AssignToCourseView.as_view()),
     path('courses/<int:course>/unassign/<int:account>/', views.UnassignFromCourseView.as_view()),
+    path('courses/<int:course>/membership/<int:account>/', views.EditMembershipView.as_view()),
     path('courses/<int:course>/edit/', views.EditCourseView.as_view()),
     path('courses/<int:course>/delete/', views.DeleteCourseView.as_view()),
     path('courses/<int:course>/sections/<int:section>/assign/', views.AssignToSectionView.as_view()),
