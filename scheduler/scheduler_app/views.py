@@ -307,7 +307,6 @@ class AssignToCourseView(View):
 
         return render(request, "user_course_assignment.html", {
             "course": course,
-            "supervisor": requester.role == Account.Role.SUPERVISOR,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
                       for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
         })
