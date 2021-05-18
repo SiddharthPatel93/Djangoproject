@@ -140,6 +140,7 @@ class AssignToCourseTest(TestCase):
     def test_invalidUser(self):
         supervisor = Account.objects.create(name="Supervisor", role=Account.Role.SUPERVISOR)
         self.assertEqual(1, len(courses.assign(self.course, supervisor)), msg="user is not a TA or instructor and cannot be assigned")
+      
 
 class UnassignFromCourseTest(TestCase):
     def setUp(self):
@@ -459,7 +460,7 @@ class AssignToSectionTest(TestCase):
 
     def test_invalidUserAssigned(self):
         inst = Account.objects.create(name="instructor", role=Account.Role.INSTRUCTOR)
-        self.assertEqual(["User is an instructor, not a TA!"],sections.assign(self.section, inst))
+        self.assertEqual(["User is an instructor, not a TA!"], sections.assign(self.section, inst), msg="Instructor assigned to section")
 
     def test_noUserAssigned(self):
         with self.assertRaises(TypeError, msg="No User argument given"):
