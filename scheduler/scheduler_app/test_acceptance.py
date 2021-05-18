@@ -603,10 +603,10 @@ class UnassignFromSectionTest(TestCase):
         self.course = Course.objects.create()
         self.route_base = f"/courses/{self.course.id}"
         self.unassigned_section = Section.objects.create(course=self.course)
-        self.unassigned_route = f"{self.route_base}/section/{self.unassigned_section.id}/unassign/"
+        self.unassigned_route = f"{self.route_base}/sections/{self.unassigned_section.id}/unassign/"
         self.ta = Account.objects.create(role=Account.Role.TA)
         self.assigned_section = Section.objects.create(course=self.course, ta=self.ta)
-        self.assigned_route = f"{self.route_base}/section/{self.assigned_section.id}/unassign/"
+        self.assigned_route = f"{self.route_base}/sections/{self.assigned_section.id}/unassign/"
         self.instructor = Account.objects.create(role=Account.Role.INSTRUCTOR)
         self.supervisor = Account.objects.create(role=Account.Role.SUPERVISOR)
     
@@ -637,6 +637,6 @@ class UnassignFromSectionTest(TestCase):
     def test_assignedSection(self):
         permissions.login(self.client, self.supervisor)
         r = self.client.post(self.assigned_route, follow=True)
-        self.assertEqual([(f"/courses/{self.course.id}/")], r.redirect_chain, "Section unassignment page fails to redirect to course page for assigned section")
-        del self.assigned_section.ta
+        self.assertEqual([(f"/courses/{self.course.id}/", 302)], r.redirect_chain, "Section unassignment page fails to redirect to course page for assigned section")
+        self.assigned_section.refresh_from_db(fields=["ta"])
         self.assertIsNone(self.assigned_section.ta, "Section unassignment page fails to unassign section for assigned section")
