@@ -57,10 +57,11 @@ def edit(course: Course, details: dict[str, str]) -> list[str]:
 
     if not (name := details.get("name", "")):
         errors.append("Please enter a name!")
-    elif count(name):
+    elif name != course.name and count(name):
         errors.append("Please enter a name not taken by an existing course!")
     else:
         course.name = name
+    course.description = details.get("description", "")
 
     if not errors:
         course.save()
