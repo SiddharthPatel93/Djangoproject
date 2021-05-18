@@ -289,6 +289,9 @@ class AssignToCourseView(View):
 class AssignToSectionView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account, course=0, section=0):
+        if requester.role == Account.Role.TA:
+            return HttpResponseForbidden("You do not have permission to perform this action.")
+        
         try:
             course = Course.objects.get(pk=course)
             section = Section.objects.get(pk=section)
@@ -301,11 +304,15 @@ class AssignToSectionView(View):
             "course": course,
             "section": section,
             "instructor": requester.role == Account.Role.INSTRUCTOR,
-            "users": course.members.filter(role=Account.Role.TA),
+            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
+                      for user in course.members.filter(role=Account.Role.TA)],
         })
 
     @check_permissions(check_supervisor=False)
     def post(self, request, requester: Account, course=0, section=0):
+        if requester.role == Account.Role.TA:
+            return HttpResponseForbidden("You do not have permission to perform this action.")
+        
         try:
             section = Section.objects.get(pk=section)
         except section.DoesNotExist:
@@ -315,7 +322,6 @@ class AssignToSectionView(View):
         user_key = request.POST.get('user', "0")
         user = Account.objects.get(pk=user_key)
         errors = sections.assign_section(section, user)
-        ta_members = course.members.filter(role=Account.Role.TA)
 
         return render(request, "section_assignment.html", {
             "errors": errors,
@@ -323,5 +329,5 @@ class AssignToSectionView(View):
             "section":section,
             "instructor": requester.role == Account.Role.INSTRUCTOR,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                      for user in ta_members],
+                      for user in course.members.filter(role=Account.Role.TA)],
         })
