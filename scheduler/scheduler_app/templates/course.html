@@ -80,11 +80,11 @@
                             {% if supervisor or instructor %}
                                 <td>
                                     <a class="btn btn-primary btn-sm" href="sections/{{ section.pk }}/assign/">Assign User</a>
-                                {% if supervisor %}
-                                    <form method="POST" action="sections/{{ section.pk }}/delete/" style="display: inline;">
-                                        {% csrf_token %}
-                                        <button class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
-                                    </form>
+                                    {% if supervisor %}
+                                        <form method="POST" action="sections/{{ section.pk }}/delete/" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
+                                        </form>
                                     {% endif %}
                                 </td>
                             {% endif %}
