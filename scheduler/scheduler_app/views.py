@@ -168,8 +168,10 @@ class ViewCourseView(View):
         
         return render(request, "course.html", {
             "course": course,
-            "sections": course.sections.all(),
             "supervisor": supervisor,
+            "sections": course.sections.all(),
+            "instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
+            "tas": course.members.filter(role=Account.Role.TA),
         })
 
     @check_permissions()
@@ -183,9 +185,11 @@ class ViewCourseView(View):
 
         return render(request, "course.html", {
             "course": course,
+            "supervisor": True,
             "sections": course.sections.all(),
             "errors": errors,
-            "supervisor": True,
+            "instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
+            "tas": course.members.filter(role=Account.Role.TA),
         }, status=400 if errors else 200)
 
 class EditCourseView(View):
