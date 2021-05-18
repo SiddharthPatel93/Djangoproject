@@ -47,13 +47,11 @@
                                 </td>
                             {% endif %}
                         </tr>
-                    {% endfor %}
-
-                    {% if not courses %}
+                    {% empty %}
                         <tr>
-                            <td colspan="{{ supervisor|yesno:"2,1" }}">No courses to list!</td>
+                            <td colspan="{{ supervisor|yesno:"2,1" }}">No courses yet!</td>
                         </tr>
-                    {% endif %}
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
