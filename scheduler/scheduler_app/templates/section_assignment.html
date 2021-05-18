@@ -20,10 +20,12 @@
                 <h1>Assign to Section: {{ section.num }}</h1>
 
                 <div class="form-group mb-3">
-                    <label for = "user">User</label>
-                    <select class="form-select" name = "user" id="user">
+                    <label for="user">TA</label>
+                    <select class="form-select" name="user" id="user"{% if not users %} disabled{% endif %}>
                         {% for user in users %}
                             <option value="{{ user.pk }}">{{ user.name }} - {{  user.role }}</option>
+                        {% empty %}
+                            <option value="0">No TAs to assign!</option>
                         {% endfor %}
                     </select>
                 </div>

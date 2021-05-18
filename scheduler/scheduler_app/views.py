@@ -11,13 +11,10 @@ from .models import Account, Course, CourseMembership, Section
 class HomepageView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account):
-
         return render(request, "homepage.html", {
             "user": requester,
-            "sections": [{"pk": section.pk, "course": section.course, "num":section.num,"ta":section.ta} \
-                      for section in Section.objects.all()],
-            "instructor": requester.role == Account.Role.INSTRUCTOR,
-            "ta": requester.role == Account.Role.TA,
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+            "courses": courses.get(requester),
         })
 
 
@@ -188,7 +185,7 @@ class ViewCourseView(View):
             "instructor": instructor,
             "sections": course.sections.all(),
             "course_instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
-            "tas": CourseMembership.objects.filter(account__role=Account.Role.TA),
+            "tas": CourseMembership.objects.filter(account__role=Account.Role.TA, course=course),
         })
 
     @check_permissions()
@@ -381,17 +378,17 @@ class AssignToSectionView(View):
         try:
             course = Course.objects.get(pk=course)
             section = Section.objects.get(pk=section)
-            course_members = course.members.all()
-            ta_members = list(course_members.filter(role=Account.Role.TA))
-        except section.DoesNotExist:
-            raise Http404("section does not exist")
+            tas = course.members.filter(role=Account.Role.TA)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist!")
+        except Section.DoesNotExist:
+            raise Http404("Section does not exist!")
 
         return render(request, "section_assignment.html", {
             "course": course,
             "section": section,
             "instructor": requester.role == Account.Role.INSTRUCTOR,
-            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                      for user in ta_members],
+            "users": tas,
         })
 
     @check_permissions(check_supervisor=False)
