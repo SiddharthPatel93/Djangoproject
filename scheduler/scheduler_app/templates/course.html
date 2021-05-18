@@ -83,7 +83,7 @@
                                     {% if supervisor %}
                                         <form method="POST" action="sections/{{ section.pk }}/delete/" style="display: inline;">
                                             {% csrf_token %}
-                                            <button class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
                                         </form>
                                     {% endif %}
                                 </td>
