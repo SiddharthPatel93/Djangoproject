@@ -327,14 +327,17 @@ class AssignToSectionView(View):
         user = Account.objects.get(pk=user_key)
         errors = sections.assign(section, user)
 
-        return render(request, "section_assignment.html", {
-            "errors": errors,
-            "course": course,
-            "section":section,
-            "instructor": requester.role == Account.Role.INSTRUCTOR,
-            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                      for user in course.members.filter(role=Account.Role.TA)],
-        })
+        if errors:
+            return render(request, "section_assignment.html", {
+                "errors": errors,
+                "course": course,
+                "section": section,
+                "instructor": requester.role == Account.Role.INSTRUCTOR,
+                "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
+                        for user in course.members.filter(role=Account.Role.TA)],
+            })
+        else:
+            return redirect(f"/courses/{course.id}/")
 
 class UnassignFromCourseView(View):
     @check_permissions()
