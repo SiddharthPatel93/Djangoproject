@@ -278,9 +278,9 @@ class DeleteUserTest(TestCase):
         permissions.login(self.client, self.supervisor)
         r = self.client.post(self.route, follow=True)
         self.assertEqual([("/users/", 302)], r.redirect_chain,
-                         "Deleting user as supervisor fails to redirect to users list")
-        self.assertNotIn(self.ta.pk, [user["pk"] for user in r.context["users"]],
-                         "Deleting user as supervisor fails to delete user")
+                            "Deleting user as supervisor fails to redirect to users list")
+        self.assertNotIn(self.ta, r.context["users"],
+                            "Deleting user as supervisor fails to delete user")
 
     def test_deleteNeedsSupervisor(self):
         permissions.login(self.client, self.instructor)
@@ -414,7 +414,7 @@ class ViewCourseTest(TestCase):
         r = self.client.get(self.accessible_route)
         self.assertEqual(self.accessible_course, r.context["course"], "Course page fails to load course info")
         self.assertEqual(1, r.context["sections"].count(), "Course page fails to load course sections")
-        self.assertEqual(self.instructor, r.context["instructor"], "Course page fails to load instructor")
+        self.assertEqual(self.instructor, r.context["course_instructor"], "Course page fails to load instructor")
         self.assertEqual(1, r.context["tas"].count(), "Course page fails to load TAs")
 
     def test_errorVisibility(self):
