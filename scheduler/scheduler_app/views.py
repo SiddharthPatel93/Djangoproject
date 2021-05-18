@@ -198,7 +198,7 @@ class ViewCourseView(View):
             "sections": course.sections.all(),
             "errors": errors,
             "course_instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
-            "tas": course.members.filter(role=Account.Role.TA),
+            "tas": CourseMembership.objects.filter(account__role=Account.Role.TA, course=course),
         }, status=400 if errors else 200)
 
 
