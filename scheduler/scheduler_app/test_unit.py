@@ -369,3 +369,99 @@ class DeleteSectionTest(TestCase):
     def test_deletesSection(self):
         sections.delete(self.section)
         self.assertEqual(0, sections.count(self.section.num), "Section deletion function fails to delete section")
+
+class AssignSectionTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.course = Course.objects.create(name="CS 361")
+        self.course.save()
+        self.section = Section.objects.create(course=self.course, num=902)
+        self.section.save()
+        self.route_base = "/courses/{}/sections/{}/delete/"
+        self.route = self.route_base.format(self.course.pk, self.section.pk)
+        self.ta = Account.objects.create(name="ta", role=Account.Role.TA)
+        self.ta.save()
+        self.TAcourse = CourseMembership.objects.create(account=self.ta, course=self.course)
+        self.TAcourse.save()
+
+    def test_isCourseMember(self):
+        course = self.section.course
+        self.assertEqual(self.ta, course.members.get(courses__coursemembership__account=self.ta))
+
+    def test_isnotcourseMember(self):
+        ta2 = Account.objects.create(name="ta2",role=Account.Role.TA)
+        course = self.section.course
+        self.assertNotEqual(ta2, course.members.get(courses__coursemembership__account=self.ta))
+
+
+    def test_assignOneSection(self):
+        sections.assign_section(self.section, self.ta)
+        self.assertEqual(self.section.ta, self.ta)
+
+    def test_assignTwoSections(self):
+        sectiontwo = Section.objects.create(course=self.course, num=23)
+        sectiontwo.save()
+        sections.assign_section(self.section, self.ta)
+        sections.assign_section(sectiontwo, self.ta)
+        self.assertEqual(sectiontwo.ta, self.ta)
+
+    def test_alreadyAssigned(self):
+        sections.assign_section(self.section, self.ta)
+        ta2 = Account.objects.create(name="new ta", role=Account.Role.TA)
+        ta2.save()
+        sections.assign_section(self.section, ta2)
+        self.assertNotEqual(self.section.ta, ta2, msg="Trying to assign 2 TA's to 1 Section")
+
+    def test_invalidUserAssigned(self):
+        inst = Account.objects.create(name="instructor", role=Account.Role.INSTRUCTOR)
+        self.assertEqual(["User is an instructor, not a TA!"],sections.assign_section(self.section, inst))
+
+
+    def test_noUserAssigned(self):
+        with self.assertRaises(TypeError, msg="No User argument given"):
+            sections.assign_section(self.section)
+
+    def test_noSectionGiven(self):
+        with self.assertRaises(TypeError, msg="No section argument given"):
+            sections.assign_section(self.ta)
+
+class AssignInstructorTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.course = Course.objects.create(name="CS 361")
+        self.section = Section.objects.create(course=self.course, num=902)
+        self.route_base = "/courses/{}/sections/{}/delete/"
+        self.route = self.route_base.format(self.course.pk, self.section.pk)
+        self.ta = Account.objects.create(name="ta",email="122@email.com", role=Account.Role.TA)
+        self.inst = Account.objects.create(name="inst", role=Account.Role.INSTRUCTOR)
+
+
+    def test_assignInstructor(self):
+        self.assertEqual(courses.assign(self.course, self.inst), ["Successfully added Instructor inst to course"], msg=("could not assign instructor"))
+
+    def test_assignTA(self):
+        self.assertEqual(courses.assign(self.course, self.ta), ["Successfully added ta to course"], msg="could not assign TA")
+
+    def test_assignSecondInstructor(self):
+        courses.assign(self.course, self.inst)
+        self.inst2 = Account.objects.create(name="inst2", role=Account.Role.INSTRUCTOR)
+        self.assertEqual(courses.assign(self.course, self.inst2), ["An instructor has already been assigned to this Course"],msg="assigned a instructor when it should not have")
+
+    def test_assignSecondTA(self):
+        courses.assign(self.course, self.ta)
+        self.ta2 = Account.objects.create(name="ta2", email="123@email.com",role=Account.Role.TA)
+        self.assertEqual(courses.assign(self.course, self.ta2), ["Successfully added ta2 to course"], msg="did not add TA2 ")
+
+    def test_assign_same_TA(self):
+        courses.assign(self.course, self.ta)
+        self.assertEqual(courses.assign(self.course, self.ta), ["TA ta has already been assigned to this course"],msg="assigned same TA to course when it should not have")
+
+    def test_noCourse(self):
+        self.assertEqual(courses.assign(None, self.inst), ["Please choose a course"], msg="somehow assigned a ta to no course")
+
+    def test_noUser(self):
+        self.assertEqual(courses.assign(self.course, None), ["Please enter a user"], msg="no user to assign")
+
+    def test_invalidUser(self):
+        self.Supervisor = Account.objects.create(name="Supervisor", role=Account.Role.SUPERVISOR)
+        self.assertEqual(courses.assign(self.course, self.Supervisor), ["User is a supervisor"], msg='user is not a TA or instructor and cannot be assigned')

@@ -7,24 +7,31 @@ from .classes import courses, permissions, sections, users
 from .classes.permissions import check_permissions
 from .models import Account, Course, CourseMembership, Section
 
+
 class HomepageView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account):
+
         return render(request, "homepage.html", {
             "user": requester,
+            "sections": [{"pk": section.pk, "course": section.course, "num":section.num,"ta":section.ta} \
+                      for section in Section.objects.all()],
+            "instructor": requester.role == Account.Role.INSTRUCTOR,
+            "ta": requester.role == Account.Role.TA,
         })
+
 
 class LoginView(View):
     def get(self, request):
         if "account" in request.session:
             return redirect("/")
-        
+
         return render(request, "login.html", {"nav": True})
-    
+
     def post(self, request):
         if "account" in request.session:
             return redirect("/")
-        
+
         errors, invalid_login = permissions.login_with_details(request, request.POST)
 
         if not errors:
@@ -33,18 +40,20 @@ class LoginView(View):
                 password=request.POST["password"],
             ).pk
             return redirect("/")
-        
+
         return render(request, "login.html", {
             "nav": True,
             "errors": errors,
         }, status=401 if invalid_login else 400)
 
+
 class LogoutView(View):
     def post(self, request):
         if "account" in request.session:
             del request.session["account"]
-        
+
         return redirect("/login/")
+
 
 class ListUsersView(View):
     def get(self, request):
@@ -57,18 +66,15 @@ class ListUsersView(View):
 
         return render(request, "users_list.html", {
             "users": [{"pk": user.pk, "name": user.name} \
-                        for user in users.get(requester)],
+                      for user in users.get(requester)],
             "supervisor": requester.role == Account.Role.SUPERVISOR,
             "members": [{"pk": member.pk, "name": member.name} \
                         for course in courses.get(requester) \
                         for member in course.members.all()],
         })
 
+
 class DeleteUserView(View):
-        """
-        Attempt to delete the specified user.
-        Redirect to /users/ after, potentially with error.
-        """
         @check_permissions()
         def post(self, *args, account=0):
             try:
@@ -80,6 +86,7 @@ class DeleteUserView(View):
 
             return redirect("/users/")
 
+
 class ViewUserView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account, account=0):
@@ -87,7 +94,7 @@ class ViewUserView(View):
             account = Account.objects.get(pk=account)
         except Account.DoesNotExist:
             raise Http404("User does not exist")
-        
+
         return render(request, "user.html", {
             "roles": Account.Role.choices,
             "own_profile": account.pk == request.session["account"],
@@ -104,9 +111,9 @@ class ViewUserView(View):
             account = Account.objects.get(pk=account)
         except Account.DoesNotExist:
             raise Http404("User does not exist")
-        
+
         errors = users.edit(requester, account, request.POST)
-        
+
         return render(request, "user.html", {
             "roles": Account.Role.choices,
             "errors": errors,
@@ -114,6 +121,7 @@ class ViewUserView(View):
             "supervisor": requester.role == Account.Role.SUPERVISOR,
             **model_to_dict(account),
         }, status=400 if errors else 200)
+
 
 class CreateUserView(View):
     @check_permissions()
@@ -130,14 +138,20 @@ class CreateUserView(View):
         else:
             return redirect("/users/?user_created=true")
 
+
 class ListCoursesView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account):
         return render(request, "courses_list.html", {
-            "courses": [{ "pk": course.pk, "name": course.name} \
-                for course in courses.get(requester)],
+            "courses": [{"pk": course.pk, "name": course.name} \
+                        for course in courses.get(requester)],
             "supervisor": requester.role == Account.Role.SUPERVISOR,
+            "instructors": [{"pk": instructor.pk, "name": instructor.name} \
+                            for instructor in Account.objects.filter(role=Account.Role.INSTRUCTOR)],
+            "TAs": [{"pk": TA.pk, "name": TA.name} \
+                    for TA in Account.objects.filter(role=Account.Role.TA)],
         })
+
 
 class CreateCourseView(View):
     @check_permissions()
@@ -153,6 +167,7 @@ class CreateCourseView(View):
         else:
             return redirect("/courses/?course_created=true")
 
+
 class ViewCourseView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account, course=0):
@@ -162,15 +177,18 @@ class ViewCourseView(View):
             raise Http404("Course does not exist")
 
         supervisor = requester.role == Account.Role.SUPERVISOR
-        
+        instructor = requester.role == Account.Role.INSTRUCTOR
+
         if not supervisor and course not in courses.get(requester):
             return HttpResponseForbidden("You do not have access to this course.")
-        
+
         return render(request, "course.html", {
+            "TAs": course.members.filter(courses__coursemembership__account=Account.Role.TA),
             "course": course,
             "supervisor": supervisor,
+            "instructor": instructor,
             "sections": course.sections.all(),
-            "instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
+            "course_instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
             "tas": CourseMembership.objects.filter(account__role=Account.Role.TA),
         })
 
@@ -192,6 +210,7 @@ class ViewCourseView(View):
             "tas": course.members.filter(role=Account.Role.TA),
         }, status=400 if errors else 200)
 
+
 class EditCourseView(View):
     @check_permissions()
     def get(self, request, *args, course=0):
@@ -199,16 +218,16 @@ class EditCourseView(View):
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             raise Http404("Course does not exist")
-        
+
         return render(request, "course_edit.html", {"course": course})
-    
+
     @check_permissions()
     def post(self, request, *args, course=0):
         try:
             course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             raise Http404("Course does not exist")
-        
+
         errors = courses.edit(course, request.POST)
 
         if errors:
@@ -218,6 +237,7 @@ class EditCourseView(View):
             }, status=400)
         else:
             return redirect(f"/courses/{course.pk}/")
+
 
 class DeleteCourseView(View):
     @check_permissions()
@@ -231,6 +251,7 @@ class DeleteCourseView(View):
 
         return redirect("/courses/")
 
+
 class DeleteSectionView(View):
     @check_permissions()
     def post(self, *args, section=0, **kwargs):
@@ -242,3 +263,159 @@ class DeleteSectionView(View):
         sections.delete(section)
 
         return redirect(f"/courses/{section.course.pk}/")
+
+
+class SectionAssignmentView(View):
+    def get(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        if requester.role is not Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You do not have access to this feature")
+
+        if courses not in courses.get(requester):
+            return HttpResponseForbidden("No courses available")
+
+        return render(request, "course.html", {
+            "instructors": [{"pk": user.pk, "name": user.name} \
+                            for user in users.get(requester)],
+            "TAs": users.get(Account.Role.TA)
+        })
+
+    def post(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        if requester.role is not Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You do not have access to this feature")
+
+        if courses not in courses.get(requester):
+            return HttpResponseForbidden("No courses available")
+
+        errors = Section.assignTA(courses.Course, courses.num, request.POST.get("name", ""))
+
+        if errors:
+            return render(request, "section_assignment.html", {"errors": errors}, status=401)
+        else:
+            return render(request, "course.html", {
+                "instructors": Account.objects.filter(Account.Role.INSTRUCTOR),
+                "TAs": users.get(Account.Role.TA)
+            })
+
+
+class CourseAssignmentView(View):
+    def get(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        if requester.role is not Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You do not have access to this feature")
+
+        if courses not in courses.get(requester):
+            return HttpResponseForbidden("No courses available")
+
+        return render(request, "user_course_assignment.html")
+
+    def post(self, request):
+        if "account" not in request.session:
+            return redirect("/login/")
+
+        requester = Account.objects.get(pk=request.session["account"])
+
+        if requester.role is not Account.Role.SUPERVISOR:
+            return HttpResponseForbidden("You do not have access to this feature")
+
+        if courses not in courses.get(requester):
+            return HttpResponseForbidden("No courses available")
+
+        errors = courses.assign(courses.Course, courses.num, request.POST.get("name", ""))
+
+        if errors:
+            return render(request, "user_course_assignment.html", {"errors": errors}, status=401)
+        else:
+            return redirect("/course_assignment/")
+
+
+class AssignToCourseview(View):
+    @check_permissions()
+    def get(self, request, requester: Account, course=0):
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+
+        return render(request, "user_course_assignment.html", {
+            "course": course,
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
+                      for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
+        })
+
+    @check_permissions()
+    def post(self, request, requester: Account, course=0):
+        try:
+            course = Course.objects.get(pk=course)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist")
+
+        user_key = request.POST.get('user', "0")
+        user = Account.objects.get(pk=user_key)
+        errors = courses.assign(course, user)
+        return render(request, "user_course_assignment.html", {
+            "errors": errors,
+            "course": course,
+            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
+                      for user in Account.objects.exclude(role=Account.Role.SUPERVISOR)],
+
+        })
+
+
+class AssignToSectionView(View):
+    @check_permissions(check_supervisor=False)
+    def get(self, request, requester: Account, course=0, section=0):
+        try:
+            course = Course.objects.get(pk=course)
+            section = Section.objects.get(pk=section)
+            course_members = course.members.all()
+            ta_members = list(course_members.filter(role=Account.Role.TA))
+        except section.DoesNotExist:
+            raise Http404("section does not exist")
+
+        return render(request, "section_assignment.html", {
+            "course": course,
+            "section": section,
+            "instructor": requester.role == Account.Role.INSTRUCTOR,
+            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
+                      for user in ta_members],
+        })
+
+    @check_permissions(check_supervisor=False)
+    def post(self, request, requester: Account, course=0, section=0):
+        try:
+            section = Section.objects.get(pk=section)
+
+        except section.DoesNotExist:
+            raise Http404("section does not exist")
+
+        course = Course.objects.get(pk=course)
+        user_key = request.POST.get('user', "0")
+        user = Account.objects.get(pk=user_key)
+        errors = sections.assign_section(section, user)
+        course_members = course.members.all()
+        ta_members = list(course_members.filter(role=Account.Role.TA))
+
+        return render(request, "section_assignment.html", {
+            "errors": errors,
+            "course": course,
+            "section":section,
+            "instructor": requester.role == Account.Role.INSTRUCTOR,
+            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
+                      for user in ta_members],
+
+        })

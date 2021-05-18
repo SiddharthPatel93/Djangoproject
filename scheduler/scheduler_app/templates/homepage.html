@@ -7,29 +7,49 @@
     <div class="row">
         <div class="col-8 col-md-6 col-lg-4 mx-auto">
             <h1>{{ user.name }}</h1>
-            <table>
+            <table class="table table-striped">
                 <tr>
-                    <th>Role</th>
+                    <th scope="row">Role</th>
                     <td> {{ user.get_role_display }}</td>
                 </tr>
                 <tr>
-                    <th>Email</th>
+                    <th scope="row">Email</th>
                     <td> {{ user.get_email }}</td>
                 </tr>
                 <tr>
-                    <th>Phone</th>
+                    <th scope="row">Phone</th>
                     <td> {{ user.get_phone }}</td>
                 </tr>
                 <tr>
-                    <th>Office Hours</th>
+                    <th scope="row">Office Hours</th>
                     <td> {{ user.get_office_hours }}</td>
                 </tr>
                 <tr>
-                    <th>Address</th>
+                    <th scope="row">Address</th>
                     <td> {{ user.get_address }}</td>
                 </tr>
-
             </table>
+        <br>
+            {% if instructor or ta %}
+            <table class="table table-striped" width="300">
+                <thead>
+                    <tr>
+                        <th scope="col">Course</th>
+                        <th scope="col">Section</th>
+                        <th scope="col">TA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for section in sections %}
+                        <tr>
+                            <td width="40%">{{ section.course }}</td>
+                            <td width="30%">{{ section.num }}</td>
+                            <td width="30%">{{ section.ta }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
 
 
         </div>
