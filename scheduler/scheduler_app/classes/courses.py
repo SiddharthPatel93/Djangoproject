@@ -49,7 +49,7 @@ def assign(course: Course, user: Account) -> list[str]:
     
     return errors
 
-def unassign(course: Course, account: Account) -> bool:
+def unassign(course: Course, account: Account):
     pass
 
 def edit(course: Course, details: dict[str, str]) -> list[str]:

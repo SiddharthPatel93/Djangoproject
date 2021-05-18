@@ -149,13 +149,11 @@ class UnassignFromCourseTest(TestCase):
         self.memberful_course.members.add(self.user)
     
     def test_memberlessCourse(self):
-        result = courses.unassign(self.memberless_course, self.user)
-        self.assertFalse(result, "Course unassignment function fails to return false when given user not in course")
+        courses.unassign(self.memberless_course, self.user)
         self.assertEqual(1, self.memberful_course.members.count(), "Course unassignment function removes unrelated course membership when given user not in course")
     
     def test_memberfulCourse(self):
-        result = courses.unassign(self.memberful_course, self.user)
-        self.assertTrue(result, "Course unassignment function fails to return true when given user in course")
+        courses.unassign(self.memberful_course, self.user)
         self.assertEqual(0, self.memberful_course.members.count(), "Course unassignment function fails to remove course membership whhen given user in course")
 
 class EditCourseTest(TestCase):
