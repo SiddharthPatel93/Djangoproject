@@ -277,7 +277,8 @@ class AssignToCourseView(View):
             raise Http404("Course does not exist")
 
         user = Account.objects.get(pk=request.POST.get("user", "0"))
-        errors = courses.assign(course, user)
+        errors = courses.assign(course, user, "grader" in request.POST, int(request.POST["sections"]))
+
         return render(request, "course_assignment.html", {
             "errors": errors,
             "course": course,

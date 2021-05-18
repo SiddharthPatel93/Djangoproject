@@ -25,7 +25,7 @@ def create(name: str) -> list[str]:
 def delete(course: Course):
     course.delete()
 
-def assign(course: Course, user: Account) -> list[str]:
+def assign(course: Course, user: Account, grader: bool = False, sections: int = 1) -> list[str]:
     errors = []
 
     if not course:
@@ -44,7 +44,7 @@ def assign(course: Course, user: Account) -> list[str]:
     elif course.members.filter(email=user.get_email()):
         errors.append(f"User {user.name} has already been assigned to this course!")
     else:
-        CourseMembership.objects.create(account=user, course=course)
+        CourseMembership.objects.create(account=user, course=course, grader=grader, sections=sections)
         errors.append(f"Successfully added user {user.name} to course!")
     
     return errors
