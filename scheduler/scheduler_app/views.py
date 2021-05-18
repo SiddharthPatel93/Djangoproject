@@ -53,21 +53,15 @@ class LogoutView(View):
 
 
 class ListUsersView(View):
-    def get(self, request):
+    @check_permissions(check_supervisor=False)
+    def get(self, request, requester: Account):
         """Render template of all users as a list."""
 
-        if "account" not in request.session:
-            return redirect("/login/")
-
-        requester = Account.objects.get(pk=request.session["account"])
-
         return render(request, "users_list.html", {
-            "users": [{"pk": user.pk, "name": user.name} \
-                      for user in users.get(requester)],
+            "users": users.get(requester),
             "supervisor": requester.role == Account.Role.SUPERVISOR,
-            "members": [{"pk": member.pk, "name": member.name} \
-                        for course in courses.get(requester) \
-                        for member in course.members.all()],
+            "members": set(member for course in courses.get(requester) \
+                            for member in course.members.all()),
         })
 
 
