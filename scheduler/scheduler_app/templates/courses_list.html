@@ -41,19 +41,17 @@
                                     <a class="btn btn-success btn-sm" href="/courses/{{ course.pk }}/edit/">Edit</a>
                                     <form method="POST" action="/courses/{{ course.pk }}/delete/" style="display: inline;">
                                         {% csrf_token %}
-                                        <button class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
                                     </form>
 
                                 </td>
                             {% endif %}
                         </tr>
-                    {% endfor %}
-
-                    {% if not courses %}
+                    {% empty %}
                         <tr>
-                            <td colspan="{{ supervisor|yesno:"2,1" }}">No courses to list!</td>
+                            <td colspan="{{ supervisor|yesno:"2,1" }}">No courses yet!</td>
                         </tr>
-                    {% endif %}
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

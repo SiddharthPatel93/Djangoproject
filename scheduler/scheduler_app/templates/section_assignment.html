@@ -1,6 +1,6 @@
 {% extends "page.html" %}
 
-{% block title %}Assign to Course{% endblock %}
+{% block title %}Assign to Section: {{ section.num }}{% endblock %}
 
 {% block main %}
 <div class="container">
@@ -9,7 +9,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/courses/">Courses</a></li>
-                    <li class="breadcrumb-item"><a href="/courses/{{ course.pk }}/">{{ section.num }}</a></li>
+                    <li class="breadcrumb-item"><a href="/courses/{{ course.pk }}/">{{ course.name }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Assign TA</li>
                 </ol>
             </nav>
@@ -17,13 +17,15 @@
             <form method="POST">
                 {% csrf_token %}
 
-                <h1>Assign to Section</h1>
+                <h1>Assign to Section: {{ section.num }}</h1>
 
                 <div class="form-group mb-3">
-                    <label for = "user">User</label>
-                    <select class="form-select" name = "user" id="user">
+                    <label for="user">TA</label>
+                    <select class="form-select" name="user" id="user"{% if not users %} disabled{% endif %}>
                         {% for user in users %}
                             <option value="{{ user.pk }}">{{ user.name }} - {{  user.role }}</option>
+                        {% empty %}
+                            <option value="0">No TAs to assign!</option>
                         {% endfor %}
                     </select>
                 </div>

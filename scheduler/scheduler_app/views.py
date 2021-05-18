@@ -5,19 +5,16 @@ from django.views import View
 
 from .classes import courses, permissions, sections, users
 from .classes.permissions import check_permissions
-from .models import Account, Course, Section
+from .models import Account, Course, CourseMembership, Section
 
 
 class HomepageView(View):
     @check_permissions(check_supervisor=False)
     def get(self, request, requester: Account):
-
         return render(request, "homepage.html", {
             "user": requester,
-            "sections": [{"pk": section.pk, "course": section.course, "num":section.num,"ta":section.ta} \
-                      for section in Section.objects.all()],
-            "instructor": requester.role == Account.Role.INSTRUCTOR,
-            "ta": requester.role == Account.Role.TA,
+            "supervisor": requester.role == Account.Role.SUPERVISOR,
+            "courses": courses.get(requester),
         })
 
 
@@ -56,21 +53,15 @@ class LogoutView(View):
 
 
 class ListUsersView(View):
-    def get(self, request):
+    @check_permissions(check_supervisor=False)
+    def get(self, request, requester: Account):
         """Render template of all users as a list."""
 
-        if "account" not in request.session:
-            return redirect("/login/")
-
-        requester = Account.objects.get(pk=request.session["account"])
-
         return render(request, "users_list.html", {
-            "users": [{"pk": user.pk, "name": user.name} \
-                      for user in users.get(requester)],
+            "users": users.get(requester),
             "supervisor": requester.role == Account.Role.SUPERVISOR,
-            "members": [{"pk": member.pk, "name": member.name} \
-                        for course in courses.get(requester) \
-                        for member in course.members.all()],
+            "members": set(member for course in courses.get(requester) \
+                            for member in course.members.all()),
         })
 
 
@@ -183,11 +174,12 @@ class ViewCourseView(View):
             return HttpResponseForbidden("You do not have access to this course.")
 
         return render(request, "course.html", {
-            "TAs": course.members.filter(courses__coursemembership__account=Account.Role.TA),
             "course": course,
-            "sections": course.sections.all(),
             "supervisor": supervisor,
             "instructor": instructor,
+            "sections": course.sections.all(),
+            "course_instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
+            "tas": CourseMembership.objects.filter(account__role=Account.Role.TA, course=course),
         })
 
     @check_permissions()
@@ -201,9 +193,11 @@ class ViewCourseView(View):
 
         return render(request, "course.html", {
             "course": course,
+            "supervisor": True,
             "sections": course.sections.all(),
             "errors": errors,
-            "supervisor": True,
+            "instructor": course.members.filter(role=Account.Role.INSTRUCTOR).first(),
+            "tas": course.members.filter(role=Account.Role.TA),
         }, status=400 if errors else 200)
 
 
@@ -338,7 +332,7 @@ class CourseAssignmentView(View):
             return redirect("/course_assignment/")
 
 
-class AssignToCourseview(View):
+class AssignToCourseView(View):
     @check_permissions()
     def get(self, request, requester: Account, course=0):
         try:
@@ -378,17 +372,17 @@ class AssignToSectionView(View):
         try:
             course = Course.objects.get(pk=course)
             section = Section.objects.get(pk=section)
-            course_members = course.members.all()
-            ta_members = list(course_members.filter(role=Account.Role.TA))
-        except section.DoesNotExist:
-            raise Http404("section does not exist")
+            tas = course.members.filter(role=Account.Role.TA)
+        except Course.DoesNotExist:
+            raise Http404("Course does not exist!")
+        except Section.DoesNotExist:
+            raise Http404("Section does not exist!")
 
         return render(request, "section_assignment.html", {
             "course": course,
             "section": section,
             "instructor": requester.role == Account.Role.INSTRUCTOR,
-            "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
-                      for user in ta_members],
+            "users": tas,
         })
 
     @check_permissions(check_supervisor=False)

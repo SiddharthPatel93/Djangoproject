@@ -21,9 +21,9 @@
 <div class="container">
     <div class="row">
         <div class="col-8 col-md-6 col-lg-4 mx-auto">
-            <h1>Course Members</h1>
-
             {% if not supervisor %}
+                <h1>Course Members</h1>
+                
                 <table class="table table-striped align-middle">
                     <thead>
                         <th scope="col">Name</th>
@@ -37,13 +37,11 @@
                                     </a>
                                 </td>
                             </tr>
-                        {% endfor %}
-
-                        {% if not members %}
+                        {% empty %}
                             <tr>
-                                <td>No members to list!</td>
+                                <td>No members yet!</td>
                             </tr>
-                        {% endif %}
+                        {% endfor %}
                     </tbody>
                 </table>
 
@@ -85,13 +83,11 @@
                                 </td>
                             {% endif %}
                         </tr>
-                    {% endfor %}
-
-                    {% if not users %}
+                    {% empty %}
                         <tr>
-                            <td colspan="{{ supervisor|yesno:"2,1" }}">No users to list!</td>
+                            <td colspan="{{ supervisor|yesno:"2,1" }}">No users yet!</td>
                         </tr>
-                    {% endif %}
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

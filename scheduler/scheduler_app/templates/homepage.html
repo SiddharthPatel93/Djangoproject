@@ -1,6 +1,6 @@
 {% extends "page.html" %}
 
-{% block title %}{{ name }}{% endblock %}
+{% block title %}Homepage{% endblock %}
 
 {% block main %}
 <div class="container">
@@ -29,29 +29,59 @@
                     <td> {{ user.get_address }}</td>
                 </tr>
             </table>
-        <br>
-            {% if instructor or ta %}
-            <table class="table table-striped" width="300">
-                <thead>
-                    <tr>
-                        <th scope="col">Course</th>
-                        <th scope="col">Section</th>
-                        <th scope="col">TA</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for section in sections %}
+
+            {% if not supervisor %}
+                <hr>
+                <h1>Courses</h1>
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <td width="40%">{{ section.course }}</td>
-                            <td width="30%">{{ section.num }}</td>
-                            <td width="30%">{{ section.ta }}</td>
+                            <th scope="col">Course</th>
+                            <th scope="col">Section</th>
+                            <th scope="col">TA</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                            {% for section in course.sections.all %}
+                                <tr>
+                                    {% if forloop.first %}
+                                        <th scope="rowgroup" rowspan="{{ course.sections.count }}">
+                                            <a href="/courses/{{ course.pk }}/">
+                                                {{ course.name }}
+                                            </a>
+                                        </th>
+                                    {% endif %}
+                                    <td>{{ section.num }}</td>
+                                    <td>
+                                        {% if section.ta %}
+                                            <a href="/users/{{ section.ta.pk }}">
+                                                {{ section.ta.name }}
+                                            </a>
+                                        {% else %}
+                                            None
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <th scope="row">
+                                        <a href="/courses/{{ course.pk }}/">
+                                            {{ course.name }}
+                                        </a>
+                                    </th>
+                                    <td>N/A</td>
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="3">No courses yet!</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             {% endif %}
-
-
         </div>
     </div>
 </div>
