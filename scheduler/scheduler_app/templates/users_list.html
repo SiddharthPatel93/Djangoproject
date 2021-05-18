@@ -58,37 +58,39 @@
                             {% endif %}
                         </tr>
                     {% endfor %}
+                </tbody>
+            </table>
 
-                    {% if not users %}
-                        <tr>
-                            <td colspan="{{ supervisor|yesno:"2,1" }}">No users to list!</td>
-                        </tr>
-                    {% endif %}
+            {% if not users %}
+                <tr>
+                    <td colspan="{{ supervisor|yesno:"2,1" }}">No users to list!</td>
+                </tr>
+            {% endif %}
 
-                    {% if not supervisor %}
-                        <table class="table table-striped align-middle">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h2>Course Assignments</h2>
-                            </div>
-                            <thead>
-                                <th scope="col">Name</th>
-                                {% if supervisor %}
-                                    <th scope="col">Actions</th>
-                                {% endif %}
-                            </thead>
-                            <tbody>
-                                {% for member in members %}
-                                    <tr>
-                                        <td>
-                                            <a href="/users/{{ member.pk }}/">
-                                                {{ member.name }}
-                                            </a>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% endif %}
+            {% if not supervisor %}
+                <table class="table table-striped align-middle">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2>Course Assignments</h2>
+                    </div>
+                    <thead>
+                        <th scope="col">Name</th>
+                            {% if supervisor %}
+                                <th scope="col">Actions</th>
+                            {% endif %}
+                    </thead>
+                    <tbody>
+                        {% for member in members %}
+                            <tr>
+                                <td>
+                                    <a href="/users/{{ member.pk }}/">
+                                        {{ member.name }}
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
         </div>
     </div>
 </div>
