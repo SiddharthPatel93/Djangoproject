@@ -67,7 +67,7 @@ class CourseMembership(models.Model):
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="sections")
     num = models.CharField(max_length=MAX_LENGTH)
-    ta = models.ForeignKey(Account, related_name="ta", null=True, on_delete=models.SET_NULL)
+    ta = models.ForeignKey(Account, on_delete=models.SET_NULL, related_name="sections", null=True)
 
     def __str__(self):
         return str(self.num)
