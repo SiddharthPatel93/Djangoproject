@@ -433,38 +433,35 @@ class AssignInstructorTest(TestCase):
         self.route_base = "/courses/{}/sections/{}/delete/"
         self.route = self.route_base.format(self.course.pk, self.section.pk)
         self.ta = Account.objects.create(name="ta",email="122@email.com", role=Account.Role.TA)
-        self.ta.save()
         self.inst = Account.objects.create(name="inst", role=Account.Role.INSTRUCTOR)
-        self.inst.save()
 
 
     def test_assignInstructor(self):
-        self.assertEqual(courses.assigninstructor(self.course, self.inst), ["Successfully added INSTRUCTOR to course"])
+        self.assertEqual(courses.assign(self.course, self.inst), ["Successfully added Instructor inst to course"], msg=("could not assign instructor"))
 
     def test_assignTA(self):
-        self.assertEqual(courses.assigninstructor(self.course, self.ta), ["Successfully added TA to course"])
+        self.assertEqual(courses.assign(self.course, self.ta), ["Successfully added ta to course"], msg="could not assign TA")
 
     def test_assignSecondInstructor(self):
-        courses.assigninstructor(self.course, self.inst)
+        courses.assign(self.course, self.inst)
         self.inst2 = Account.objects.create(name="inst2", role=Account.Role.INSTRUCTOR)
-        self.assertEqual(courses.assigninstructor(self.course, self.inst2), [" An instructor has already been assigned to this Course"])
+        self.assertEqual(courses.assign(self.course, self.inst2), ["An instructor has already been assigned to this Course"],msg="assigned a instructor when it should not have")
 
     def test_assignSecondTA(self):
-        courses.assigninstructor(self.course, self.ta)
+        courses.assign(self.course, self.ta)
         self.ta2 = Account.objects.create(name="ta2", email="123@email.com",role=Account.Role.TA)
-        self.assertEqual(courses.assigninstructor(self.course, self.ta2), ["Successfully added TA to course"])
+        self.assertEqual(courses.assign(self.course, self.ta2), ["Successfully added ta2 to course"], msg="did not add TA2 ")
 
     def test_assign_same_TA(self):
-        courses.assigninstructor(self.course, self.ta)
-        self.assertEqual(courses.assigninstructor(self.course, self.ta), ["this TA has already been assigned to this course"])
+        courses.assign(self.course, self.ta)
+        self.assertEqual(courses.assign(self.course, self.ta), ["TA ta has already been assigned to this course"],msg="assigned same TA to course when it should not have")
 
     def test_noCourse(self):
-        self.assertEqual(courses.assigninstructor(None, self.inst), ["Please choose a course"])
+        self.assertEqual(courses.assign(None, self.inst), ["Please choose a course"], msg="somehow assigned a ta to no course")
 
     def test_noUser(self):
-        self.assertEqual(courses.assigninstructor(self.course, None), ["Please enter a user"])
+        self.assertEqual(courses.assign(self.course, None), ["Please enter a user"], msg="no user to assign")
 
     def test_invalidUser(self):
         self.Supervisor = Account.objects.create(name="Supervisor", role=Account.Role.SUPERVISOR)
-        self.Supervisor.save()
-        self.assertEqual(courses.assigninstructor(self.course, self.Supervisor), ["User is a supervisor"])
+        self.assertEqual(courses.assign(self.course, self.Supervisor), ["User is a supervisor"], msg='user is not a TA or instructor and cannot be assigned')

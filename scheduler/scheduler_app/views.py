@@ -75,12 +75,6 @@ class ListUsersView(View):
 
 
 class DeleteUserView(View):
-    def post(self, request, account: int):
-        """
-        Attempt to delete the specified user.
-        Redirect to /users/ after, potentially with error.
-        """
-
         @check_permissions()
         def post(self, *args, account=0):
             try:
@@ -368,7 +362,7 @@ class AssignToCourseview(View):
 
         user_key = request.POST.get('user', "0")
         user = Account.objects.get(pk=user_key)
-        errors = courses.assigninstructor(course, user)
+        errors = courses.assign(course, user)
         return render(request, "user_course_assignment.html", {
             "errors": errors,
             "course": course,
@@ -415,9 +409,9 @@ class AssignToSectionView(View):
         return render(request, "section_assignment.html", {
             "errors": errors,
             "course": course,
+            "section":section,
             "instructor": requester.role == Account.Role.INSTRUCTOR,
             "users": [{"pk": user.pk, "name": user.name, "role": user.get_role_display()} \
                       for user in ta_members],
-            "sectionta": section.ta,
 
         })

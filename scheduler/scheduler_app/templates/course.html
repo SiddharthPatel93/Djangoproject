@@ -70,16 +70,13 @@
                             <td>{{ section.num }}</td>
                             {% if supervisor or instructor %}
                                 <td>
+                                    <a class="btn btn-primary btn-sm" href="/courses/{{ course.pk }}/{{ section.pk }}/assign/">Assign User</a>
                                 {% if supervisor %}
                                     <form method="POST" action="sections/{{ section.pk }}/delete/" style="display: inline;">
                                         {% csrf_token %}
                                         <button class="btn btn-danger btn-sm" onclick="confirmDelete(this);">Delete</button>
                                     </form>
                                     {% endif %}
-                                        <div class="dropdown">
-
-                                            <a class=" btn-success btn-sm" href="/courses/{{ course.pk }}/{{ section.pk }}/assign/">Assign User</a>
-                                        </div>
                                 </td>
                             {% endif %}
                         </tr>

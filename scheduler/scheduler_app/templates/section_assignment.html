@@ -8,6 +8,7 @@
         <div class="col-sm-4 mx-auto">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/courses/">Courses</a></li>
                     <li class="breadcrumb-item"><a href="/courses/{{ course.pk }}/">{{ section.num }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Assign TA</li>
                 </ol>
@@ -19,8 +20,8 @@
                 <h1>Assign to Section</h1>
 
                 <div class="form-group mb-3">
-                    <label for = "users">assign user to section</label>
-                    <select name = "user" id="user">
+                    <label for = "user">User</label>
+                    <select class="form-select" name = "user" id="user">
                         {% for user in users %}
                             <option value="{{ user.pk }}">{{ user.name }} - {{  user.role }}</option>
                         {% endfor %}
@@ -34,9 +35,8 @@
                         {% endfor %}
                     </ul>
                 {% endif %}
-            <p>{{ sectionta }}</p>
 
-                <button class="btn btn-primary mb-3" type="submit">submit</button>
+                <button class="btn btn-primary mb-3" type="submit">Assign</button>
             </form>
         </div>
     </div>

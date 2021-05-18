@@ -9,18 +9,16 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/courses/">Courses</a></li>
+                    <li class="breadcrumb-item"><a href="/courses/{{ course.pk }}">{{ course.name }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Assign</li>
                 </ol>
             </nav>
-            <h1>{{ course.name }}</h1>
+            <h1>Assign to Course: {{ course.name }}</h1>
             <form method="POST">
                 {% csrf_token %}
-
-                <h1>Assign to Course</h1>
-
                 <div class="form-group mb-3">
-                    <label for = "users">assign user to course</label>
-                    <select name = "user" id="user">
+                    <label for = "user">User</label>
+                    <select class="form-select" name = "user" id="user">
                         {% for user in users %}
                             <option value="{{ user.pk }}">{{ user.name }} - {{  user.role }}</option>
                         {% endfor %}
@@ -35,7 +33,7 @@
                     </ul>
                 {% endif %}
 
-                <button class="btn btn-primary mb-3" type="submit">submit</button>
+                <button class="btn btn-primary mb-3" type="submit">Assign</button>
             </form>
         </div>
     </div>

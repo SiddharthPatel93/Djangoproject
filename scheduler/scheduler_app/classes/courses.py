@@ -25,7 +25,7 @@ def create(name: str) -> list[str]:
 def delete(course: Course):
     course.delete()
 
-def assigninstructor(course:Course, user:Account)->list[str]:
+def assign(course:Course, user:Account)->list[str]:
     errors = []
     if not course:
         errors.append("Please choose a course")
@@ -37,27 +37,23 @@ def assigninstructor(course:Course, user:Account)->list[str]:
         coursemembers = course.members.all()
         old_instructor = list(coursemembers.filter(role=Account.Role.INSTRUCTOR))
         if len(old_instructor) is not 0:
-            errors.append(" An instructor has already been assigned to this Course")
-
+            errors.append("An instructor has already been assigned to this Course")
         else:
             new_assignment = CourseMembership.objects.create(account=user, course=course)
-            new_assignment.save()
-            errors.append("Successfully added INSTRUCTOR to course")
+            errors.append(f"Successfully added Instructor {user.name} to course")
         return errors
     elif user.get_role() == 2:
         alreadyassigned = course.members.all()
         alreadyassigned2= list(alreadyassigned.filter(email=user.get_email()))
         if len(alreadyassigned2) is not 0:
-            errors.append("this TA has already been assigned to this course")
-            return errors
+            errors.append(f"TA {user.name} has already been assigned to this course")
+
         else:
             newTA = CourseMembership.objects.create(account=user, course=course)
-            newTA.save()
-            errors.append("Successfully added TA to course")
-        return errors
+            errors.append(f"Successfully added {user.name} to course")
     else:
         errors.append("User is a supervisor")
-        return errors
+    return errors
 
 
 
