@@ -1,6 +1,6 @@
 {% extends "page.html" %}
 
-{% block title %}Assign to Course{% endblock %}
+{% block title %}Assign to Section: {{ section.num }}{% endblock %}
 
 {% block main %}
 <div class="container">
@@ -17,7 +17,7 @@
             <form method="POST">
                 {% csrf_token %}
 
-                <h1>Assign to Section</h1>
+                <h1>Assign to Section: {{ section.num }}</h1>
 
                 <div class="form-group mb-3">
                     <label for = "user">User</label>
