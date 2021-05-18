@@ -73,21 +73,27 @@ class ListUsersTest(TestCase):
         self.test_course = Course.objects.create(name="CS 361")
         CourseMembership.objects.create(account=self.ta, course=self.test_course)
         CourseMembership.objects.create(account=self.instructor, course=self.test_course)
+    
+    def test_permissions(self):
+        r = self.client.get(self.route, follow=True)
+        self.assertEqual([("/login/", 302)], r.redirect_chain, "GETing users list while logged out fails to redirect to login page")
+
+        permissions.login(self.client, self.ta)
+        r = self.client.get(self.route)
+        self.assertEqual(200, r.redirect_chain, "GETing users list while logged in fails to load with status code 200")
 
     def test_supervisorAccess(self):
         permissions.login(self.client, self.supervisor)
         r = self.client.get(self.route)
-        self.assertEqual(3, len(r.context["users"]), "Users list fails to show all users in system")
         self.assertTrue(r.context["supervisor"], "Users list fails to show management tools for supervisor")
+        self.assertEqual(3, len(r.context["users"]), "Users list fails to show all users for supervisor")
     
-    # Reenable this test when you're going to implement the course membership-specific tests.
-    """
     def test_userAccess(self):
         permissions.login(self.client, self.ta)
         r = self.client.get(self.route)
-        self.assertEqual(2, len(r.context["users"]), "Users list fails to show only course members")
-        self.assertFalse(r.context["supervisor"], "Users list shows management tools")
-    """
+        self.assertFalse(r.context["supervisor"], "Users list shows management tools for user")
+        self.assertEqual(2, len(r.context["members"]), "Users list fails to show only course members for user")
+        self.assertEqual(3, len(r.context["users"]), "Users list fails to show all users for user")
 
 def assert_field_accessibility(self: TestCase, user: Account, route: str, model: Model, case: str, hidden: list[str], readonly: list[str]):
     permissions.login(self.client, user)
