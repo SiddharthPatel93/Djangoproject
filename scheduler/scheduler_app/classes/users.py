@@ -3,37 +3,43 @@ from django.core.validators import validate_email
 
 from ..models import Account
 
+def count(name: str) -> int:
+    return Account.objects.filter(name=name).count()
 
 def get(requester: Account) -> list[Account]:
 
     return list(Account.objects.all())
-    return list(requester.users.all())
 
-def create(details: dict) -> list[str]:
+def create(details: dict[str, str]) -> list[str]:
     errors = []
 
-    if not details.get("name", ""):
+    if not (name := details.get("name", "")):
         errors.append("Please enter a name!")
-    if not details.get("role", ""):
+    if not (role := details.get("role", "")):
         errors.append("Please enter a role!")
-    if not details.get("email", ""):
+    else:
+        try:
+            role = Account.Role(int(role))
+        except ValueError:
+            errors.append("Please enter a valid role!")
+    if not (email := details.get("email", "")):
         errors.append("Please enter an email!")
-    elif Account.objects.filter(email=details["email"]).exists():
+    elif Account.objects.filter(email=email).exists():
         errors.append("Please enter an unused email!")
     else:
         try:
-            validate_email(details["email"])
+            validate_email(email)
         except ValidationError:
             errors.append("Please enter a valid email!")
-    if not details.get("password", ""):
+    if not (password := details.get("password", "")):
         errors.append("Please enter a password!")
     
     if not errors:
         Account.objects.create(
-            name=details["name"],
-            role=Account.Role(int(details["role"])),
-            email=details["email"],
-            password=details["password"],
+            name=name,
+            role=role,
+            email=email,
+            password=password,
             phone=details.get("phone", ""),
             address=details.get("address", ""),
             office_hours=details.get("office_hours", ""),
@@ -41,13 +47,10 @@ def create(details: dict) -> list[str]:
     
     return errors
 
-def delete(account: int) -> bool:
-    """
-    Attempt to delete a user.
-    Return True if successful, False if not.
-    """
+def delete(account: Account):
+    account.delete()
 
-def edit(requester: Account, account: Account, details: dict) -> list[str]:
+def edit(requester: Account, account: Account, details: dict[str, str]) -> list[str]:
     errors = []
 
     account.name = details.get("name", account.name)
@@ -66,6 +69,7 @@ def edit(requester: Account, account: Account, details: dict) -> list[str]:
             except ValidationError:
                 errors.append("Please enter a valid email!")
     account.password = details.get("password", account.password)
+    account.skills = details.get("skills", account.skills)
     account.phone = details.get("phone", account.phone)
     account.address = details.get("address", account.address)
     account.office_hours = details.get("office_hours", account.office_hours)

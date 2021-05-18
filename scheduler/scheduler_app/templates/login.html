@@ -5,7 +5,7 @@
 {% block main %}
 <div class="container d-flex align-items-center vh-100">
     <div class="row flex-fill">
-        <form method="POST" class="col-sm-4 mx-auto">
+        <form method="POST" class="col-8 col-md-6 col-lg-4 mx-auto">
             {% csrf_token %}
 
             <h1>Login</h1>
@@ -28,7 +28,7 @@
                 </ul>
             {% endif %}
 
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary mb-3">Login</button>
         </form>
     </div>
 </div>
